@@ -1271,7 +1271,7 @@ function renderCalendar() {
 }
 
 function renderClassicCalendarGrid(cal) {
-  const container = $("#sm-classic-calendar-container");
+  const container = $("#sm-classic-cal-container");
   if (!container.length) return;
 
   const mIdx = cal.months.findIndex(m => m.name === cal.currentDate.month);
