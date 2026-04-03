@@ -4243,6 +4243,9 @@ $(document).on("click", "#sm-btn-save-ai-events", saveEventsToCalendar);
     $("#sm-toggle-tab-qcsettings").prop("checked", s.enableTabQcSettings);
 
     applyVisibilityToggles();
+    applyVisibilityToggles();
+    renderQuests();
+    renderCalendar();
 
     setTimeout(updateProfilesList, 2000);
 
