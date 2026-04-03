@@ -1,0 +1,17 @@
+.sunny_memories_content {
+    border-left: 3px solid #ffd700;
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+.sunny-fact-item {
+    background: rgba(0,0,0,0.2);
+    border-left: 3px solid var(--mainColor);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+#sunny-memories-save-settings {
+    margin-top: 10px;
+    background-color: rgba(255, 215, 0, 0.15);
+}
