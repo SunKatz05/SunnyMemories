@@ -3866,21 +3866,29 @@ Include only known and actively planned or imminent future events.
     });
 
     $(document).on("click", ".sm-main-tab-btn", function () {
-      $(".sm-main-tab-btn").removeClass("active");
-      $(".sm-main-tab-pane").removeClass("active");
-      $(this).addClass("active");
-      $("#sm-main-tab-" + $(this).data("maintab")).addClass("active");
-    });
+  $(".sm-main-tab-btn").removeClass("active");
+  $(".sm-main-tab-pane").removeClass("active");
+  $(this).addClass("active");
+  $("#sm-main-tab-" + $(this).data("maintab")).addClass("active");
+
+  if ($(this).data("maintab") === "calendar") {
+    renderCalendar();
+  }
+});
 
     $(document).on("click", ".sm-tab-btn", function () {
-      $(this).siblings().removeClass("active");
-      $(this)
-        .closest(".sm-tab-pane, .sm-main-tab-pane")
-        .find(".sm-tab-pane")
-        .removeClass("active");
-      $(this).addClass("active");
-      $("#sm-tab-" + $(this).data("tab")).addClass("active");
-    });
+  $(this).siblings().removeClass("active");
+  $(this)
+    .closest(".sm-tab-pane, .sm-main-tab-pane")
+    .find(".sm-tab-pane")
+    .removeClass("active");
+  $(this).addClass("active");
+  $("#sm-tab-" + $(this).data("tab")).addClass("active");
+
+  if ($(this).data("tab") === "cal") {
+    renderCalendar();
+  }
+});
 
     $(document).on("click", "#sm-btn-generate-quests", () =>
       runQuestGeneration(null),
