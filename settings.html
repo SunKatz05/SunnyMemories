@@ -339,7 +339,7 @@
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-library" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_lib_tab">Show Library Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-quests" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_quests_tab">Show Quests Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
+                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-cal" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&C Settings Tab</span></label>
                     </div>
                 </div>
@@ -356,7 +356,7 @@
 
                 <div class="sm-main-tabs-header">
                     <div id="sm-main-btn-memories" class="sm-main-tab-btn active" data-maintab="memories"><i class="fa-solid fa-brain" style="margin-right: 5px;"></i><span data-i18n="memories"> Memories</span></div>
-                    <div id="sm-main-btn-calendar" class="sm-main-tab-btn" data-maintab="calendar"><i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i><span data-i18n="quests_cal"> Quests & Calendar</span></div>
+                    <div id="sm-main-btn-cal" class="sm-main-tab-btn" data-maintab="cal"><i class="fa-solid fa-cal-days" style="margin-right: 5px;"></i><span data-i18n="quests_cal"> Quests & Calendar</span></div>
                 </div>
 
                 <div id="sm-main-tab-memories" class="sm-main-tab-pane active">
@@ -552,7 +552,7 @@
                     </div>
                 </div>
 
-                <div id="sm-main-tab-calendar" class="sm-main-tab-pane">
+                <div id="sm-main-tab-cal" class="sm-main-tab-pane">
                     
                     <div class="sm-tabs-header">
                         <div id="sm-tab-btn-quests" class="sm-tab-btn active" data-tab="quests"><span style="margin-right: 5px;">⚔️</span><span data-i18n="timeline_quests"> Timeline & Quests</span></div>
@@ -627,7 +627,7 @@
         </button>
 
         <button id="sm-btn-open-ai-events" class="menu_button" style="flex: 1; font-weight: bold; padding: 10px; min-width: 200px;">
-            <i class="fa-solid fa-calendar-plus" style="margin-right: 5px;"></i>
+            <i class="fa-solid fa-cal-plus" style="margin-right: 5px;"></i>
             Generate AI Events
         </button>
     </div>
@@ -784,10 +784,10 @@
         </div>
     </div>
 
-    <div id="sm-classic-calendar-container"></div>
+    <div id="sm-classic-cal-container"></div>
                         
                         <div class="sm-qc-section-title" data-i18n="timeline_events">Timeline Events</div>
-                        <div id="sm-list-calendar-events"></div>
+                        <div id="sm-list-cal-events"></div>
                     </div> 
 
                     <div id="sm-tab-qcsettings" class="sm-tab-pane">
@@ -874,6 +874,6 @@
         <button type="button" class="menu_button sm-popover-btn" data-action="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i> Summary</button>
         <button type="button" class="menu_button sm-popover-btn" data-action="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i> Facts</button>
         <button type="button" class="menu_button sm-popover-btn" data-action="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i> Quests</button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-calendar-day" style="margin-right: 5px;"></i> Events</button>
+        <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-cal-day" style="margin-right: 5px;"></i> Events</button>
     </div>
 </div>
