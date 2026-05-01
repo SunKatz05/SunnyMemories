@@ -6,6 +6,6 @@
     "js": "index.js",
     "css": "style.css",
     "author": "Sunrize",
-    "version": "1.0.1",
+    "version": "1.0.9",
     "description": "Custom memory management extension"
 }
