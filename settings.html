@@ -12,25 +12,18 @@
             box-shadow: inset 0 0 10px rgba(254, 202, 87, 0.05);
             border-radius: 6px;
         }
-        .sm-save-highlight {
-            background-color: var(--SmartThemeQuoteColor, #feca57) !important;
-            color: #111 !important;
-            border-color: var(--SmartThemeQuoteColor, #feca57) !important;
-            box-shadow: 0 0 12px rgba(254, 202, 87, 0.8) !important;
-            animation: smSunPulse 2s infinite ease-in-out !important;
-        }
 
         .sm-btn-cancel-gen {
             background: rgba(255, 71, 87, 0.15) !important;
             color: var(--SmartThemeAlertColor, #ff4757) !important;
             border: 1px solid var(--SmartThemeAlertColor, #ff4757) !important;
             transition: 0.2s;
-            display: none !important; 
+            display: none !important;
             justify-content: center;
             align-items: center;
         }
         .sm-btn-cancel-gen.sm-active {
-            display: flex !important; 
+            display: flex !important;
         }
         .sm-btn-cancel-gen:hover {
             background: var(--SmartThemeAlertColor, #ff4757) !important;
@@ -44,10 +37,51 @@
         .sm-main-tab-pane.active { display: block; }
         .sm-tabs-header { display: flex; flex-wrap: nowrap; border-bottom: 2px solid var(--SmartThemeBorderColor); margin-bottom: 15px; gap: 5px; }
         .sm-tab-btn { padding: 8px 5px; cursor: pointer; border-radius: 8px 8px 0 0; background: rgba(0,0,0,0.15); opacity: 0.6; font-weight: bold; transition: 0.2s; flex: 1 1 0; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.1; font-size: clamp(0.75em, 2vw, 0.9em); }
+        .sm-tab-btn > i { width: 1.1em; min-width: 1.1em; text-align: center; line-height: 1; display: inline-block; }
         .sm-tab-btn:hover { background: rgba(0,0,0,0.3); opacity: 0.9; }
         .sm-tab-btn.active { opacity: 1; background: var(--SmartThemeBlurTintColor); color: var(--SmartThemeBodyColor); box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.2); }
+        #sunny_memories_settings .sm-main-tab-btn,
+        #sunny_memories_settings .sm-tab-btn {
+            --sm-tab-accent: var(--SmartThemeQuoteColor, #feca57);
+        }
+        #sm-main-btn-memories { --sm-tab-accent: rgba(147, 197, 253, 0.9); }
+        #sm-main-btn-calendar { --sm-tab-accent: rgba(252, 211, 77, 0.9); }
+        #sm-tab-btn-summary { --sm-tab-accent: rgba(147, 197, 253, 0.9); }
+        #sm-tab-btn-facts { --sm-tab-accent: rgba(110, 231, 183, 0.9); }
+        #sm-tab-btn-library { --sm-tab-accent: rgba(253, 186, 116, 0.9); }
+        #sm-tab-btn-quests { --sm-tab-accent: rgba(249, 168, 212, 0.9); }
+        #sm-tab-btn-calendar { --sm-tab-accent: rgba(103, 232, 249, 0.9); }
+        #sm-tab-btn-qcsettings { --sm-tab-accent: rgba(196, 181, 253, 0.9); }
+        .sm-main-tab-btn :is(i, .svg-inline--fa),
+        .sm-tab-btn :is(i, .svg-inline--fa) {
+            transition: color 0.2s ease, filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+        }
+        .sm-main-tab-btn .svg-inline--fa,
+        .sm-main-tab-btn .svg-inline--fa *,
+        .sm-tab-btn .svg-inline--fa,
+        .sm-tab-btn .svg-inline--fa * {
+            fill: currentColor !important;
+            stroke: currentColor !important;
+        }
+        .sm-main-tab-btn.active :is(i, .svg-inline--fa),
+        .sm-tab-btn.active :is(i, .svg-inline--fa) {
+            color: var(--sm-tab-accent) !important;
+            opacity: 0.95;
+            filter: none;
+            transform: none;
+        }
+        .sm-main-tab-pane.active .sm-tab-btn :is(i, .svg-inline--fa) {
+            color: var(--sm-tab-accent) !important;
+            opacity: 0.58;
+            filter: none;
+        }
+        .sm-main-tab-pane.active .sm-tab-btn.active :is(i, .svg-inline--fa) {
+            opacity: 0.95;
+            filter: none;
+        }
         .sm-tab-pane { display: none; animation: smFade 0.3s; }
         .sm-tab-pane.active { display: block; }
+
         @keyframes smFade { from {opacity: 0;} to {opacity: 1;} }
         .sm-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
         .sm-switch input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; pointer-events: none; }
@@ -55,9 +89,173 @@
         .sm-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: var(--SmartThemeBodyColor, #fff); transition: .2s; border-radius: 50%; box-sizing: border-box; }
         .sm-switch input:checked + .sm-slider { background-color: var(--SmartThemeQuoteColor, #feca57); border-color: var(--SmartThemeQuoteColor, #feca57); }
         .sm-switch input:checked + .sm-slider:before { transform: translateX(16px); background-color: #111; }
+        .sm-summary-mode-toggle {
+            display: inline-grid;
+            grid-template-columns: repeat(2, minmax(90px, 1fr));
+            gap: 4px;
+            padding: 4px;
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid var(--SmartThemeBorderColor, #555);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .sm-summary-mode-toggle input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .sm-summary-mode-toggle label {
+            margin: 0;
+            padding: 6px 10px;
+            text-align: center;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            color: var(--SmartThemeBodyColor, #ddd);
+            background: transparent;
+            user-select: none;
+        }
+        .sm-summary-mode-toggle input[type="radio"]:checked + label {
+            background: var(--SmartThemeQuoteColor, #feca57);
+            color: #111;
+            box-shadow: 0 0 10px rgba(254, 202, 87, 0.35);
+        }
+        .sm-summary-mode-toggle input[type="radio"]:focus-visible + label {
+            outline: 2px solid var(--SmartThemeQuoteColor, #feca57);
+            outline-offset: 2px;
+        }
+        .sm-summary-mode-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        .sm-summary-mode-help-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .sm-density-help-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        .sm-density-help-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .sm-summary-mode-help-btn,
+        .sm-density-help-btn {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--SmartThemeBorderColor, #666);
+            border-radius: 50%;
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            font-size: 0.72em;
+            font-weight: 700;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .sm-summary-mode-help-btn:hover,
+        .sm-density-help-btn:hover {
+            background: rgba(0,0,0,0.45);
+            border-color: var(--SmartThemeQuoteColor, #feca57);
+        }
+        .sm-summary-mode-help-btn:focus-visible,
+        .sm-density-help-btn:focus-visible {
+            outline: 2px solid var(--SmartThemeQuoteColor, #feca57);
+            outline-offset: 2px;
+        }
+        .sm-summary-mode-help-popover,
+.sm-density-help-popover {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 8px);
+    transform: translateY(-50%);
+    width: min(260px, calc(100vw - 40px));
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 0.9em;
+    line-height: 1.35;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.55);
+    display: none;
+    z-index: 1000;
+}
+        .sm-summary-mode-help-wrap.sm-open .sm-summary-mode-help-popover {
+            display: block;
+        }
+        .sm-density-help-wrap.sm-open .sm-density-help-popover {
+            display: block;
+        }
+        .sm-summary-mode-help-line + .sm-summary-mode-help-line {
+            margin-top: 8px;
+        }
+        .sm-density-help-line + .sm-density-help-line {
+            margin-top: 8px;
+        }
+        .sm-library-type-switch {
+            margin-top: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .sm-library-type-toggle {
+            width: 100%;
+            max-width: 320px;
+            padding: 3px;
+            gap: 3px;
+        }
+        .sm-library-type-toggle label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 28px;
+            font-size: 0.88em;
+            padding: 3px 10px;
+        }
+        .sm-library-pane {
+            display: none;
+            animation: smFade 0.22s ease;
+        }
+        .sm-library-pane.active {
+            display: block;
+        }
+        #sunny_memories_settings .sm-summary-static-settings:not([style*="display: none"]) {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-items: center;
+        }
+        #sunny_memories_settings .sm-summary-static-settings > label {
+            min-width: 0;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        #sunny_memories_settings .sm-summary-static-settings > label > span {
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .sm-lib-item { background: rgba(0,0,0,0.2); border: 1px solid var(--SmartThemeBorderColor); border-radius: 8px; padding: 10px; margin-bottom: 10px; transition: 0.2s; }
+        .sm-lib-item.sm-search-hit-item { box-shadow: inset 0 0 0 1px rgba(254, 202, 87, 0.12); }
+        .sm-search-hit { background: rgba(254, 202, 87, 0.2); border-radius: 3px; padding: 0 1px; }
         .sm-lib-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px; border-radius: 6px; transition: background-color 0.2s; }
-        .sm-lib-header:hover { background: rgba(255, 255, 255, 0.05); } 
+        .sm-lib-header:hover { background: rgba(255, 255, 255, 0.05); }
         .sm-sun-toggle { cursor: pointer; color: var(--SmartThemeBorderColor, #555); transition: 0.1s; font-size: 1.2em; padding: 2px 4px; }
         .sm-sun-toggle.active { color: var(--SmartThemeQuoteColor, #feca57); text-shadow: 0 0 10px var(--SmartThemeQuoteColor, #feca57); transform: scale(1.1); }
         .sm-sun-toggle:not(.active):hover { color: var(--SmartThemeQuoteColor, #feca57); opacity: 0.5; transform: scale(1.1); }
@@ -71,6 +269,9 @@
         .sm-lib-action-btn { cursor: pointer; opacity: 0.5; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 4px; font-size: 1.1em; flex-shrink: 0; }
         .sm-lib-action-btn:hover { opacity: 1; transform: scale(1.1); }
         .sm-lib-edit:hover { color: var(--SmartThemeQuoteColor, #feca57); }
+        .sm-lib-pin:hover { color: var(--SmartThemeQuoteColor, #feca57); }
+        .sm-lib-pin.active { color: var(--SmartThemeQuoteColor, #feca57); opacity: 0.95; }
+        .sm-lib-copy:hover { color: var(--SmartThemeQuoteColor, #feca57); }
         .sm-lib-delete:hover { color: var(--SmartThemeAlertColor, #ff4757); }
         .sm-lib-expand-icon { font-size: 0.9em; pointer-events: none; }
         .sm-lib-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 0.85em; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; }
@@ -92,8 +293,10 @@
         .sm-library-list.grid-view .sm-bulk-checkbox { position: absolute; top: 12px; left: 12px; }
         .sm-library-list.grid-view .sm-sun-toggle { position: absolute; top: 10px; right: 10px; font-size: 1.4em; }
         .sm-library-list.grid-view .sm-lib-edit { display: flex; position: absolute; bottom: 10px; left: 10px; opacity: 0.4; }
+        .sm-library-list.grid-view .sm-lib-copy { display: flex; position: absolute; bottom: 10px; left: 36px; opacity: 0.4; }
+        .sm-library-list.grid-view .sm-lib-pin { display: flex; position: absolute; bottom: 10px; left: 62px; opacity: 0.4; }
         .sm-library-list.grid-view .sm-lib-delete { position: absolute; bottom: 10px; right: 10px; opacity: 0.4; }
-        .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-edit, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-delete { opacity: 0.9; }
+        .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-edit, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-pin, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-copy, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-delete { opacity: 0.9; }
         .sm-library-list.grid-view .sm-lib-title-container { margin-top: auto; margin-bottom: auto; text-align: center; width: 100%; justify-content: center; }
         .sm-library-list.grid-view .sm-lib-title-display { font-size: 1.1em; color: var(--SmartThemeQuoteColor); white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         .sm-library-list.grid-view .sm-lib-title-input { text-align: center; }
@@ -118,6 +321,8 @@
         .sm-popover-btn { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin: 0; padding: 8px 12px; font-weight: bold; font-size: 0.9em; border-radius: 6px; background: rgba(0,0,0,0.2) !important; transition: 0.2s; border: 1px solid transparent !important; white-space: nowrap !important; word-break: normal !important; line-height: 1.2; text-align: left; }
         .sm-popover-btn:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: #111 !important; transform: scale(1.02); box-shadow: 0 0 10px rgba(254, 202, 87, 0.4); }
         .sm-qc-section-title { font-weight: bold; padding: 5px 0; border-bottom: 1px solid var(--SmartThemeBorderColor); margin: 15px 0 10px 0; color: var(--SmartThemeQuoteColor); }
+        #sm-list-quests-main, #sm-list-quests-side, #sm-list-quests-short, #sm-list-quests-completed { max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        #sm-list-calendar-events { max-height: 400px; overflow-y: auto; padding-right: 5px; }
         .sm-quest-item, .sm-cal-event-item { background: rgba(0,0,0,0.15); border: 1px solid var(--SmartThemeBorderColor); border-radius: 6px; padding: 8px; margin-bottom: 8px; }
         .sm-quest-header, .sm-cal-event-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; font-weight: bold; margin-bottom: 4px; }
         .sm-quest-desc, .sm-cal-event-desc { font-size: 0.9em; opacity: 0.8; margin-bottom: 6px; }
@@ -204,92 +409,290 @@
             font-size: 0.85em;
             margin-bottom: 2px;
         }
-        #sm-events-inline-panel {
+
+
+  #sm-events-inline-panel {
     max-height: calc(100vh - 190px);
     overflow-y: auto;
-    padding-right: 6px;
-}
+    padding-right: 8px;
+  }
 
-#sm-events-generator-inline,
-#sm-events-preview-inline {
-    max-height: none;
-}
+  .sm-events-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-.sm-preview-list {
-    max-height: calc(100vh - 340px);
-    overflow-y: auto;
-}
-        .sm-date-range-section {
-    padding: 12px;
-}
-
-.sm-date-range-grid {
+  .sm-events-toolbar {
     display: grid;
-    grid-template-columns: 64px minmax(70px, 0.8fr) minmax(120px, 1.4fr) minmax(80px, 0.9fr);
-    gap: 8px 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .sm-events-toolbar .menu_button {
+    width: 100%;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 11px 14px;
+    border-radius: 14px;
+    white-space: normal !important;
+    line-height: 1.15;
+    font-weight: 700;
+    background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.03)
+    );
+    border: 1px solid var(--SmartThemeBorderColor);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .sm-events-toolbar .menu_button:hover {
+    transform: translateY(-1px);
+    border-color: var(--SmartThemeQuoteColor);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.24);
+  }
+
+  .sm-feature-btn {
+    width: 100%;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 11px 14px !important;
+    border-radius: 14px !important;
+    white-space: normal !important;
+    line-height: 1.15;
+    font-weight: 700;
+    background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.03)
+    );
+    border: 1px solid var(--SmartThemeBorderColor);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .sm-feature-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--SmartThemeQuoteColor);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.24);
+  }
+
+  .sm-tool-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 16px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)),
+      var(--SmartThemeBlurTintColor, rgba(20,20,20,0.55));
+    box-shadow:
+      0 14px 40px rgba(0,0,0,0.28),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+  }
+
+  .sm-tool-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at top left, rgba(254,202,87,0.10), transparent 35%),
+      radial-gradient(circle at top right, rgba(162,155,254,0.08), transparent 30%);
+  }
+
+  .sm-tool-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .sm-tool-title {
+    display: flex;
     align-items: center;
-}
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.98em;
+    font-weight: 800;
+    color: var(--SmartThemeQuoteColor);
+    letter-spacing: 0.2px;
+  }
 
-.sm-date-range-spacer {
-    height: 1px;
-}
-
-.sm-date-range-colhead {
-    font-size: 0.78em;
-    opacity: 0.75;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    text-align: center;
-    padding-bottom: 2px;
-}
-
-.sm-date-range-rowhead {
-    font-size: 0.9em;
+  .sm-tool-title i {
     opacity: 0.9;
-    font-weight: 600;
-    text-align: left;
-    white-space: nowrap;
+  }
+
+  .sm-modal-section {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .sm-modal-section-title {
+    font-weight: 800;
+    color: var(--SmartThemeQuoteColor);
+    margin-bottom: 12px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-size: 0.82em;
+  }
+
+  .sm-preview-desc {
+    opacity: 0.78;
+    font-size: 0.88em;
+    margin-bottom: 12px;
+  }
+
+  .sm-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .sm-modal-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+    min-width: 0;
+    font-size: 0.9em;
+  }
+
+  .sm-modal-grid input[type="number"],
+  .sm-modal-grid input[type="text"],
+  .sm-modal-grid select {
+    width: 100%;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background: rgba(0,0,0,0.18);
+    color: var(--SmartThemeBodyColor);
+    height: 34px;
+    padding: 6px 10px !important;
+  }
+
+  .sm-modal-grid input[type="number"]:focus,
+  .sm-modal-grid input[type="text"]:focus,
+  .sm-modal-grid select:focus {
+    outline: none;
+    border-color: var(--SmartThemeQuoteColor);
+    box-shadow: 0 0 0 2px rgba(254,202,87,0.12);
+  }
+
+.sm-date-range-section {
+  padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sm-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.sm-date-row {
+  display: grid;
+  grid-template-columns: 45px minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.5fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.sm-date-head {
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 2px;
+}
+
+.sm-date-head span {
+  font-size: 0.76em;
+  opacity: 0.78;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sm-date-head span:first-child {
+  opacity: 0;
+}
+
+.sm-date-rowlabel {
+  font-size: 0.92em;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0.95;
 }
 
 .sm-date-range-input {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    height: 34px;
-    padding: 4px 8px !important;
+  width: 100%;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  height: 38px;
+  padding: 7px 10px !important;
+  border-radius: 10px;
 }
 
-.sm-date-range-grid input[type="number"] {
-    text-align: center;
+.sm-date-row input,
+.sm-date-row select {
+  min-width: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sm-date-range-hint {
-    font-size: 0.8em;
-    opacity: 0.8;
-    margin-top: 8px;
+  font-size: 0.8em;
+  opacity: 0.75;
+  margin-top: 8px;
 }
 
 @media (max-width: 700px) {
-    .sm-date-range-grid {
-        grid-template-columns: 52px 1fr 1.6fr 0.9fr;
-        gap: 6px 8px;
-    }
+  .sm-date-card {
+    padding: 10px;
+    gap: 8px;
+    border-radius: 14px;
+  }
 
-    .sm-date-range-colhead {
-        font-size: 0.72em;
-    }
+  .sm-date-head {
+    display: none;
+  }
 
-    .sm-date-range-rowhead {
-        font-size: 0.82em;
-    }
+.sm-date-row {
+   grid-template-columns: 40px minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.5fr);
+    gap: 5px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
 
-    .sm-date-range-input {
-        height: 32px;
-        padding: 3px 6px !important;
-    }
+  .sm-date-rowlabel {
+    margin-bottom: 2px;
+  }
+
+  .sm-date-range-input {
+    height: 40px;
+  }
 }
+
     </style>
-    
+
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
             <b><i class="fa-solid fa-sun" style="color: #feca57; margin-right: 6px;"></i>SunnyMemories</b>
@@ -297,11 +700,10 @@
         </div>
         <div class="inline-drawer-content">
             <div class="extension_part_panel">
-                
+
                 <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
                     <label for="sunny-memories-profile" style="white-space: nowrap; margin-bottom: 0;" data-i18n="api_profile">API Profile:</label>
                     <select id="sunny-memories-profile" class="text_pole flex1" style="min-width: 150px;"></select>
-                    <button id="sunny-memories-save" class="menu_button" data-i18n-title="save_settings" style="padding: 10px 15px;"><i class="fa-solid fa-floppy-disk"></i></button>
                 </div>
 
                 <div class="flex-container margin-bottom-10" style="gap: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; align-items: stretch; flex-wrap: wrap;">
@@ -318,7 +720,7 @@
                                 <input type="checkbox" id="sm-global-enable-quests" checked>
                                 <span class="sm-slider"></span>
                             </div>
-                            <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_quests_cal">Enable Quests & Calendar</span>
+                            <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_quests_cal">Enable Quests &amp; Calendar</span>
                         </label>
                     </div>
                     <button id="sm-global-settings-btn" class="menu_button" data-i18n-title="global_settings" style="margin:0; padding: 10px 20px; display: flex; align-items: center; justify-content: center; font-size: 1.2em;"><i class="fa-solid fa-gear"></i></button>
@@ -333,37 +735,43 @@
                         </select>
                     </div>
 
-                    <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px;" data-i18n="mod_tab_settings">Module & Tab Settings</div>
+                    <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px;" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 15px;">
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-summary" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_summary_tab">Show Summary Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-library" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_lib_tab">Show Library Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-quests" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_quests_tab">Show Quests Tab</span></label>
                         <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&C Settings Tab</span></label>
+                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&amp;C Settings Tab</span></label>
                     </div>
                 </div>
-               
+
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15);">
-            
-                <label class="checkbox_label" title="Figure spaces for filter-kill.">
+
+                <label class="checkbox_label" data-i18n-title="bypass_filter_title">
                 <input type="checkbox" id="sm-bypass-filter">
-                <i class="fa-solid fa-mask" style="margin-right: 5px; opacity: 0.8;"></i>
+                <i class="fa-solid fa-user-secret" style="margin-right: 5px; opacity: 0.8;"></i>
                 <span data-i18n="bypass_filter">Anti-Filter Mode</span>
             </label>
 
         </div>
 
                 <div class="sm-main-tabs-header">
-                    <div id="sm-main-btn-memories" class="sm-main-tab-btn active" data-maintab="memories"><i class="fa-solid fa-brain" style="margin-right: 5px;"></i><span data-i18n="memories"> Memories</span></div>
-                    <div id="sm-main-btn-cal" class="sm-main-tab-btn" data-maintab="cal"><i class="fa-solid fa-cal-days" style="margin-right: 5px;"></i><span data-i18n="quests_cal"> Quests & Calendar</span></div>
-                </div>
+    <div id="sm-main-btn-memories" class="sm-main-tab-btn active" data-maintab="memories">
+        <i class="fa-solid fa-brain" style="margin-right: 5px;"></i>
+        <span data-i18n="memories"> Memories</span>
+    </div>
+    <div id="sm-main-btn-calendar" class="sm-main-tab-btn" data-maintab="calendar">
+        <i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i>
+        <span data-i18n="quests_cal"> Quests &amp; Calendar</span>
+    </div>
+</div>
 
-                <div id="sm-main-tab-memories" class="sm-main-tab-pane active">
-                    <div class="sm-tabs-header">
-                        <div id="sm-tab-btn-summary" class="sm-tab-btn active" data-tab="summary"><span style="margin-right: 5px;">📝</span><span data-i18n="summary"> Summary</span></div>
-                        <div id="sm-tab-btn-facts" class="sm-tab-btn" data-tab="facts"><span style="margin-right: 5px;">📌</span><span data-i18n="facts"> Facts</span></div>
-                        <div id="sm-tab-btn-library" class="sm-tab-btn" data-tab="library"><span style="margin-right: 5px;">📚</span><span data-i18n="library"> Library</span></div>
+<div id="sm-main-tab-memories" class="sm-main-tab-pane active">
+    <div class="sm-tabs-header">
+                        <div id="sm-tab-btn-summary" class="sm-tab-btn active" data-tab="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i><span data-i18n="summary"> Summary</span></div>
+                        <div id="sm-tab-btn-facts" class="sm-tab-btn" data-tab="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i><span data-i18n="facts"> Facts</span></div>
+                        <div id="sm-tab-btn-library" class="sm-tab-btn" data-tab="library"><i class="fa-solid fa-book" style="margin-right: 5px;"></i><span data-i18n="library"> Library</span></div>
                     </div>
 
                     <div id="sm-tab-summary" class="sm-tab-pane active">
@@ -371,14 +779,14 @@
                             <label data-i18n="summary_prompt">Story Summary Prompt:</label>
                             <textarea id="sunny-memories-prompt-summary" class="text_pole" rows="3" style="width: 100%;"></textarea>
                         </div>
-                        
+
                         <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
-                            <button class="menu_button sm-generate-btn" data-type="summary" style="flex: 1; font-weight: bold; padding: 10px; min-width: 150px;" data-i18n="gen_summary">Generate Summary</button>
-                            
-                           <button class="menu_button sm-btn-cancel-gen" title="Cancel Generation" style="padding: 10px 15px; width: 45px;">
+                            <button class="menu_button sm-generate-btn sm-feature-btn" data-type="summary" style="flex: 1; min-width: 150px;" data-i18n="gen_summary">Generate Summary</button>
+
+                           <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px;">
                                 <i class="fa-solid fa-stop"></i>
                             </button>
-                            
+
                             <button class="menu_button sm-save-lib-btn" data-type="summary" data-i18n-title="save_lib" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;">
                                 <i class="fa-solid fa-bookmark"></i>
                             </button>
@@ -389,8 +797,41 @@
                             <label for="sunny-memories-enable-summary" style="margin-bottom:0; cursor:pointer;" data-i18n="inject_summary">Inject Current Summary into Context</label>
                         </div>
 
+                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
+                            <div class="sm-summary-mode-header" style="margin-bottom: 10px; opacity: 0.8;">
+                                <b data-i18n="summary_mode_title">Summary Mode</b>
+                                <span id="sm-summary-mode-help-wrap" class="sm-summary-mode-help-wrap">
+                                    <button id="sm-summary-mode-help-btn" type="button" class="sm-summary-mode-help-btn" aria-expanded="false" data-i18n-aria-label="summary_mode_help_aria">?</button>
+                                    <div id="sm-summary-mode-help-popover" class="sm-summary-mode-help-popover" role="tooltip">
+                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_dynamic_bi">Dynamic / Динамичный: updates the same summary over time, compressing previous details while preserving story continuity.</div>
+                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_static_bi">Static / Статичный: adds a new immutable entry each generation; old entries are kept as history.</div>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="flex-container flexFlowColumn" style="gap: 8px;">
+                                <div class="sm-summary-mode-toggle" role="radiogroup" data-i18n-aria-label="summary_mode_title">
+                                    <input type="radio" id="sm-summary-mode-dynamic" name="sm_summary_mode" value="dynamic" checked>
+                                    <label for="sm-summary-mode-dynamic" data-i18n="summary_mode_dynamic_short">Dynamic</label>
+
+                                    <input type="radio" id="sm-summary-mode-static" name="sm_summary_mode" value="static">
+                                    <label for="sm-summary-mode-static" data-i18n="summary_mode_static_short">Static</label>
+                                </div>
+
+                                <div id="sm-summary-static-settings" class="flex-container alignitemscenter sm-summary-static-settings" style="gap: 10px; margin-top: 6px; display: none;">
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; gap: 6px;">
+                                        <span data-i18n="summary_keep_latest">Inject latest entries</span>
+                                        <input type="number" id="sunny-memories-summary-static-keep-latest" class="text_pole" min="1" value="1" style="width: 60px;">
+                                    </label>
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; gap: 6px;">
+                                        <span data-i18n="summary_max_entries">Store up to entries</span>
+                                        <input type="number" id="sunny-memories-summary-static-max-entries" class="text_pole" min="1" value="30" style="width: 70px;">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <textarea id="sunny-memories-output-summary" class="text_pole margin-bottom-5" rows="8" style="width: 100%; resize: vertical;" placeholder="..."></textarea>
-                        
+
                         <div class="flex-container margin-bottom-10" style="justify-content: space-between; align-items: flex-end; gap: 10px;">
                             <div class="flex-container flexFlowColumn" style="gap: 5px; align-items: flex-start;">
                                 <button class="menu_button sm-restore-btn" data-type="summary" style="padding: 4px 10px; font-size: 0.85em; margin: 0;" data-i18n-title="restore_title">
@@ -407,7 +848,7 @@
 <div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
     <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_summary_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
                                     <input type="number" id="sunny-memories-summary-depth" class="text_pole" min="0" value="0" style="width: 50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" title="Frequency: 1=Always, N=Every N messages"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-summary-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-summary-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
                                         <span data-i18n="as">as</span>
                                         <select id="sunny-memories-summary-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0">System</option><option value="1">User</option><option value="2">Assistant</option></select>
@@ -419,14 +860,14 @@
 
                     <div id="sm-tab-facts" class="sm-tab-pane">
                         <div class="flex-container" style="flex-direction: column; align-items: flex-start; margin-bottom: 10px;">
-                            <label data-i18n="facts_prompt">Facts & Details Prompt:</label>
+                            <label data-i18n="facts_prompt">Facts &amp; Details Prompt:</label>
                             <textarea id="sunny-memories-prompt-facts" class="text_pole" rows="3" style="width: 100%;"></textarea>
                         </div>
-                        
+
                         <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
-                            <button class="menu_button sm-generate-btn" data-type="facts" style="flex: 1; font-weight: bold; padding: 10px; min-width: 150px;" data-i18n="extract_facts">Extract Facts</button>
-                            
-                            <button class="menu_button sm-btn-cancel-gen" title="Cancel Generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
+                            <button class="menu_button sm-generate-btn sm-feature-btn" data-type="facts" style="flex: 1; min-width: 150px;" data-i18n="extract_facts">Extract Facts</button>
+
+                            <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
                                 <i class="fa-solid fa-stop"></i>
                             </button>
 
@@ -444,7 +885,7 @@
                         </div>
 
                         <textarea id="sunny-memories-output-facts" class="text_pole margin-bottom-5" rows="8" style="width: 100%; resize: vertical;" placeholder="..."></textarea>
-                        
+
                         <div class="flex-container margin-bottom-10" style="justify-content: space-between; align-items: flex-end; gap: 10px;">
                             <div class="flex-container flexFlowColumn" style="gap: 5px; align-items: flex-start;">
                                 <button class="menu_button sm-restore-btn" data-type="facts" style="padding: 4px 10px; font-size: 0.85em; margin: 0;" data-i18n-title="restore_title">
@@ -461,7 +902,7 @@
 <div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
     <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_facts_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
                                     <input type="number" id="sunny-memories-facts-depth" class="text_pole" min="0" value="4" style="width: 50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" title="Frequency: 1=Always, N=Every N messages"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-facts-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-facts-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
                                         <span data-i18n="as">as</span>
                                         <select id="sunny-memories-facts-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0">System</option><option value="1">User</option><option value="2">Assistant</option></select>
@@ -472,11 +913,18 @@
                     </div>
 
                     <div id="sm-tab-library" class="sm-tab-pane">
-                        <div style="margin-top: 15px;">
-                            <div class="sm-archive-header" data-target="#sm-summary-archive-container">
-                                <span>📝<span data-i18n="summary_archive"> Summary Archive</span></span><i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        <div class="sm-library-type-switch">
+                            <div class="sm-summary-mode-toggle sm-library-type-toggle" role="radiogroup" data-i18n-aria-label="library">
+                                <input type="radio" id="sm-library-view-summary" name="sm_library_view" value="summary" checked>
+                                <label for="sm-library-view-summary"><i class="fa-solid fa-file-lines"></i><span data-i18n="summary">Summary</span></label>
+
+                                <input type="radio" id="sm-library-view-facts" name="sm_library_view" value="facts">
+                                <label for="sm-library-view-facts"><i class="fa-solid fa-thumbtack"></i><span data-i18n="facts">Facts</span></label>
                             </div>
-                            <div id="sm-summary-archive-container">
+                        </div>
+
+                        <div id="sm-library-pane-summary" class="sm-library-pane active">
+                            <div style="margin-top: 6px;">
                                 <div class="sm-archive-toolbar">
                                     <i class="fa-regular fa-moon sm-bulk-select-all" data-type="summary" data-i18n-title="select_all" style="margin-right: 5px;"></i>
                                     <button class="menu_button sm-bulk-delete" data-type="summary" data-i18n-title="del_selected" style="color:var(--SmartThemeAlertColor)"><i class="fa-solid fa-trash"></i></button>
@@ -485,15 +933,22 @@
                                     <div style="flex:1;"></div>
                                     <button class="menu_button sm-view-toggle" data-type="summary" data-i18n-title="toggle_view"><i class="fa-solid fa-table-cells"></i></button>
                                 </div>
+                                <div style="margin: 8px 0 10px 0;">
+                                    <input
+                                        type="text"
+                                        id="sm-library-search-summary"
+                                        class="text_pole"
+                                        style="width: 100%;"
+                                        data-i18n-placeholder="search_summary_title"
+                                        placeholder="Search summary titles..."
+                                    >
+                                </div>
                                 <div id="sm-library-list-summary" class="sm-library-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;"></div>
-                            </div>
+                        </div>
                         </div>
 
-                        <div style="margin-top: 15px;">
-                            <div class="sm-archive-header" data-target="#sm-facts-archive-container">
-                                <span>📌<span data-i18n="facts_archive"> Facts Archive</span></span><i class="fa-solid fa-chevron-down toggle-icon"></i>
-                            </div>
-                            <div id="sm-facts-archive-container">
+                        <div id="sm-library-pane-facts" class="sm-library-pane">
+                            <div style="margin-top: 6px;">
                                 <div class="sm-archive-toolbar">
                                     <i class="fa-regular fa-moon sm-bulk-select-all" data-type="facts" data-i18n-title="select_all" style="margin-right: 5px;"></i>
                                     <button class="menu_button sm-bulk-delete" data-type="facts" data-i18n-title="del_selected" style="color:var(--SmartThemeAlertColor)"><i class="fa-solid fa-trash"></i></button>
@@ -502,7 +957,33 @@
                                     <div style="flex:1;"></div>
                                     <button class="menu_button sm-view-toggle" data-type="facts" data-i18n-title="toggle_view"><i class="fa-solid fa-table-cells"></i></button>
                                 </div>
+                                <div style="margin: 8px 0 10px 0;">
+                                    <input
+                                        type="text"
+                                        id="sm-library-search-facts"
+                                        class="text_pole"
+                                        style="width: 100%;"
+                                        data-i18n-placeholder="search_facts_title"
+                                        placeholder="Search fact titles..."
+                                    >
+                                </div>
                                 <div id="sm-library-list-facts" class="sm-library-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+                        </div>
+                        </div>
+
+                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; margin-top: 15px;">
+                            <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="auto_cleanup">Auto-Cleanup Defaults</b></div>
+                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
+                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer; flex-wrap: wrap; gap: 5px;">
+                                    <span style="flex: 1; min-width: 150px;" data-i18n="expire_sum">Expire Summaries after:</span>
+                                    <input type="number" id="sunny-memories-default-expiry-summary" class="text_pole" style="width:60px; text-align:center;" min="0" value="0">
+                                    <span style="opacity: 0.8;" data-i18n="msgs_never">msgs (0 = Never)</span>
+                                </label>
+                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer; flex-wrap: wrap; gap: 5px;">
+                                    <span style="flex: 1; min-width: 150px;" data-i18n="expire_facts">Expire Facts after:</span>
+                                    <input type="number" id="sunny-memories-default-expiry-facts" class="text_pole" style="width:60px; text-align:center;" min="0" value="0">
+                                    <span style="opacity: 0.8;" data-i18n="msgs_never">msgs (0 = Never)</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -535,292 +1016,384 @@
                         </div>
                     </div>
 
-                    <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                        <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="auto_cleanup">Auto-Cleanup Defaults</b></div>
-                        <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                            <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer; flex-wrap: wrap; gap: 5px;">
-                                <span style="flex: 1; min-width: 150px;" data-i18n="expire_sum">Expire Summaries after:</span>
-                                <input type="number" id="sunny-memories-default-expiry-summary" class="text_pole" style="width:60px; text-align:center;" min="0" value="0">
-                                <span style="opacity: 0.8;" data-i18n="msgs_never">msgs (0 = Never)</span>
-                            </label>
-                            <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer; flex-wrap: wrap; gap: 5px;">
-                                <span style="flex: 1; min-width: 150px;" data-i18n="expire_facts">Expire Facts after:</span>
-                                <input type="number" id="sunny-memories-default-expiry-facts" class="text_pole" style="width:60px; text-align:center;" min="0" value="0">
-                                <span style="opacity: 0.8;" data-i18n="msgs_never">msgs (0 = Never)</span>
-                            </label>
-                        </div>
-                    </div>
                 </div>
 
-                <div id="sm-main-tab-cal" class="sm-main-tab-pane">
-                    
+                <div id="sm-main-tab-calendar" class="sm-main-tab-pane">
+
                     <div class="sm-tabs-header">
-                        <div id="sm-tab-btn-quests" class="sm-tab-btn active" data-tab="quests"><span style="margin-right: 5px;">⚔️</span><span data-i18n="timeline_quests"> Timeline & Quests</span></div>
-                        <div id="sm-tab-btn-cal" class="sm-tab-btn" data-tab="cal"><span style="margin-right: 5px;">📅</span><span data-i18n="cal_events"> Calendar Events</span></div>
-                        <div id="sm-tab-btn-qcsettings" class="sm-tab-btn" data-tab="qcsettings"><span style="margin-right: 5px;">⚙️</span><span data-i18n="settings"> Settings</span></div>
+                        <div id="sm-tab-btn-quests" class="sm-tab-btn active" data-tab="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i><span data-i18n="timeline_quests"> Timeline &amp; Quests</span></div>
+                        <div id="sm-tab-btn-calendar" class="sm-tab-btn" data-tab="cal"><i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i><span data-i18n="cal_events"> Calendar Events</span></div>
+                        <div id="sm-tab-btn-qcsettings" class="sm-tab-btn" data-tab="qcsettings"><i class="fa-solid fa-gear" style="margin-right: 5px;"></i><span data-i18n="settings"> Settings</span></div>
                     </div>
 
-                    <div id="sm-tab-quests" class="sm-tab-pane active">
-                        <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
-                            <button id="sm-btn-generate-quests" class="menu_button" style="flex: 1; font-weight: bold; padding: 10px; min-width: 200px;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 5px;"></i><span data-i18n="analyze_quests"> Analyze Chat for Quests</span></button>
-                            
-                            <button class="menu_button sm-btn-cancel-gen" title="Cancel Generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
-                                <i class="fa-solid fa-stop"></i>
-                            </button>
-
-                            <button id="sm-btn-add-quest" class="menu_button" data-i18n-title="add_manual_quest" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;"><i class="fa-solid fa-plus"></i></button>
-                        </div>
-
-                        <div id="sm-form-add-quest" class="sm-hidden-form flexFlowColumn" style="gap: 8px;">
-                            <input type="hidden" id="sm-quest-edit-id">
-                            <input type="text" id="sm-quest-form-title" class="text_pole" data-i18n-placeholder="quest_title_ph">
-                            <textarea id="sm-quest-form-desc" class="text_pole" rows="2" data-i18n-placeholder="desc_notes_ph"></textarea>
-                            <div class="flex-container" style="gap: 10px; flex-wrap: wrap;">
-                                <select id="sm-quest-form-type" class="text_pole" style="flex: 1; min-width: 120px;">
-                                    <option value="main">Main Event/Quest</option>
-                                    <option value="side">Side Objective</option>
-                                    <option value="short">Short Task</option>
-                                </select>
-                                <select id="sm-quest-form-status" class="text_pole" style="flex: 1; min-width: 120px;">
-                                    <option value="current">Current</option>
-                                    <option value="future">Future</option>
-                                    <option value="past">Past</option>
-                                </select>
-                            </div>
-                            
-                            <div class="flex-container" style="gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-                                <span style="opacity:0.8; font-size:0.9em; align-self:center; min-width: 90px;" data-i18n="planned_date">Planned Date:</span>
-                                <input type="number" id="sm-quest-form-day" class="text_pole" data-i18n-placeholder="day_ph" style="width: 50px;">
-                                <select id="sm-quest-form-month" class="text_pole flex1" style="min-width: 100px;"></select>
-                                <input type="number" id="sm-quest-form-year" class="text_pole" data-i18n-placeholder="year_ph" style="width: 60px;">
-                                <button id="sm-btn-clear-quest-date" class="menu_button" data-i18n-title="clear_date" style="padding: 0 10px; margin: 0;"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-
-                            <div class="flex-container" style="gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                                <button id="sm-btn-save-quest" class="menu_button" style="flex: 1; min-width: 100px;" data-i18n="save">Save</button>
-                                <button id="sm-btn-cancel-quest" class="menu_button" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.1);" data-i18n="cancel">Cancel</button>
-                            </div>
-                        </div>
-
-                        <div class="sm-qc-section-title" data-i18n="main_quests_goals">Main Quests & Goals</div>
-                        <div id="sm-list-quests-main"></div>
-                        
-                        <div class="sm-qc-section-title" data-i18n="side_objectives">Side Objectives</div>
-                        <div id="sm-list-quests-side"></div>
-
-                        <div class="sm-qc-section-title" data-i18n="short_tasks">Short Tasks</div>
-                        <div id="sm-list-quests-short"></div>
-
-                        <div class="sm-archive-header margin-top-10" data-target="#sm-list-quests-completed-container" style="margin-top: 20px;">
-                            <span><i class="fa-solid fa-clock-rotate-left" style="margin-right: 5px;"></i><span data-i18n="past_completed"> Past / Completed</span></span><i class="fa-solid fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div id="sm-list-quests-completed-container" style="display: none;">
-                            <div id="sm-list-quests-completed"></div>
-                        </div>
-                    </div>
-
-                    <div id="sm-tab-cal" class="sm-tab-pane">
+<div id="sm-tab-quests" class="sm-tab-pane active">
     <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
-        <button id="sm-btn-generate-events" class="menu_button" style="flex: 1; font-weight: bold; padding: 10px; min-width: 200px;">
-            <i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 5px;"></i>
-            <span data-i18n="extract_events">Extract Events from Chat</span>
-        </button>
+        <button id="sm-btn-generate-quests" class="menu_button sm-feature-btn" style="flex: 1; min-width: 200px;"><i class="fa-solid fa-location-crosshairs" style="margin-right: 5px;"></i><span data-i18n="analyze_quests"> Analyze Chat for Quests</span></button>
 
-        <button id="sm-btn-open-ai-events" class="menu_button" style="flex: 1; font-weight: bold; padding: 10px; min-width: 200px;">
-            <i class="fa-solid fa-cal-plus" style="margin-right: 5px;"></i>
-            Generate AI Events
-        </button>
-    </div>
-
-    <div id="sm-events-inline-panel" class="sm-hidden-form flexFlowColumn" style="display:none; gap:12px; margin-top:12px;">
-        <div class="sm-qc-section-title">[Current option in progress]</div>
-
-        <div id="sm-events-generator-inline" class="sm-inline-panel" style="display:none; gap:12px; margin-top:12px;">
-<div class="sm-modal-section sm-date-range-section">
-    <div class="sm-modal-section-title">Date Range</div>
-
-    <div class="sm-date-range-grid">
-        <div class="sm-date-range-spacer"></div>
-        <div class="sm-date-range-colhead">Day</div>
-        <div class="sm-date-range-colhead">Month</div>
-        <div class="sm-date-range-colhead">Year</div>
-
-        <div class="sm-date-range-rowhead">Start</div>
-        <input id="sm-range-start-day" class="text_pole sm-date-range-input" type="number" min="1" value="1">
-        <select id="sm-range-start-month" class="text_pole sm-date-range-input"></select>
-        <input id="sm-range-start-year" class="text_pole sm-date-range-input" type="number" value="2025">
-
-        <div class="sm-date-range-rowhead">End</div>
-        <input id="sm-range-end-day" class="text_pole sm-date-range-input" type="number" min="1" value="1">
-        <select id="sm-range-end-month" class="text_pole sm-date-range-input"></select>
-        <input id="sm-range-end-year" class="text_pole sm-date-range-input" type="number" value="2026">
-    </div>
-
-    <div class="sm-date-range-hint">
-        Range is limited to 2 years max.
-    </div>
-</div>
-
-            <div class="sm-modal-section">
-                <div class="sm-modal-section-title">Context Sources</div>
-
-                <div class="sm-modal-grid">
-                    <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                        <input type="checkbox" id="sm-ev-ctx-char" checked>
-                        <span style="margin-left:6px;">Character Card</span>
-                    </label>
-
-                    <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                        <input type="checkbox" id="sm-ev-ctx-wi" checked>
-                        <span style="margin-left:6px;">World Info / Lorebook</span>
-                    </label>
-
-                    <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                        <input type="checkbox" id="sm-ev-ctx-sum" checked>
-                        <span style="margin-left:6px;">Story Summary</span>
-                    </label>
-
-                    <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                        <input type="checkbox" id="sm-ev-ctx-chat">
-                        <span style="margin-left:6px;">Chat History</span>
-                    </label>
-
-                    <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                        <input type="checkbox" id="sm-ev-ctx-an">
-                        <span style="margin-left:6px;">Author Note</span>
-                    </label>
-                </div>
-
-                <textarea
-                    id="sm-ev-custom-notes"
-                    class="text_pole margin-top-10"
-                    rows="3"
-                    style="width:100%; resize: vertical;"
-                    placeholder="Optional custom notes for generation..."
-                ></textarea>
-            </div>
-
-            <div class="sm-modal-section">
-                <div class="sm-modal-section-title">Generation Style</div>
-
-                <div class="sm-modal-grid">
-                    <select id="sm-ev-param-style" class="text_pole">
-                        <option value="mixed" selected>Mixed</option>
-                        <option value="story">Story</option>
-                        <option value="daily">Daily</option>
-                        <option value="random">Random</option>
-                    </select>
-
-                    <select id="sm-ev-param-density" class="text_pole">
-                        <option value="low">Low density</option>
-                        <option value="medium" selected>Medium density</option>
-                        <option value="high">High density</option>
-                    </select>
-
-                    <select id="sm-ev-param-visibility" class="text_pole">
-    <option value="mixed" selected>Mixed public / hidden</option>
-    <option value="public">Public / known in advance</option>
-    <option value="hidden">Hidden / unknown until it happens</option>
-</select>
-
-                    <input type="number" id="sm-ev-param-exposure-every" class="text_pole" min="0" value="0" placeholder="Exposure every N days">
-                </div>
-
-                <div style="font-size:0.8em; opacity:0.75; margin-top:8px;">
-                    Exposure every N days = how often this event should be resurfaced before it happens. Hidden events ignore this.
-                </div>
-            </div>
-
-            <div class="sm-modal-section">
-                <label class="flex-container alignitemscenter" style="margin:0; cursor:pointer;">
-                    <input type="checkbox" id="sm-ev-param-overwrite">
-                    <span style="margin-left:6px;">Allow overwriting existing events on the same date</span>
-                </label>
-            </div>
-
-            <div class="flex-container" style="gap:10px; justify-content:flex-end;">
-                <button id="sm-btn-cancel-ai-events" class="menu_button" style="min-width:110px;">Cancel</button>
-                <button id="sm-btn-run-ai-events" class="menu_button" style="min-width:140px; font-weight:bold;">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="margin-right:5px;"></i> Generate
-                </button>
-            </div>
-
-        </div>
-
-        <div id="sm-events-preview-inline" class="sm-inline-panel" style="display:none; gap:12px; margin-top:12px;">
-            <div class="sm-qc-section-title">Preview Generated Events</div>
-
-            <div class="flex-container" style="gap:10px; justify-content:flex-end; margin-bottom:10px;">
-                <button id="sm-btn-discard-ai-events" class="menu_button">Discard</button>
-                <button id="sm-btn-save-ai-events" class="menu_button" style="font-weight:bold;">Save to Calendar</button>
-            </div>
-
-            <div id="sm-preview-list-container" class="sm-preview-list"></div>
-        </div>
-    </div>
-
-    <div class="flex-container alignitemscenter margin-top-10" style="gap: 10px; flex-wrap: wrap;">
-        <button class="menu_button sm-btn-cancel-gen" title="Cancel Generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
+        <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
             <i class="fa-solid fa-stop"></i>
         </button>
 
-        <button id="sm-btn-add-event" class="menu_button" data-i18n-title="add_manual_event" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;">
-            <i class="fa-solid fa-plus"></i>
-        </button>
+        <button id="sm-btn-add-quest" class="menu_button" data-i18n-title="add_manual_quest" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;"><i class="fa-solid fa-plus"></i></button>
     </div>
 
-    <div id="sm-form-add-event" class="sm-hidden-form flexFlowColumn" style="gap: 8px;">
-        <input type="text" id="sm-event-form-desc" class="text_pole" data-i18n-placeholder="event_desc_ph">
-
+    <div id="sm-form-add-quest" class="sm-hidden-form flexFlowColumn" style="gap: 8px;">
+        <input type="hidden" id="sm-quest-edit-id">
+        <input type="text" id="sm-quest-form-title" class="text_pole" data-i18n-placeholder="quest_title_ph">
+        <textarea id="sm-quest-form-desc" class="text_pole" rows="2" data-i18n-placeholder="desc_notes_ph"></textarea>
         <div class="flex-container" style="gap: 10px; flex-wrap: wrap;">
-            <input type="number" id="sm-event-form-day" class="text_pole" data-i18n-placeholder="day_ph" style="width: 60px;">
-            <select id="sm-event-form-month" class="text_pole flex1" style="min-width: 100px;"></select>
-            <input type="number" id="sm-event-form-year" class="text_pole" data-i18n-placeholder="year_ph" style="width: 80px;">
+            <select id="sm-quest-form-type" class="text_pole" style="flex: 1; min-width: 120px;">
+                <option value="main">Main Event/Quest</option>
+                <option value="side">Side Objective</option>
+                <option value="short">Short Task</option>
+            </select>
+            <select id="sm-quest-form-status" class="text_pole" style="flex: 1; min-width: 120px;">
+                <option value="current">Current</option>
+                <option value="future">Future</option>
+                <option value="past">Past</option>
+            </select>
         </div>
 
         <div class="flex-container" style="gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-            <button id="sm-btn-save-event" class="menu_button" style="flex: 1; min-width: 100px;" data-i18n="save_event">Save Event</button>
-            <button id="sm-btn-cancel-event" class="menu_button" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.1);" data-i18n="cancel">Cancel</button>
+            <span style="opacity:0.8; font-size:0.9em; align-self:center; min-width: 90px;" data-i18n="planned_date">Planned Date:</span>
+            <input type="number" id="sm-quest-form-day" class="text_pole" data-i18n-placeholder="day_ph" style="width: 50px;">
+            <select id="sm-quest-form-month" class="text_pole flex1" style="min-width: 100px;"></select>
+            <input type="number" id="sm-quest-form-year" class="text_pole" data-i18n-placeholder="year_ph" style="width: 60px;">
+            <button id="sm-btn-clear-quest-date" class="menu_button" data-i18n-title="clear_date" style="padding: 0 10px; margin: 0;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="flex-container" style="gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button id="sm-btn-save-quest" class="menu_button" style="flex: 1; min-width: 100px;" data-i18n="save">Save</button>
+            <button id="sm-btn-cancel-quest" class="menu_button" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.1);" data-i18n="cancel">Cancel</button>
         </div>
     </div>
 
-    <div id="sm-classic-cal-container"></div>
-                        
-                        <div class="sm-qc-section-title" data-i18n="timeline_events">Timeline Events</div>
-                        <div id="sm-list-cal-events"></div>
-                    </div> 
+    <div class="sm-qc-section-title" data-i18n="main_quests_goals">Main Quests &amp; Goals</div>
+    <div id="sm-list-quests-main"></div>
+
+    <div class="sm-qc-section-title" data-i18n="side_objectives">Side Objectives</div>
+    <div id="sm-list-quests-side"></div>
+
+    <div class="sm-qc-section-title" data-i18n="short_tasks">Short Tasks</div>
+    <div id="sm-list-quests-short"></div>
+
+    <div class="sm-archive-header margin-top-10" data-target="#sm-list-quests-completed-container" style="margin-top: 20px;">
+        <span><i class="fa-solid fa-clock-rotate-left" style="margin-right: 5px;"></i><span data-i18n="past_completed"> Past / Completed</span></span><i class="fa-solid fa-chevron-down toggle-icon"></i>
+    </div>
+    <div id="sm-list-quests-completed-container" style="display: none;">
+        <div id="sm-list-quests-completed"></div>
+    </div>
+</div>
+
+<div id="sm-tab-cal" class="sm-tab-pane">
+    <div class="sm-events-shell">
+        <div class="sm-events-toolbar">
+            <button id="sm-btn-generate-events" class="menu_button">
+                <i class="fa-solid fa-meteor" style="margin-right:5px;"></i>
+                <span data-i18n="extract_events">Extract Events from Chat</span>
+            </button>
+
+            <button id="sm-btn-open-ai-events" class="menu_button">
+                <i class="fa-solid fa-star" style="margin-right:5px;"></i>
+                <span data-i18n="generate_ai_events">Generate AI Events</span>
+            </button>
+
+            <button id="sm-btn-open-parser" class="menu_button">
+                <i class="fa-solid fa-sliders" style="margin-right:5px;"></i>
+                <span data-i18n="parser_settings">Parser Settings</span>
+            </button>
+        </div>
+
+        <div id="sm-events-inline-panel" class="sm-hidden-form flexFlowColumn" style="display:none; gap:12px; margin-top:12px;">
+            <div id="sm-events-generator-inline" class="sm-inline-panel sm-tool-card" style="display:none; gap:12px; margin-top:12px;">
+                <div class="sm-tool-title">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span data-i18n="ai_event_generator">AI Event Generator</span>
+                </div>
+
+                <div class="sm-modal-section sm-date-range-section">
+                    <div class="sm-modal-section-title" data-i18n="date_range">Date Range</div>
+
+                    <div class="sm-date-card">
+                        <div class="sm-date-row sm-date-head">
+                            <span></span>
+                            <span data-i18n="day_col">Day</span>
+                            <span data-i18n="month_col">Month</span>
+                            <span data-i18n="year_col">Year</span>
+                        </div>
+
+                        <div class="sm-date-row">
+                            <div class="sm-date-rowlabel" data-i18n="start">Start</div>
+                            <input id="sm-range-start-day" class="text_pole sm-date-range-input" type="number" min="1" value="1">
+                            <select id="sm-range-start-month" class="text_pole sm-date-range-input"></select>
+                            <input id="sm-range-start-year" class="text_pole sm-date-range-input" type="number" value="2025">
+                        </div>
+
+                        <div class="sm-date-row">
+                            <div class="sm-date-rowlabel" data-i18n="end">End</div>
+                            <input id="sm-range-end-day" class="text_pole sm-date-range-input" type="number" min="1" value="1">
+                            <select id="sm-range-end-month" class="text_pole sm-date-range-input"></select>
+                            <input id="sm-range-end-year" class="text_pole sm-date-range-input" type="number" value="2026">
+                        </div>
+                    </div>
+
+                    <div class="sm-date-range-hint" data-i18n="range_2y_limit">Range is limited to 2 years max.</div>
+                </div>
+
+                <div class="sm-modal-section">
+                    <div class="sm-modal-section-title" data-i18n="context_sources">Context Sources</div>
+                    <div class="sm-modal-grid">
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-char" checked><span data-i18n="character_card">Character Card</span></label>
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-wi" checked><span data-i18n="world_info_lorebook">World Info / Lorebook</span></label>
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-sum" checked><span data-i18n="story_summary">Story Summary</span></label>
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-chat" checked><span data-i18n="chat_history">Chat History</span></label>
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-an" checked><span data-i18n="authors_note">Author’s Note</span></label>
+                    </div>
+                </div>
+
+                <div class="sm-modal-section">
+                    <div class="sm-modal-section-title" data-i18n="generation_style">Generation Style</div>
+                    <div class="sm-modal-grid">
+                        <label>
+                            <span data-i18n="style">Style</span>
+                            <select id="sm-ev-param-style" class="text_pole">
+                                <option value="mixed">Mixed</option>
+                                <option value="story">Story</option>
+                                <option value="random">Random</option>
+                                <option value="social">Social</option>
+                                <option value="weather">Weather</option>
+                                <option value="character">Character</option>
+                                <option value="world">World</option>
+                                <option value="quest">Quest</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span class="sm-density-help-label">
+                                <span data-i18n="density">Density</span>
+                                <span id="sm-density-help-wrap" class="sm-density-help-wrap">
+                                    <button id="sm-density-help-btn" type="button" class="sm-density-help-btn" aria-expanded="false" data-i18n-aria-label="density_help_aria">?</button>
+                                    <div id="sm-density-help-popover" class="sm-density-help-popover" role="tooltip">
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_low_bi">Low / Низкая: fewer generated events, wider spacing, calmer pace.</div>
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_medium_bi">Medium / Средняя: balanced amount of events for regular world activity.</div>
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_high_bi">High / Высокая: many generated events, denser timeline, faster pace.</div>
+                                    </div>
+                                </span>
+                            </span>
+                            <select id="sm-ev-param-density" class="text_pole">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span data-i18n="visibility">Visibility</span>
+                            <select id="sm-ev-param-visibility" class="text_pole">
+                                <option value="mixed">Mixed</option>
+                                <option value="public">Public</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span data-i18n="exposure_every_n_days">Exposure every N days</span>
+                            <input type="number" id="sm-ev-param-exposure-every" class="text_pole" min="0" value="0">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sm-modal-section">
+                    <label class="sm-check-row">
+                        <input type="checkbox" id="sm-ev-param-overwrite">
+                        <span data-i18n="allow_overwrite_same_date">Allow overwriting existing events on the same date</span>
+                    </label>
+                </div>
+
+                <div class="sm-action-row">
+                    <button id="sm-btn-cancel-ai-events" class="menu_button" style="min-width:110px;" data-i18n="cancel">Cancel</button>
+                    <button id="sm-btn-run-ai-events" class="menu_button" style="min-width:140px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="margin-right:5px;"></i><span data-i18n="generate"> Generate</span>
+                    </button>
+                </div>
+            </div>
+
+<div id="sm-events-parser-inline" class="sm-inline-panel sm-tool-card" style="display:none; gap:12px; margin-top:12px;">
+  <div class="sm-tool-title">
+    <i class="fa-solid fa-sliders"></i>
+    <span data-i18n="event_parser">Event Parser</span>
+  </div>
+
+  <div class="sm-modal-section">
+    <div class="sm-modal-section-title" data-i18n="manual_parse">Manual Parse</div>
+    <div class="sm-preview-desc" data-i18n="parse_selected_chat_range">Parse events from the selected chat range.</div>
+
+    <div class="sm-modal-grid">
+      <label>
+        <span data-i18n="range_mode">Range mode</span>
+        <select id="sm-event-range-mode" class="text_pole">
+          <option value="last">Last N</option>
+          <option value="first">First N</option>
+          <option value="all">All visible</option>
+        </select>
+      </label>
+
+      <label>
+        <span data-i18n="amount">Amount</span>
+        <input type="number" id="sm-event-range-amount" class="text_pole" min="1" value="25">
+      </label>
+    </div>
+
+    <div class="sm-action-row" style="justify-content:flex-start;">
+      <button id="sm-btn-parse-events-now" class="menu_button" style="font-weight:700; padding:10px 14px; white-space:normal;">
+        <i class="fa-solid fa-magnifying-glass" style="margin-right:5px;"></i>
+        <span data-i18n="parse_now">Parse now</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sm-modal-section">
+    <div class="sm-modal-section-title" data-i18n="auto_parse">Auto Parse</div>
+    <div class="sm-preview-desc" data-i18n="auto_parse_runs_hint">Runs automatically when enough new messages appear.</div>
+
+    <div class="sm-modal-grid">
+      <label class="sm-check-row">
+        <input type="checkbox" id="sm-event-auto-parse-enabled">
+        <span data-i18n="enable_auto_parse">Enable auto parse</span>
+      </label>
+
+      <label>
+        <span data-i18n="every_n_messages">Every N messages</span>
+        <input type="number" id="sm-event-auto-parse-every" class="text_pole" min="1" value="5">
+      </label>
+
+      <label>
+        <span data-i18n="auto_range_mode">Auto range mode</span>
+        <select id="sm-event-auto-range-mode" class="text_pole">
+          <option value="last">Last N</option>
+          <option value="first">First N</option>
+          <option value="all">All visible</option>
+        </select>
+      </label>
+
+      <label>
+        <span data-i18n="auto_range_amount">Auto range amount</span>
+        <input type="number" id="sm-event-auto-range-amount" class="text_pole" min="1" value="12">
+      </label>
+    </div>
+  </div>
+</div>
+
+            <div id="sm-events-preview-inline" class="sm-inline-panel sm-tool-card" style="display:none; gap:12px; margin-top:12px;">
+                <div class="sm-tool-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span data-i18n="preview_generated_events">Preview Generated Events</span>
+                </div>
+
+                <div class="sm-action-row">
+                    <button id="sm-btn-discard-ai-events" class="menu_button" data-i18n="discard">Discard</button>
+                    <button id="sm-btn-save-ai-events" class="menu_button" style="font-weight:700;" data-i18n="save_to_calendar">Save to Calendar</button>
+                </div>
+
+                <div id="sm-preview-list-container" class="sm-preview-list"></div>
+            </div>
+        </div>
+
+        <div class="flex-container alignitemscenter margin-top-10" style="gap: 10px; flex-wrap: wrap;">
+            <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
+                <i class="fa-solid fa-stop"></i>
+            </button>
+
+            <button id="sm-btn-refresh-events-now" class="menu_button" style="flex:0 0 auto; width:auto; font-weight:700; padding:10px 14px; white-space:nowrap;">
+                <i class="fa-solid fa-arrows-rotate" style="margin-right:5px;"></i>
+                <span data-i18n="sync_date_now">Sync date now</span>
+            </button>
+
+            <button id="sm-btn-clean-date-signals" class="menu_button" style="flex:0 0 auto; width:auto; padding:10px 14px; white-space:nowrap;">
+                <i class="fa-solid fa-eraser" style="margin-right:5px;"></i>
+                <span data-i18n="clean_date">Clean date</span>
+            </button>
+
+            <button id="sm-btn-add-event" class="menu_button" data-i18n-title="add_manual_event_title" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <div id="sm-form-add-event" class="sm-hidden-form flexFlowColumn" style="gap: 8px;">
+            <input type="text" id="sm-event-form-desc" class="text_pole" data-i18n-placeholder="event_desc_ph">
+
+            <div class="flex-container" style="gap: 10px; flex-wrap: wrap;">
+                <input type="number" id="sm-event-form-day" class="text_pole" data-i18n-placeholder="day_ph" style="width: 60px;">
+                <select id="sm-event-form-month" class="text_pole flex1" style="min-width: 100px;"></select>
+                <input type="number" id="sm-event-form-year" class="text_pole" data-i18n-placeholder="year_ph" style="width: 80px;">
+            </div>
+
+            <div class="flex-container" style="gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                <button id="sm-btn-save-event" class="menu_button" style="flex: 1; min-width: 100px;" data-i18n="save_event">Save Event</button>
+                <button id="sm-btn-cancel-event" class="menu_button" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.1);" data-i18n="cancel">Cancel</button>
+            </div>
+        </div>
+
+        <div id="sm-classic-cal-container"></div>
+
+        <div class="sm-qc-section-title" data-i18n="timeline_events">Timeline Events</div>
+        <div id="sm-list-calendar-events"></div>
+    </div>
+</div>
 
                     <div id="sm-tab-qcsettings" class="sm-tab-pane">
                         <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="quest_ctx_inj">Quests Context Injection</div>
-                            <div class="flex-container alignitemscenter margin-bottom-10">
-                                <input type="checkbox" id="sm-qc-enable-quests" checked class="margin-right-5">
-                                <label for="sm-qc-enable-quests" style="margin-bottom:0; cursor:pointer;" data-i18n="inj_quests">Inject Current/Future Quests into Context (Max 5)</label>
-                            </div>
-                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
-<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
-                                    <input type="number" id="sm-quest-depth" class="text_pole" min="0" value="2" style="width:50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" title="Frequency: 1=Always, N=Every N messages"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-quest-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                            <div class="sm-modal-section">
+                                <div class="sm-modal-section-title" data-i18n="cal_quests_injection">Calendar &amp; Quests Injection</div>
+                                <div class="sm-modal-grid">
+                                    <label class="sm-check-row">
+                                        <input type="checkbox" id="sm-qc-enable-cal-date">
+                                        <span data-i18n="inject_current_date">Inject current date</span>
+                                    </label>
+                                    <label class="sm-check-row">
+                                        <input type="checkbox" id="sm-qc-enable-cal-events">
+                                        <span data-i18n="inject_upcoming_events">Inject upcoming events</span>
+                                    </label>
+                                    <label class="sm-check-row">
+                                        <input type="checkbox" id="sm-qc-enable-quests" checked>
+                                        <span data-i18n="inj_quests">Inject Current/Future Quests into Context (Max 5)</span>
+                                    </label>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="cal_ctx_inj">Calendar Context Injection</div>
-                            <div class="flex-container alignitemscenter margin-bottom-10">
-                                <input type="checkbox" id="sm-qc-enable-cal" checked class="margin-right-5">
-                                <label for="sm-qc-enable-cal" style="margin-bottom:0; cursor:pointer;" data-i18n="inj_cal">Inject Date Reminder[System Note] & Upcoming Events</label>
-                            </div>
+                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="cal_ctx_inj">Calendar Context Position</div>
                             <div class="flex-container flexFlowColumn" style="gap: 10px;">
                                 <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
 <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
 <div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
     <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
                                     <input type="number" id="sm-cal-depth" class="text_pole" min="0" value="3" style="width:50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" title="Frequency: 1=Always, N=Every N messages"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-cal-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-cal-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
+                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="quest_ctx_inj">Quests Context Position</div>
+                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
+                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
+    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+                                    <input type="number" id="sm-quest-depth" class="text_pole" min="0" value="2" style="width:50px;">
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-quest-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
+                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="events_ctx_pos">Events Context Position</div>
+                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
+                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
+    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+                                    <input type="number" id="sm-event-depth" class="text_pole" min="0" value="3" style="width:50px;">
+                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-event-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                 </div>
                             </div>
                         </div>
@@ -831,7 +1404,7 @@
                                 <option value="classic">Classic (Standard Real-World Months)</option>
                                 <option value="custom">Custom (Define Your Own)</option>
                             </select>
-                            
+
                             <div id="sm-cal-custom-settings" style="display:none; padding: 10px; border: 1px dashed var(--SmartThemeBorderColor); border-radius: 6px;">
                                 <div style="font-size:0.9em; opacity:0.8; margin-bottom: 10px;" data-i18n="edit_months_json">Edit months using JSON format:</div>
                                 <textarea id="sm-cal-custom-json" class="text_pole" rows="4" style="width:100%; font-family: monospace;"></textarea>
@@ -842,7 +1415,7 @@
                         <div class="flex-container flexFlowColumn" style="gap: 10px;">
                             <label data-i18n="quest_ai_prompt">Quest AI Prompt:</label>
                             <textarea id="sm-prompt-quest" class="text_pole" rows="6" style="width: 100%; font-size: 0.85em;"></textarea>
-                            
+
                             <label data-i18n="event_ai_prompt">Event AI Prompt:</label>
                             <textarea id="sm-prompt-event" class="text_pole" rows="6" style="width: 100%; font-size: 0.85em;"></textarea>
                         </div>
@@ -870,10 +1443,11 @@
     </div>
 
     <div id="sm-message-popover">
-        <div class="sm-popover-header"><i class="fa-solid fa-sun" style="margin-right: 5px;"></i> Generate</div>
-        <button type="button" class="menu_button sm-popover-btn" data-action="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i> Summary</button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i> Facts</button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i> Quests</button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-cal-day" style="margin-right: 5px;"></i> Events</button>
+        <div class="sm-popover-header"><i class="fa-solid fa-sun" style="margin-right: 5px;"></i><span data-i18n="generate"> Generate</span></div>
+        <button type="button" class="menu_button sm-popover-btn" data-action="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i><span data-i18n="summary"> Summary</span></button>
+        <button type="button" class="menu_button sm-popover-btn" data-action="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i><span data-i18n="facts"> Facts</span></button>
+        <button type="button" class="menu_button sm-popover-btn" data-action="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i><span data-i18n="quests"> Quests</span></button>
+        <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-calendar-day" style="margin-right: 5px;"></i><span data-i18n="events"> Events</span></button>
+        <button type="button" class="menu_button sm-popover-btn" data-action="parse-events"><i class="fa-solid fa-magnifying-glass" style="margin-right: 5px;"></i><span data-i18n="parse_events_now">Parse Events Now</span></button>
     </div>
 </div>
