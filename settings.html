@@ -177,25 +177,34 @@
             outline-offset: 2px;
         }
         .sm-summary-mode-help-popover,
-.sm-density-help-popover {
-    position: absolute;
-    top: 50%;
-    left: calc(100% + 8px);
-    transform: translateY(-50%);
-    width: min(260px, calc(100vw - 40px));
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.85);
-    color: #fff;
-    font-size: 0.9em;
-    line-height: 1.35;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.55);
-    display: none;
-    z-index: 1000;
-}
+        .sm-density-help-popover {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 8px);
+            transform: translateY(-50%);
+            width: min(240px, calc(100vw - 32px));
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            font-size: 0.9em;
+            line-height: 1.35;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.55);
+            display: none;
+            z-index: 1000;
+        }
         .sm-summary-mode-help-wrap.sm-open .sm-summary-mode-help-popover {
             display: block;
+        }
+        .sm-summary-mode-help-popover {
+            background: rgba(0,0,0,0.92);
+        }
+        .sm-density-help-popover {
+            left: calc(100% + 8px);
+            right: auto;
+            width: min(200px, calc(100vw - 24px));
+            padding: 11px;
         }
         .sm-density-help-wrap.sm-open .sm-density-help-popover {
             display: block;
@@ -495,6 +504,10 @@
     backdrop-filter: blur(10px);
   }
 
+  #sm-events-generator-inline {
+    overflow: visible;
+  }
+
   .sm-tool-card::before {
     content: "";
     position: absolute;
@@ -663,6 +676,19 @@
 }
 
 @media (max-width: 700px) {
+  .sm-summary-mode-help-popover,
+  .sm-density-help-popover {
+    top: calc(100% + 6px);
+    left: 0;
+    transform: none;
+    width: min(220px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+
+  .sm-density-help-popover {
+    right: auto;
+  }
+
   .sm-date-card {
     padding: 10px;
     gap: 8px;
