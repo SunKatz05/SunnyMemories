@@ -1185,6 +1185,9 @@ const sm_translations = {
     visibility_mixed: "Mixed",
     exposure_every_n_days: "Exposure every N days",
     allow_overwrite_same_date: "Allow overwriting existing events on the same date",
+    generation_wishes: "Generation Wishes",
+    event_gen_wishes_placeholder: "Your prompt",
+    event_gen_wishes_aria: "Generation wishes for AI event generation",
     event_parser: "Event Parser",
     manual_parse: "Manual Parse",
     parse_selected_chat_range: "Parse events from the selected chat range.",
@@ -1468,6 +1471,9 @@ const sm_translations = {
     visibility_mixed: "Смешанная",
     exposure_every_n_days: "Показывать каждые N дней",
     allow_overwrite_same_date: "Разрешить перезапись событий на ту же дату",
+    generation_wishes: "Пожелания к генерации",
+    event_gen_wishes_placeholder: "ваш промпт",
+    event_gen_wishes_aria: "Пожелания к генерации ИИ-событий",
     event_parser: "Парсер событий",
     manual_parse: "Ручной парсинг",
     parse_selected_chat_range: "Отпарсить события из выбранного диапазона чата.",
@@ -3795,6 +3801,20 @@ function applyManualCalendarDateChange(cal, changed = true, previousDate = null)
   });
 }
 
+function advanceCalendarOneDayFromUi() {
+  const mem = getChatMemory();
+  const cal = ensureCalendar(mem);
+  if (!cal) return false;
+
+  const prevDate = {
+    day: cal.currentDate.day,
+    month: cal.currentDate.month,
+    year: cal.currentDate.year,
+  };
+  const changed = advanceCalendarByDays(cal, 1);
+  return applyManualCalendarDateChange(cal, changed, prevDate);
+}
+
 function renderCalendar() {
   const cal = getOrInitCalendar();
 
@@ -5486,6 +5506,15 @@ if (options.visibility === "mixed") {
       ? "Use a balanced mix of event types (story, social, random, weather, quest, character, world)."
       : `Strongly prefer the "${styleFocus}" type for generated events.`;
 
+  const generationWishes = String(options.generationWishes || "").trim();
+  const generationWishesBlock = generationWishes
+    ? `USER WISHES:
+- Follow these additional preferences when possible, without breaking any hard rules above.
+${generationWishes}
+
+`
+    : "";
+
   const prompt = `
 You are an AI Calendar Manager for a roleplay timeline.
 
@@ -5513,7 +5542,7 @@ VISIBILITY / INSERTION RULES:
 - Use "leadTimeDays" to describe how many days before the event it should start appearing in context, if relevant.
 - Do not invent contradictory dates or impossible month/day combinations.
 
-${contextString}
+${generationWishesBlock}${contextString}
 
 OUTPUT FORMAT:
 Respond ONLY with raw JSON.
@@ -5572,6 +5601,7 @@ async function requestGeneratedEvents() {
       visibility: normalizeVisibilityMode(getInputValue("#sm-ev-param-visibility", "mixed")),
       exposureEveryDays: normalizeNumber(getInputValue("#sm-ev-param-exposure-every", "0"), 0),
       allowOverwrite: getCheckboxValue("#sm-ev-param-overwrite"),
+      generationWishes: String(getInputValue("#sm-ev-gen-wishes", "") || "").trim(),
       rangeStart: range.start,
       rangeEnd: range.end,
       rangeStartAbs: range.startAbs,
@@ -6201,6 +6231,7 @@ function saveUIFieldsToSettings(showToast = true) {
     "#sm-ev-param-overwrite",
     Boolean(s.eventGenOverwrite),
   );
+  s.eventGenWishes = String(getScopedFieldValue("#sm-ev-gen-wishes", s.eventGenWishes || ""));
 
   s.eventCtxChar = getScopedCheckboxValue("#sm-ev-ctx-char", s.eventCtxChar !== false);
   s.eventCtxWi = getScopedCheckboxValue("#sm-ev-ctx-wi", s.eventCtxWi !== false);
@@ -6517,21 +6548,39 @@ function addSunnyButton(messageElement, messageId) {
     try {
       const popover = $("#sm-message-popover");
       popover.data("mesid", messageId);
+
+      popover.css({
+        display: "flex",
+        visibility: "hidden",
+        top: "-9999px",
+        left: "-9999px",
+      });
+
       const rect = btn.getBoundingClientRect();
-      const popWidth = 120;
-      const popHeight = 150;
+      const popWidth = Math.ceil(popover.outerWidth() || 220);
+      const popHeight = Math.ceil(popover.outerHeight() || 180);
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const scrollX = window.scrollX || document.documentElement.scrollLeft;
+
       let topPos = rect.top + scrollY - popHeight - 10;
       let leftPos = rect.left + scrollX + rect.width / 2 - popWidth / 2;
-      topPos = Math.max(10, topPos);
-      leftPos = Math.max(10, leftPos);
-      if (leftPos + popWidth > window.innerWidth - 10)
-        leftPos = window.innerWidth - popWidth - 10;
+
+      const minLeft = scrollX + 10;
+      const maxLeft = scrollX + window.innerWidth - popWidth - 10;
+      leftPos = Math.min(Math.max(minLeft, leftPos), Math.max(minLeft, maxLeft));
+
+      const minTop = scrollY + 10;
+      if (topPos < minTop) {
+        topPos = rect.bottom + scrollY + 10;
+      }
+      const maxTop = scrollY + window.innerHeight - popHeight - 10;
+      topPos = Math.min(Math.max(minTop, topPos), Math.max(minTop, maxTop));
+
       popover.css({
         top: topPos + "px",
         left: leftPos + "px",
         display: "flex",
+        visibility: "visible",
       });
     } catch (err) {
       console.error("SunnyMemories: popover show error", err);
@@ -6651,6 +6700,7 @@ Include only known and actively planned or imminent future events.
     }
     if (!s.eventPrompt)
       s.eventPrompt = `Analyze the chat and detect important timeline events (battles, meetings, festivals). Do not generate trivial events. Return JSON.\nFormat: { "events":[ { "description":"", "day": 1, "month": "January", "year": 1000 } ] }`;
+    if (typeof s.eventGenWishes !== "string") s.eventGenWishes = "";
 
     if (s.summaryCollapsed === undefined) s.summaryCollapsed = false;
     if (s.factsCollapsed === undefined) s.factsCollapsed = false;
@@ -6763,6 +6813,7 @@ Include only known and actively planned or imminent future events.
     $("#sm-ev-param-visibility").val(s.eventGenVisibility ?? "mixed");
     $("#sm-ev-param-exposure-every").val(s.eventGenExposureEveryDays ?? 0);
     $("#sm-ev-param-overwrite").prop("checked", s.eventGenOverwrite === true);
+    $("#sm-ev-gen-wishes").val(s.eventGenWishes || "");
 
     $("#sm-ev-ctx-char").prop("checked", s.eventCtxChar !== false);
     $("#sm-ev-ctx-wi").prop("checked", s.eventCtxWi !== false);
@@ -7441,6 +7492,7 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
   if (action === "quests") await runQuestGeneration(mesId);
   if (action === "events") await runEventGeneration(mesId);
   if (action === "parse-events") toggleParserPanel(true);
+  if (action === "next-day") advanceCalendarOneDayFromUi();
 });
 
     $(document).on("click", ".sm-lib-item", function (e) {
@@ -7970,17 +8022,7 @@ $(document).on("click", ".sm-preview-regen", async function () {
     });
 
 $(document).on("click", "#sm-btn-next-day", function () {
-  const mem = getChatMemory();
-  const cal = ensureCalendar(mem);
-  if (!cal) return;
-
-  const prevDate = {
-    day: cal.currentDate.day,
-    month: cal.currentDate.month,
-    year: cal.currentDate.year,
-  };
-  const changed = advanceCalendarByDays(cal, 1);
-  applyManualCalendarDateChange(cal, changed, prevDate);
+  advanceCalendarOneDayFromUi();
 });
 
 $(document).on("click", "#sm-btn-save-event", function () {
