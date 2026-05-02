@@ -85,10 +85,170 @@
         @keyframes smFade { from {opacity: 0;} to {opacity: 1;} }
         .sm-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
         .sm-switch input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; pointer-events: none; }
-        .sm-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.1); border: 1px solid var(--SmartThemeBorderColor); transition: .2s; border-radius: 20px; box-sizing: border-box; }
-        .sm-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: var(--SmartThemeBodyColor, #fff); transition: .2s; border-radius: 50%; box-sizing: border-box; }
-        .sm-switch input:checked + .sm-slider { background-color: var(--SmartThemeQuoteColor, #feca57); border-color: var(--SmartThemeQuoteColor, #feca57); }
-        .sm-switch input:checked + .sm-slider:before { transform: translateX(16px); background-color: #111; }
+        .sm-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 211, 252, 0.5);
+            background: linear-gradient(180deg, rgba(10, 26, 43, 0.78), rgba(7, 19, 33, 0.9));
+            box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.06);
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .sm-slider::before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            top: 2px;
+            border-radius: 50%;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 35% 30%, #ffffff 0%, #e0f2fe 55%, #bae6fd 100%);
+            border: 1px solid rgba(186, 230, 253, 0.65);
+            box-shadow: 0 0 4px rgba(186, 230, 253, 0.5);
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .sm-switch:hover .sm-slider {
+            border-color: rgba(125, 211, 252, 0.85);
+        }
+        .sm-switch input:focus-visible + .sm-slider {
+            outline: 2px solid rgba(125, 211, 252, 0.85);
+            outline-offset: 2px;
+        }
+        .sm-switch input:checked + .sm-slider {
+            border-color: rgba(125, 211, 252, 0.98);
+            background: linear-gradient(180deg, rgba(9, 54, 84, 0.9), rgba(7, 45, 73, 0.96));
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), inset 0 0 8px rgba(125, 211, 252, 0.22);
+        }
+        .sm-switch input:checked + .sm-slider::before {
+            transform: translateX(16px);
+            border-color: rgba(224, 242, 254, 0.95);
+            box-shadow: 0 0 7px rgba(186, 230, 253, 0.7);
+        }
+        .sm-bypass-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            min-height: 34px;
+            margin: 0;
+            padding: 2px 0;
+            cursor: default;
+        }
+        .sm-bypass-filter-row > span {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1.2;
+        }
+        #sm-global-settings-panel {
+            margin-bottom: 8px;
+        }
+        .sm-global-settings-filter-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+        .sm-bypass-filter-toggle {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            border: 1px solid var(--SmartThemeBorderColor, #666);
+            background: rgba(0, 0, 0, 0.2);
+            color: rgba(255, 255, 255, 0.78);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            flex-shrink: 0;
+            align-self: center;
+            cursor: pointer;
+            transition: color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+        }
+        .sm-bypass-filter-toggle svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            fill: currentColor;
+        }
+        .sm-bypass-filter-toggle:hover {
+            color: #c4b5fd;
+            border-color: rgba(196, 181, 253, 0.9);
+            background: rgba(168, 85, 247, 0.08);
+        }
+        .sm-bypass-filter-toggle:active {
+            transform: scale(0.97);
+        }
+        .sm-bypass-filter-toggle:focus-visible {
+            outline: 2px solid rgba(196, 181, 253, 0.85);
+            outline-offset: 2px;
+        }
+        .sm-bypass-filter-toggle.active {
+            color: #c084fc;
+            border-color: rgba(192, 132, 252, 0.95);
+            background: rgba(168, 85, 247, 0.14);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.55), inset 0 0 8px rgba(168, 85, 247, 0.22);
+        }
+        .sm-check-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .sm-check-row > input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .sm-check-row > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.25;
+            position: relative;
+        }
+        .sm-check-row > span::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 211, 252, 0.55);
+            background: radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
+            box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.08);
+            transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+        }
+        .sm-check-row:hover > span::before {
+            border-color: rgba(125, 211, 252, 0.9);
+            background-color: rgba(7, 30, 49, 0.72);
+        }
+        .sm-check-row > input[type="checkbox"]:active + span::before {
+            transform: scale(0.97);
+        }
+        .sm-check-row > input[type="checkbox"]:focus-visible + span::before {
+            outline: 2px solid rgba(125, 211, 252, 0.85);
+            outline-offset: 2px;
+        }
+        .sm-check-row > input[type="checkbox"]:checked + span::before {
+            border-color: rgba(125, 211, 252, 0.98);
+            background-color: rgba(7, 45, 73, 0.72);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.4 6.6 11.5 12.5 4.8' fill='none' stroke='%23e0f2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 9px 9px;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.58), inset 0 0 10px rgba(125, 211, 252, 0.28);
+        }
         .sm-summary-mode-toggle {
             display: inline-grid;
             grid-template-columns: repeat(2, minmax(90px, 1fr));
@@ -182,11 +342,11 @@
             top: 50%;
             left: calc(100% + 8px);
             transform: translateY(-50%);
-            width: min(240px, calc(100vw - 32px));
-            padding: 10px;
+            width: min(200px, calc(100vw - 24px));
+            padding: 11px;
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.78);
             color: #fff;
             font-size: 0.9em;
             line-height: 1.35;
@@ -197,14 +357,8 @@
         .sm-summary-mode-help-wrap.sm-open .sm-summary-mode-help-popover {
             display: block;
         }
-        .sm-summary-mode-help-popover {
-            background: rgba(0,0,0,0.92);
-        }
         .sm-density-help-popover {
-            left: calc(100% + 8px);
             right: auto;
-            width: min(200px, calc(100vw - 24px));
-            padding: 11px;
         }
         .sm-density-help-wrap.sm-open .sm-density-help-popover {
             display: block;
@@ -316,6 +470,160 @@
         .sm-library-list.grid-view .sm-lib-item.grid-expanded .sm-lib-snippet { display: none; }
         .sm-library-list.grid-view .sm-lib-item.grid-expanded .sm-lib-body { display: block !important; margin-bottom: 25px; }
         .sm-library-list.grid-view .sm-lib-item.grid-expanded .sm-lib-title-container { margin-top: 5px; }
+        .sm-library-symbol { font-weight: 700; color: var(--SmartThemeQuoteColor, #feca57); }
+        .sm-library-symbols-help-wrap { margin-right: 4px; }
+        .sm-library-symbols-help-wrap .sm-library-symbols-help-popover { left: calc(100% + 8px); right: auto; }
+        .sm-library-symbols-help-wrap.sm-popover-left .sm-library-symbols-help-popover { left: auto; right: calc(100% + 8px); }
+        .sm-summary-inject-warning-anchor {
+            position: relative;
+            display: block;
+        }
+        #sm-summary-inject-warning-modal {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            z-index: 260;
+            width: min(360px, calc(100vw - 80px));
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-4px);
+            transform-origin: top left;
+            transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+        }
+        #sm-summary-inject-warning-modal.sm-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        #sm-summary-inject-warning-modal::before {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: 18px;
+            width: 10px;
+            height: 10px;
+            background: #0c0c0c;
+            border-top: 1px solid rgba(255, 255, 255, 0.28);
+            border-left: 1px solid rgba(255, 255, 255, 0.28);
+            transform: rotate(45deg);
+        }
+        .sm-summary-inject-warning-card {
+            width: 100%;
+            background: #0c0c0c;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.62);
+            padding: 12px;
+            color: #f8fafc;
+        }
+        .sm-summary-inject-warning-title {
+            font-weight: 700;
+            font-size: 0.93em;
+            margin-bottom: 8px;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+        .sm-summary-inject-warning-text {
+            font-size: 0.84em;
+            line-height: 1.42;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .sm-summary-inject-warning-text + .sm-summary-inject-warning-text {
+            margin-top: 6px;
+        }
+        .sm-summary-inject-warning-dismiss-row {
+            margin: 10px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.83em;
+            line-height: 1.35;
+            cursor: pointer;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            position: relative;
+            user-select: none;
+        }
+        .sm-summary-inject-warning-dismiss-row:hover {
+            background: transparent;
+        }
+        .sm-summary-inject-warning-dismiss-row .sm-summary-inject-warning-dismiss-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .sm-summary-inject-warning-dismiss-row input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .sm-summary-inject-warning-sun {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .sm-summary-inject-warning-sun-icon {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+        .sm-summary-inject-warning-sun-core {
+            fill: rgba(255, 255, 255, 0.2);
+            stroke: rgba(255, 255, 255, 0.55);
+            stroke-width: 1.3;
+            transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
+        }
+        .sm-summary-inject-warning-sun-rays {
+            stroke: rgba(255, 255, 255, 0.6);
+            stroke-width: 1.4;
+            stroke-linecap: round;
+            opacity: 0.7;
+            transform-origin: 12px 12px;
+        }
+        .sm-summary-inject-warning-dismiss-row input:focus-visible + .sm-summary-inject-warning-sun {
+            outline: 2px solid rgba(255, 255, 255, 0.6);
+            outline-offset: 2px;
+            border-radius: 999px;
+        }
+        .sm-summary-inject-warning-dismiss-row input:checked + .sm-summary-inject-warning-sun .sm-summary-inject-warning-sun-core {
+            fill: #facc15;
+            stroke: #fde68a;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.65));
+        }
+        .sm-summary-inject-warning-dismiss-row input:checked + .sm-summary-inject-warning-sun .sm-summary-inject-warning-sun-rays {
+            stroke: #fde047;
+            opacity: 1;
+            animation: smSummaryDismissSunSpin 0.45s ease;
+        }
+        @keyframes smSummaryDismissSunSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        #sm-summary-inject-warning-ok {
+            width: 100%;
+            margin: 0;
+            padding: 7px 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+        }
+        #sm-summary-inject-warning-ok:hover {
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.45) !important;
+            transform: translateY(-1px);
+        }
+        #sm-summary-inject-warning-ok:active {
+            transform: translateY(0);
+        }
         #sm-delete-popover, #sm-restore-popover { position: fixed; background: var(--SmartThemeWindowColor, #1a1a1a); border-radius: 8px; padding: 15px; min-width: 220px; width: max-content; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.9); display: none; z-index: 999999; text-align: center; }
         #sm-delete-popover { border: 1px solid var(--SmartThemeAlertColor, #ff4757); }
         #sm-restore-popover { border: 1px solid var(--SmartThemeQuoteColor, #feca57); }
@@ -434,7 +742,7 @@
 
   .sm-events-toolbar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 10px;
     margin-bottom: 4px;
   }
@@ -442,10 +750,12 @@
   .sm-events-toolbar .menu_button {
     width: 100%;
     min-width: 0 !important;
+    min-height: 44px;
     margin: 0 !important;
     padding: 11px 14px;
     border-radius: 14px;
     white-space: normal !important;
+    text-align: center;
     line-height: 1.15;
     font-weight: 700;
     background: linear-gradient(
@@ -466,11 +776,13 @@
 
   .sm-feature-btn {
     width: 100%;
-    min-width: 0 !important;
+    min-width: 240px !important;
+    min-height: 44px;
     margin: 0 !important;
     padding: 11px 14px !important;
     border-radius: 14px !important;
     white-space: normal !important;
+    text-align: center;
     line-height: 1.15;
     font-weight: 700;
     background: linear-gradient(
@@ -602,6 +914,175 @@
     box-shadow: 0 0 0 2px rgba(254,202,87,0.12);
   }
 
+  .sm-context-sources-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .sm-context-sources-grid .sm-check-row {
+    flex-direction: row;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .sm-context-sources-grid .sm-check-row > span {
+    min-width: 0;
+    font-size: 0.88em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .sm-qcsettings-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sm-qc-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .sm-qc-card-title {
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: var(--SmartThemeQuoteColor);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 0.82em;
+  }
+
+  .sm-qc-injection-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 12px;
+  }
+
+  .sm-qc-injection-grid .sm-check-row {
+    align-items: flex-start;
+  }
+
+  .sm-qc-injection-grid .sm-check-row > span::before {
+    margin-top: 1px;
+  }
+
+  .sm-qc-injection-grid .sm-check-row > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+
+  .sm-qc-position-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sm-radio-row,
+  .sm-qc-radio-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    cursor: pointer;
+    min-width: 0;
+  }
+
+  .sm-radio-row > input[type="radio"],
+  .sm-qc-radio-row > input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sm-radio-row > span,
+  .sm-qc-radio-row > span {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
+    min-width: 0;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .sm-radio-row > span::before,
+  .sm-qc-radio-row > span::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin-top: 1px;
+    border-radius: 999px;
+    border: 1px solid rgba(125, 211, 252, 0.55);
+    background: radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
+    box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.08);
+    transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  }
+
+  .sm-radio-row:hover > span::before,
+  .sm-qc-radio-row:hover > span::before {
+    border-color: rgba(125, 211, 252, 0.9);
+    background-color: rgba(7, 30, 49, 0.72);
+  }
+
+  .sm-radio-row > input[type="radio"]:active + span::before,
+  .sm-qc-radio-row > input[type="radio"]:active + span::before {
+    transform: scale(0.97);
+  }
+
+  .sm-radio-row > input[type="radio"]:focus-visible + span::before,
+  .sm-qc-radio-row > input[type="radio"]:focus-visible + span::before {
+    outline: 2px solid rgba(125, 211, 252, 0.85);
+    outline-offset: 2px;
+  }
+
+  .sm-radio-row > input[type="radio"]:checked + span::before,
+  .sm-qc-radio-row > input[type="radio"]:checked + span::before {
+    border-color: rgba(125, 211, 252, 0.98);
+    background:
+      radial-gradient(circle at center, rgba(224, 242, 254, 0.96) 0 30%, rgba(224, 242, 254, 0) 36%),
+      radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.28), rgba(14, 28, 45, 0) 62%),
+      rgba(7, 45, 73, 0.72);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.58), inset 0 0 10px rgba(125, 211, 252, 0.28);
+  }
+
+  .sm-qc-depth-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sm-qc-number-input {
+    width: 48px !important;
+    min-width: 48px !important;
+    text-align: center;
+  }
+
+  .sm-qc-inline-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .sm-qc-inline-field > span {
+    white-space: nowrap;
+  }
+
+  #sm-cal-custom-settings {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.14);
+  }
+
 .sm-date-range-section {
   padding: 12px;
   width: 100%;
@@ -676,6 +1157,41 @@
 }
 
 @media (max-width: 700px) {
+  #sm-summary-inject-warning-modal {
+    padding: 10px;
+  }
+
+  .sm-summary-inject-warning-card {
+    width: min(340px, calc(100vw - 20px));
+    border-radius: 10px;
+    padding: 12px 12px 10px;
+  }
+
+  .sm-summary-inject-warning-title {
+    font-size: 0.94em;
+  }
+
+  .sm-summary-inject-warning-text {
+    font-size: 0.85em;
+  }
+
+  .sm-summary-inject-warning-dismiss-row {
+    font-size: 0.82em;
+  }
+
+  #sm-summary-inject-warning-ok {
+    min-height: 36px;
+  }
+
+  .sm-events-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .sm-feature-btn {
+    min-width: 0 !important;
+    flex: 1 0 100% !important;
+  }
+
   .sm-summary-mode-help-popover,
   .sm-density-help-popover {
     top: calc(100% + 6px);
@@ -714,6 +1230,19 @@
 
   .sm-date-range-input {
     height: 40px;
+  }
+
+  .sm-context-sources-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .sm-qc-injection-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sm-qc-depth-row {
+    gap: 5px;
   }
 }
 
@@ -763,22 +1292,26 @@
 
                     <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px;" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 15px;">
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-summary" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_summary_tab">Show Summary Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-library" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_lib_tab">Show Library Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-quests" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_quests_tab">Show Quests Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="margin-left:5px; word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&amp;C Settings Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-summary" checked><span style="word-break: break-word;" data-i18n="show_summary_tab">Show Summary Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-library" checked><span style="word-break: break-word;" data-i18n="show_lib_tab">Show Library Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-quests" checked><span style="word-break: break-word;" data-i18n="show_quests_tab">Show Quests Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&amp;C Settings Tab</span></label>
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15);">
+                <div class="sm-global-settings-filter-wrap">
 
-                <label class="checkbox_label" data-i18n-title="bypass_filter_title">
-                <input type="checkbox" id="sm-bypass-filter">
-                <i class="fa-solid fa-user-secret" style="margin-right: 5px; opacity: 0.8;"></i>
-                <span data-i18n="bypass_filter">Anti-Filter Mode</span>
-            </label>
+                <div class="sm-bypass-filter-row" data-i18n-title="bypass_filter_title">
+                    <button type="button" id="sm-bypass-filter-toggle" class="sm-bypass-filter-toggle" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M19 11.5c0 3.59-2.91 6.5-6.5 6.5S6 15.09 6 11.5 8.91 5 12.5 5 19 7.91 19 11.5zm-6.5-4a4 4 0 1 0 0 8.001A4 4 0 0 0 12.5 7.5z"></path>
+                            <path d="M4.5 4.5h2v2h-2zm13 13h2v2h-2zM3 11h2v1.5H3zm16 0h2v1.5h-2z"></path>
+                        </svg>
+                    </button>
+                    <span data-i18n="bypass_filter">Anti-Filter Mode</span>
+                </div>
 
         </div>
 
@@ -818,14 +1351,44 @@
                             </button>
                         </div>
 
-                        <div class="flex-container alignitemscenter margin-bottom-5">
-                            <input type="checkbox" id="sunny-memories-enable-summary" checked class="margin-right-5">
-                            <label for="sunny-memories-enable-summary" style="margin-bottom:0; cursor:pointer;" data-i18n="inject_summary">Inject Current Summary into Context</label>
+                        <div class="sm-summary-inject-warning-anchor margin-bottom-5">
+                            <label class="sm-check-row flex-container alignitemscenter" style="margin-bottom:0;">
+                                <input type="checkbox" id="sunny-memories-enable-summary" checked>
+                                <span data-i18n="inject_summary">Inject Current Summary into Context</span>
+                            </label>
+
+                            <div id="sm-summary-inject-warning-modal" aria-hidden="true">
+                                <div class="sm-summary-inject-warning-card" role="dialog" aria-labelledby="sm-summary-inject-warning-title">
+                                    <div id="sm-summary-inject-warning-title" class="sm-summary-inject-warning-title" data-i18n="summary_inject_warning_title">Summary Injection Notice</div>
+                                    <div class="sm-summary-inject-warning-text" data-i18n="summary_inject_warning_line_1">Summary injection works differently here. While enabled, it always stays in context and, when at depth, is pulled closer at the configured frequency.</div>
+                                    <div class="sm-summary-inject-warning-text" data-i18n="summary_inject_warning_line_2">If you want Summary to appear only sometimes, move that text to Library and inject library entries by frequency.</div>
+                                    <label class="sm-summary-inject-warning-dismiss-row">
+                                        <input type="checkbox" id="sm-summary-inject-warning-dismiss">
+                                        <span class="sm-summary-inject-warning-sun" aria-hidden="true">
+                                            <svg class="sm-summary-inject-warning-sun-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                                <g class="sm-summary-inject-warning-sun-rays">
+                                                    <line x1="12" y1="2.2" x2="12" y2="5.1"></line>
+                                                    <line x1="12" y1="18.9" x2="12" y2="21.8"></line>
+                                                    <line x1="2.2" y1="12" x2="5.1" y2="12"></line>
+                                                    <line x1="18.9" y1="12" x2="21.8" y2="12"></line>
+                                                    <line x1="5.1" y1="5.1" x2="7.2" y2="7.2"></line>
+                                                    <line x1="16.8" y1="16.8" x2="18.9" y2="18.9"></line>
+                                                    <line x1="5.1" y1="18.9" x2="7.2" y2="16.8"></line>
+                                                    <line x1="16.8" y1="7.2" x2="18.9" y2="5.1"></line>
+                                                </g>
+                                                <circle class="sm-summary-inject-warning-sun-core" cx="12" cy="12" r="4.2"></circle>
+                                            </svg>
+                                        </span>
+                                        <span class="sm-summary-inject-warning-dismiss-label" data-i18n="summary_inject_warning_dont_show">Don't show again</span>
+                                    </label>
+                                    <button type="button" id="sm-summary-inject-warning-ok" class="menu_button" data-i18n="summary_inject_warning_ok">OK</button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div class="sm-summary-mode-header" style="margin-bottom: 10px; opacity: 0.8;">
-                                <b data-i18n="summary_mode_title">Summary Mode</b>
+                            <div class="sm-summary-mode-header" style="margin-bottom: 10px;">
+                                <b data-i18n="summary_mode_title" style="opacity: 0.8;">Summary Mode</b>
                                 <span id="sm-summary-mode-help-wrap" class="sm-summary-mode-help-wrap">
                                     <button id="sm-summary-mode-help-btn" type="button" class="sm-summary-mode-help-btn" aria-expanded="false" data-i18n-aria-label="summary_mode_help_aria">?</button>
                                     <div id="sm-summary-mode-help-popover" class="sm-summary-mode-help-popover" role="tooltip">
@@ -869,10 +1432,10 @@
                         <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
                             <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="curr_summary_pos">Current Summary Position</b></div>
                             <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_summary_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_summary_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+                                <label class="sm-radio-row"><input type="radio" name="sm_summary_position" value="0"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+<label class="sm-radio-row"><input type="radio" name="sm_summary_position" value="2"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
 <div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_summary_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+    <label class="sm-radio-row"><input type="radio" name="sm_summary_position" value="1"><span data-i18n="in_chat_depth">In-chat @ Depth</span></label>
                                     <input type="number" id="sunny-memories-summary-depth" class="text_pole" min="0" value="0" style="width: 50px;">
                                     <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-summary-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
@@ -905,10 +1468,10 @@
                             </button>
                         </div>
 
-                        <div class="flex-container alignitemscenter margin-bottom-5">
-                            <input type="checkbox" id="sunny-memories-enable-facts" checked class="margin-right-5">
-                            <label for="sunny-memories-enable-facts" style="margin-bottom:0; cursor:pointer;" data-i18n="inject_facts">Inject Current Facts into Context</label>
-                        </div>
+                        <label class="sm-check-row flex-container alignitemscenter margin-bottom-5" style="margin-bottom:5px;">
+                            <input type="checkbox" id="sunny-memories-enable-facts" checked>
+                            <span data-i18n="inject_facts">Inject Current Facts into Context</span>
+                        </label>
 
                         <textarea id="sunny-memories-output-facts" class="text_pole margin-bottom-5" rows="8" style="width: 100%; resize: vertical;" placeholder="..."></textarea>
 
@@ -923,10 +1486,10 @@
                         <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
                             <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="curr_facts_pos">Current Facts Position</b></div>
                             <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                               <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_facts_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_facts_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+                               <label class="sm-radio-row"><input type="radio" name="sm_facts_position" value="0"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+<label class="sm-radio-row"><input type="radio" name="sm_facts_position" value="2"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
 <div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_facts_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+    <label class="sm-radio-row"><input type="radio" name="sm_facts_position" value="1"><span data-i18n="in_chat_depth">In-chat @ Depth</span></label>
                                     <input type="number" id="sunny-memories-facts-depth" class="text_pole" min="0" value="4" style="width: 50px;">
                                     <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-facts-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
@@ -957,6 +1520,13 @@
                                     <button class="menu_button sm-bulk-consolidate" data-type="summary" data-i18n-title="merge_selected" style="color:var(--SmartThemeQuoteColor)"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="merge"> Merge</span></button>
                                     <button class="menu_button sm-cleanup-btn" data-i18n-title="clean_expired"><i class="fa-solid fa-broom"></i></button>
                                     <div style="flex:1;"></div>
+                                    <span class="sm-density-help-wrap sm-library-symbols-help-wrap">
+                                        <button type="button" class="sm-density-help-btn sm-library-symbols-help-btn" aria-expanded="false" data-i18n-aria-label="library_symbols_help_aria">?</button>
+                                        <div class="sm-density-help-popover sm-library-symbols-help-popover" role="tooltip">
+                                            <div class="sm-density-help-line"><span class="sm-library-symbol">☀</span><span data-i18n="library_symbol_active_memory_desc"> — active memory.</span></div>
+                                            <div class="sm-density-help-line"><span class="sm-library-symbol">☾</span><span data-i18n="library_symbol_selection_desc"> — selection.</span></div>
+                                        </div>
+                                    </span>
                                     <button class="menu_button sm-view-toggle" data-type="summary" data-i18n-title="toggle_view"><i class="fa-solid fa-table-cells"></i></button>
                                 </div>
                                 <div style="margin: 8px 0 10px 0;">
@@ -981,6 +1551,13 @@
                                     <button class="menu_button sm-bulk-consolidate" data-type="facts" data-i18n-title="merge_selected" style="color:var(--SmartThemeQuoteColor)"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="merge"> Merge</span></button>
                                     <button class="menu_button sm-cleanup-btn" data-i18n-title="clean_expired"><i class="fa-solid fa-broom"></i></button>
                                     <div style="flex:1;"></div>
+                                    <span class="sm-density-help-wrap sm-library-symbols-help-wrap">
+                                        <button type="button" class="sm-density-help-btn sm-library-symbols-help-btn" aria-expanded="false" data-i18n-aria-label="library_symbols_help_aria">?</button>
+                                        <div class="sm-density-help-popover sm-library-symbols-help-popover" role="tooltip">
+                                            <div class="sm-density-help-line"><span class="sm-library-symbol">☀</span><span data-i18n="library_symbol_active_memory_desc"> — active memory.</span></div>
+                                            <div class="sm-density-help-line"><span class="sm-library-symbol">☾</span><span data-i18n="library_symbol_selection_desc"> — selection.</span></div>
+                                        </div>
+                                    </span>
                                     <button class="menu_button sm-view-toggle" data-type="facts" data-i18n-title="toggle_view"><i class="fa-solid fa-table-cells"></i></button>
                                 </div>
                                 <div style="margin: 8px 0 10px 0;">
@@ -1017,17 +1594,17 @@
                     <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
                         <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="gen_range_opts">Generation Range Options</b></div>
                         <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                            <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;">
-                                <input type="radio" name="sm_range_mode" value="all" class="margin-right-5">
+                            <label class="sm-radio-row">
+                                <input type="radio" name="sm_range_mode" value="all">
                                 <span data-i18n="all_msgs">All Messages (Visible Chat)</span>
                             </label>
                             <div class="flex-container alignitemscenter" style="gap: 15px; flex-wrap: wrap;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;">
-                                    <input type="radio" name="sm_range_mode" value="first" class="margin-right-5">
+                                <label class="sm-radio-row">
+                                    <input type="radio" name="sm_range_mode" value="first">
                                     <span data-i18n="from_start">From Start (First N)</span>
                                 </label>
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;">
-                                    <input type="radio" name="sm_range_mode" value="last" class="margin-right-5">
+                                <label class="sm-radio-row">
+                                    <input type="radio" name="sm_range_mode" value="last">
                                     <span data-i18n="from_end">From End (Last N)</span>
                                 </label>
                                 <div class="flex-container alignitemscenter" style="gap: 5px;">
@@ -1036,10 +1613,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-container alignitemscenter margin-top-10">
-                            <input type="checkbox" id="sunny-memories-scan-wi" class="margin-right-5">
-                            <label for="sunny-memories-scan-wi" style="margin-bottom:0; cursor:pointer;" data-i18n="enable_wi_scan">Enable World Info Scanning</label>
-                        </div>
+                        <label class="sm-check-row flex-container alignitemscenter margin-top-10" style="margin-bottom:0;">
+                            <input type="checkbox" id="sunny-memories-scan-wi">
+                            <span data-i18n="enable_wi_scan">Enable World Info Scanning</span>
+                        </label>
                     </div>
 
                 </div>
@@ -1168,7 +1745,7 @@
 
                 <div class="sm-modal-section">
                     <div class="sm-modal-section-title" data-i18n="context_sources">Context Sources</div>
-                    <div class="sm-modal-grid">
+                    <div class="sm-modal-grid sm-context-sources-grid">
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-char" checked><span data-i18n="character_card">Character Card</span></label>
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-wi" checked><span data-i18n="world_info_lorebook">World Info / Lorebook</span></label>
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-sum" checked><span data-i18n="story_summary">Story Summary</span></label>
@@ -1368,10 +1945,10 @@
 </div>
 
                     <div id="sm-tab-qcsettings" class="sm-tab-pane">
-                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div class="sm-modal-section">
-                                <div class="sm-modal-section-title" data-i18n="cal_quests_injection">Calendar &amp; Quests Injection</div>
-                                <div class="sm-modal-grid">
+                        <div class="sm-qcsettings-stack">
+                            <div class="sm-qc-card">
+                                <div class="sm-qc-card-title" data-i18n="cal_quests_injection">Calendar &amp; Quests Injection</div>
+                                <div class="sm-modal-grid sm-qc-injection-grid">
                                     <label class="sm-check-row">
                                         <input type="checkbox" id="sm-qc-enable-cal-date">
                                         <span data-i18n="inject_current_date">Inject current date</span>
@@ -1386,59 +1963,62 @@
                                     </label>
                                 </div>
                             </div>
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="cal_ctx_inj">Calendar Context Position</div>
-                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
-<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_cal_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
-                                    <input type="number" id="sm-cal-depth" class="text_pole" min="0" value="3" style="width:50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-cal-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
+
+                            <div class="sm-qc-card">
+                                <div class="sm-qc-card-title" data-i18n="cal_ctx_inj">Calendar Context Position</div>
+                                <div class="sm-qc-position-group">
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_cal_position" value="0"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_cal_position" value="2"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+                                    <div class="sm-qc-depth-row">
+                                        <label class="sm-qc-radio-row"><input type="radio" name="sm_cal_position" value="1"><span data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+                                        <input type="number" id="sm-cal-depth" class="text_pole sm-qc-number-input" min="0" value="3">
+                                        <label class="sm-qc-inline-field" data-i18n-title="freq_msgs_title"><span data-i18n="freq_short">Freq</span><input type="number" id="sm-cal-freq" class="text_pole sm-qc-number-input" min="1" value="1"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-qc-card">
+                                <div class="sm-qc-card-title" data-i18n="quest_ctx_inj">Quests Context Position</div>
+                                <div class="sm-qc-position-group">
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_quest_position" value="0"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_quest_position" value="2"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+                                    <div class="sm-qc-depth-row">
+                                        <label class="sm-qc-radio-row"><input type="radio" name="sm_quest_position" value="1"><span data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+                                        <input type="number" id="sm-quest-depth" class="text_pole sm-qc-number-input" min="0" value="2">
+                                        <label class="sm-qc-inline-field" data-i18n-title="freq_msgs_title"><span data-i18n="freq_short">Freq</span><input type="number" id="sm-quest-freq" class="text_pole sm-qc-number-input" min="1" value="1"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-qc-card">
+                                <div class="sm-qc-card-title" data-i18n="events_ctx_pos">Events Context Position</div>
+                                <div class="sm-qc-position-group">
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_event_position" value="0"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
+                                    <label class="sm-qc-radio-row"><input type="radio" name="sm_event_position" value="2"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
+                                    <div class="sm-qc-depth-row">
+                                        <label class="sm-qc-radio-row"><input type="radio" name="sm_event_position" value="1"><span data-i18n="in_chat_depth">In-chat @ Depth</span></label>
+                                        <input type="number" id="sm-event-depth" class="text_pole sm-qc-number-input" min="0" value="3">
+                                        <label class="sm-qc-inline-field" data-i18n-title="freq_msgs_title"><span data-i18n="freq_short">Freq</span><input type="number" id="sm-event-freq" class="text_pole sm-qc-number-input" min="1" value="1"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-qc-card">
+                                <div class="sm-qc-card-title" data-i18n="cal_mode">Calendar Mode</div>
+                                <select id="sm-cal-mode" class="text_pole margin-bottom-10" style="width:100%;">
+                                    <option value="classic">Classic (Standard Real-World Months)</option>
+                                    <option value="custom">Custom (Define Your Own)</option>
+                                </select>
+
+                                <div id="sm-cal-custom-settings" style="display:none;">
+                                    <div style="font-size:0.9em; opacity:0.8; margin-bottom: 10px;" data-i18n="edit_months_json">Edit months using JSON format:</div>
+                                    <textarea id="sm-cal-custom-json" class="text_pole" rows="4" style="width:100%; font-family: monospace;"></textarea>
+                                    <button id="sm-cal-custom-save" class="menu_button margin-top-5" data-i18n="apply_custom_months">Apply Custom Months</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="quest_ctx_inj">Quests Context Position</div>
-                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
-<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_quest_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
-                                    <input type="number" id="sm-quest-depth" class="text_pole" min="0" value="2" style="width:50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-quest-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="events_ctx_pos">Events Context Position</div>
-                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                                <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="0" class="margin-right-10"><span data-i18n="before_main">Before Main Prompt / Story String</span></label>
-<label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="2" class="margin-right-10"><span data-i18n="after_main">After Main Prompt / Story String</span></label>
-<div class="flex-container alignitemscenter" style="flex-wrap: wrap; gap: 8px;">
-    <label class="flex-container alignitemscenter" style="margin-bottom:0; cursor:pointer;"><input type="radio" name="sm_event_position" value="1" class="margin-right-10"><span style="white-space: nowrap;" data-i18n="in_chat_depth">In-chat @ Depth</span></label>
-                                    <input type="number" id="sm-event-depth" class="text_pole" min="0" value="3" style="width:50px;">
-                                    <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sm-event-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                            <div style="font-weight: bold; margin-bottom: 10px; color: var(--SmartThemeQuoteColor);" data-i18n="cal_mode">Calendar Mode</div>
-                            <select id="sm-cal-mode" class="text_pole margin-bottom-10" style="width:100%;">
-                                <option value="classic">Classic (Standard Real-World Months)</option>
-                                <option value="custom">Custom (Define Your Own)</option>
-                            </select>
-
-                            <div id="sm-cal-custom-settings" style="display:none; padding: 10px; border: 1px dashed var(--SmartThemeBorderColor); border-radius: 6px;">
-                                <div style="font-size:0.9em; opacity:0.8; margin-bottom: 10px;" data-i18n="edit_months_json">Edit months using JSON format:</div>
-                                <textarea id="sm-cal-custom-json" class="text_pole" rows="4" style="width:100%; font-family: monospace;"></textarea>
-                                <button id="sm-cal-custom-save" class="menu_button margin-top-5" data-i18n="apply_custom_months">Apply Custom Months</button>
-                            </div>
-                        </div>
-
-                        <div class="flex-container flexFlowColumn" style="gap: 10px;">
+                        <div class="flex-container flexFlowColumn" style="gap: 10px; margin-top: 8px;">
                             <label data-i18n="quest_ai_prompt">Quest AI Prompt:</label>
                             <textarea id="sm-prompt-quest" class="text_pole" rows="6" style="width: 100%; font-size: 0.85em;"></textarea>
 
