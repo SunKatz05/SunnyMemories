@@ -249,6 +249,14 @@
             background-size: 9px 9px;
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.58), inset 0 0 10px rgba(125, 211, 252, 0.28);
         }
+        .sm-mod-tab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 15px;
+        }
+        .sm-mod-tab-grid .sm-check-row > span {
+            gap: 10px;
+        }
         .sm-summary-mode-toggle {
             display: inline-grid;
             grid-template-columns: repeat(2, minmax(90px, 1fr));
@@ -633,10 +641,13 @@
         .sm-modal-btn-forget:hover { background: var(--SmartThemeAlertColor, #ff4757) !important; color: white !important; }
         .sm-modal-btn-restore { background: rgba(254, 202, 87, 0.1) !important; color: var(--SmartThemeQuoteColor, #feca57) !important; border: 1px solid var(--SmartThemeQuoteColor, #feca57) !important; }
         .sm-modal-btn-restore:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: var(--SmartThemeBodyColor) !important; }
-        #sm-message-popover { position: fixed; background: var(--SmartThemeBlurTintColor, rgba(20, 20, 20, 0.95)); backdrop-filter: blur(10px); border-radius: 12px; padding: 12px; min-width: 160px; width: max-content; max-width: 250px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); display: none; z-index: 999999; flex-direction: column; gap: 6px; border: 1px solid var(--SmartThemeBorderColor, #444); }
-        .sm-popover-header { font-size: 0.85em; font-weight: bold; color: var(--SmartThemeQuoteColor, #feca57); text-align: center; margin-bottom: 4px; border-bottom: 1px solid var(--SmartThemeBorderColor, #444); padding-bottom: 6px; }
-        .sm-popover-btn { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin: 0; padding: 8px 12px; font-weight: bold; font-size: 0.9em; border-radius: 6px; background: rgba(0,0,0,0.2) !important; transition: 0.2s; border: 1px solid transparent !important; white-space: nowrap !important; word-break: normal !important; line-height: 1.2; text-align: left; }
-        .sm-popover-btn:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: #111 !important; transform: scale(1.02); box-shadow: 0 0 10px rgba(254, 202, 87, 0.4); }
+        #sm-message-popover { position: fixed; background: var(--SmartThemeBlurTintColor, rgba(20, 20, 20, 0.95)); backdrop-filter: blur(10px); border-radius: 12px; padding: 8px; width: fit-content; max-width: calc(100vw - 20px); box-shadow: 0 8px 30px rgba(0,0,0,0.6); display: none; z-index: 999999; flex-direction: column; gap: 5px; border: 1px solid var(--SmartThemeBorderColor, #444); }
+        .sm-popover-header { font-size: 0.82em; font-weight: bold; color: var(--SmartThemeQuoteColor, #feca57); margin: 0; border-bottom: 1px solid var(--SmartThemeBorderColor, #444); padding: 0 0 5px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .sm-message-actions { display: grid; grid-template-columns: repeat(2, 106px); grid-auto-rows: 34px; gap: 4px; width: fit-content; justify-content: center; margin: 0 auto; padding: 0; }
+        .sm-popover-btn { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin: 0; padding: 6px 8px; font-weight: 600; font-size: 0.8em; border-radius: 7px; background: rgba(0,0,0,0.2) !important; transition: 0.2s; border: 1px solid transparent !important; white-space: nowrap !important; word-break: normal !important; line-height: 1.1; text-align: left; height: 100%; min-height: 0; overflow: hidden; }
+        .sm-popover-btn i { margin-right: 0 !important; width: 14px; flex: 0 0 14px; text-align: center; }
+        .sm-popover-btn span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sm-popover-btn:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: #111 !important; box-shadow: 0 0 10px rgba(254, 202, 87, 0.4); }
         .sm-qc-section-title { font-weight: bold; padding: 5px 0; border-bottom: 1px solid var(--SmartThemeBorderColor); margin: 15px 0 10px 0; color: var(--SmartThemeQuoteColor); }
         #sm-list-quests-main, #sm-list-quests-side, #sm-list-quests-short, #sm-list-quests-completed { max-height: 400px; overflow-y: auto; padding-right: 5px; }
         #sm-list-calendar-events { max-height: 400px; overflow-y: auto; padding-right: 5px; }
@@ -1156,6 +1167,13 @@
   margin-top: 8px;
 }
 
+.sm-clean-add-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
 @media (max-width: 700px) {
   #sm-summary-inject-warning-modal {
     padding: 10px;
@@ -1190,6 +1208,26 @@
   .sm-feature-btn {
     min-width: 0 !important;
     flex: 1 0 100% !important;
+  }
+
+  .sm-generate-actions-row {
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
+
+  .sm-generate-actions-row .sm-feature-btn {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .sm-generate-actions-row .sm-btn-cancel-gen,
+  .sm-generate-actions-row .sm-save-lib-btn,
+  .sm-generate-actions-row .sm-split-lib-btn {
+    width: 42px !important;
+    min-width: 42px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    flex: 0 0 42px !important;
   }
 
   .sm-summary-mode-help-popover,
@@ -1290,8 +1328,8 @@
                         </select>
                     </div>
 
-                    <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px;" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 15px;">
+                    <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px; margin-bottom: 10px;" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
+                    <div class="sm-mod-tab-grid">
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-summary" checked><span style="word-break: break-word;" data-i18n="show_summary_tab">Show Summary Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-library" checked><span style="word-break: break-word;" data-i18n="show_lib_tab">Show Library Tab</span></label>
@@ -1339,7 +1377,7 @@
                             <textarea id="sunny-memories-prompt-summary" class="text_pole" rows="3" style="width: 100%;"></textarea>
                         </div>
 
-                        <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
+                        <div class="flex-container alignitemscenter margin-bottom-10 sm-generate-actions-row" style="gap: 10px; flex-wrap: wrap;">
                             <button class="menu_button sm-generate-btn sm-feature-btn" data-type="summary" style="flex: 1; min-width: 150px;" data-i18n="gen_summary">Generate Summary</button>
 
                            <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px;">
@@ -1453,7 +1491,7 @@
                             <textarea id="sunny-memories-prompt-facts" class="text_pole" rows="3" style="width: 100%;"></textarea>
                         </div>
 
-                        <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
+                        <div class="flex-container alignitemscenter margin-bottom-10 sm-generate-actions-row" style="gap: 10px; flex-wrap: wrap;">
                             <button class="menu_button sm-generate-btn sm-feature-btn" data-type="facts" style="flex: 1; min-width: 150px;" data-i18n="extract_facts">Extract Facts</button>
 
                             <button class="menu_button sm-btn-cancel-gen" data-i18n-title="cancel_generation" style="padding: 10px 15px; width: 45px; display: flex; justify-content: center; align-items: center;">
@@ -1813,6 +1851,18 @@
                     </label>
                 </div>
 
+                <div class="sm-modal-section">
+                    <div class="sm-modal-section-title" data-i18n="generation_wishes">Generation Wishes</div>
+                    <textarea
+                        id="sm-ev-gen-wishes"
+                        class="text_pole"
+                        rows="3"
+                        style="width: 100%; font-size: 0.85em;"
+                        data-i18n-placeholder="event_gen_wishes_placeholder"
+                        data-i18n-aria-label="event_gen_wishes_aria"
+                    ></textarea>
+                </div>
+
                 <div class="sm-action-row">
                     <button id="sm-btn-cancel-ai-events" class="menu_button" style="min-width:110px;" data-i18n="cancel">Cancel</button>
                     <button id="sm-btn-run-ai-events" class="menu_button" style="min-width:140px;">
@@ -1912,14 +1962,16 @@
                 <span data-i18n="sync_date_now">Sync date now</span>
             </button>
 
-            <button id="sm-btn-clean-date-signals" class="menu_button" style="flex:0 0 auto; width:auto; padding:10px 14px; white-space:nowrap;">
-                <i class="fa-solid fa-eraser" style="margin-right:5px;"></i>
-                <span data-i18n="clean_date">Clean date</span>
-            </button>
+            <div class="sm-clean-add-group">
+                <button id="sm-btn-clean-date-signals" class="menu_button" style="flex:0 0 auto; width:auto; padding:10px 14px; white-space:nowrap;">
+                    <i class="fa-solid fa-eraser" style="margin-right:5px;"></i>
+                    <span data-i18n="clean_date">Clean date</span>
+                </button>
 
-            <button id="sm-btn-add-event" class="menu_button" data-i18n-title="add_manual_event_title" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;">
-                <i class="fa-solid fa-plus"></i>
-            </button>
+                <button id="sm-btn-add-event" class="menu_button" data-i18n-title="add_manual_event_title" style="padding: 10px 15px; background: rgba(0,0,0,0.3); width: 45px; display: flex; justify-content: center; align-items: center;">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
         </div>
 
         <div id="sm-form-add-event" class="sm-hidden-form flexFlowColumn" style="gap: 8px;">
@@ -2049,11 +2101,14 @@
     </div>
 
     <div id="sm-message-popover">
-        <div class="sm-popover-header"><i class="fa-solid fa-sun" style="margin-right: 5px;"></i><span data-i18n="generate"> Generate</span></div>
-        <button type="button" class="menu_button sm-popover-btn" data-action="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i><span data-i18n="summary"> Summary</span></button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i><span data-i18n="facts"> Facts</span></button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i><span data-i18n="quests"> Quests</span></button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-calendar-day" style="margin-right: 5px;"></i><span data-i18n="events"> Events</span></button>
-        <button type="button" class="menu_button sm-popover-btn" data-action="parse-events"><i class="fa-solid fa-magnifying-glass" style="margin-right: 5px;"></i><span data-i18n="parse_events_now">Parse Events Now</span></button>
+        <div class="sm-popover-header"><i class="fa-solid fa-sun"></i><span>Sunny Tools</span></div>
+        <div class="sm-message-actions">
+            <button type="button" class="menu_button sm-popover-btn" data-action="summary"><i class="fa-solid fa-file-lines"></i><span data-i18n="summary"> Summary</span></button>
+            <button type="button" class="menu_button sm-popover-btn" data-action="facts"><i class="fa-solid fa-thumbtack"></i><span data-i18n="facts"> Facts</span></button>
+            <button type="button" class="menu_button sm-popover-btn" data-action="quests"><i class="fa-solid fa-khanda"></i><span data-i18n="quests"> Quests</span></button>
+            <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-calendar-day"></i><span data-i18n="events"> Events</span></button>
+            <button type="button" class="menu_button sm-popover-btn" data-action="parse-events"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="parse_events_now">Parse Events Now</span></button>
+            <button type="button" class="menu_button sm-popover-btn" data-action="next-day"><i class="fa-solid fa-forward-step"></i><span data-i18n="plus_1_day">+1 Day</span></button>
+        </div>
     </div>
 </div>
