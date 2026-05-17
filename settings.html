@@ -1,15 +1,45 @@
 <div id="sunny_memories_settings" class="sunny_memories_content">
     <style>
+        #sunny_memories_settings {
+            --sm-button-accent-rgb: 125, 211, 252;
+            --sm-glow-alpha: 0.36;
+            --sm-glow-alpha-mid: 0.29;
+            --sm-glow-alpha-strong: 0.48;
+            --sm-glow-alpha-knob: 0.45;
+            --sm-glow-alpha-ambient: 0.14;
+            --sm-glow-blur: 8px;
+            --sm-glow-blur-sm: 6px;
+            --sm-glow-blur-inset: 7px;
+            --sm-glow-drop-1: 6px;
+            --sm-glow-drop-2: 9px;
+            --sm-tab-glow-blur: 2px;
+            --sm-glow-gold-alpha: 0.34;
+            --sm-glow-purple-alpha: 0.4;
+        }
+        #sunny_memories_settings.sm-custom-no-glow .sm-main-tab-btn :is(i, .svg-inline--fa, .sm-tab-icon),
+        #sunny_memories_settings.sm-custom-no-glow .sm-tab-btn :is(i, .svg-inline--fa, .sm-tab-icon),
+        #sunny_memories_settings.sm-custom-no-glow .sm-tab-icon {
+            filter: none !important;
+            text-shadow: none !important;
+        }
+        #sunny_memories_settings.sm-custom-no-glow .sm-switch input:checked + .sm-slider,
+        #sunny_memories_settings.sm-custom-no-glow .sm-switch input:checked + .sm-slider::before,
+        #sunny_memories_settings.sm-custom-no-glow .sm-check-row > input[type="checkbox"]:checked + span::before,
+        #sunny_memories_settings.sm-custom-no-glow .sm-radio-row > input[type="radio"]:checked + span::before,
+        #sunny_memories_settings.sm-custom-no-glow .sm-qc-radio-row > input[type="radio"]:checked + span::before,
+        #sunny_memories_settings.sm-custom-no-glow .sm-summary-mode-toggle input[type="radio"]:checked + label {
+            box-shadow: none !important;
+        }
         @keyframes smSunPulse {
             0% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 0px rgba(254, 202, 87, 0)); }
-            50% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 5px rgba(254, 202, 87, 0.6)); }
+            50% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 4px rgba(254, 202, 87, 0.48)); }
             100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 0px rgba(254, 202, 87, 0)); }
         }
         .sm-glow-active .fa-sun {
             animation: smSunPulse 3s infinite ease-in-out;
         }
         .sm-glow-active {
-            box-shadow: inset 0 0 10px rgba(254, 202, 87, 0.05);
+            box-shadow: inset 0 0 8px rgba(254, 202, 87, 0.04);
             border-radius: 6px;
         }
 
@@ -30,30 +60,75 @@
             color: white !important;
         }
         .sm-main-tabs-header { display: flex; flex-wrap: nowrap; border-bottom: 2px solid var(--SmartThemeBorderColor); margin-bottom: 15px; gap: 5px; }
-        .sm-main-tab-btn { padding: 8px 5px; cursor: pointer; border-radius: 8px 8px 0 0; background: rgba(0,0,0,0.15); opacity: 0.6; font-weight: bold; transition: 0.2s; flex: 1 1 0; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.1; font-size: clamp(0.75em, 2.5vw, 1em); }
+        .sm-main-tab-btn { padding: 8px 5px; cursor: pointer; border-radius: 8px 8px 0 0; background: rgba(0,0,0,0.15); opacity: 0.6; font-weight: bold; transition: 0.2s; flex: 1 1 0; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.1; font-size: clamp(0.75em, 2.5vw, 1em); border: 1px solid transparent; position: relative; overflow: hidden; }
         .sm-main-tab-btn:hover { background: rgba(0,0,0,0.3); opacity: 0.9; }
         .sm-main-tab-btn.active { opacity: 1; background: var(--SmartThemeBlurTintColor); color: var(--SmartThemeBodyColor); box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.2); }
         .sm-main-tab-pane { display: none; animation: smFade 0.3s; }
         .sm-main-tab-pane.active { display: block; }
         .sm-tabs-header { display: flex; flex-wrap: nowrap; border-bottom: 2px solid var(--SmartThemeBorderColor); margin-bottom: 15px; gap: 5px; }
-        .sm-tab-btn { padding: 8px 5px; cursor: pointer; border-radius: 8px 8px 0 0; background: rgba(0,0,0,0.15); opacity: 0.6; font-weight: bold; transition: 0.2s; flex: 1 1 0; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.1; font-size: clamp(0.75em, 2vw, 0.9em); }
-        .sm-tab-btn > i { width: 1.1em; min-width: 1.1em; text-align: center; line-height: 1; display: inline-block; }
+        .sm-tab-btn { padding: 8px 5px; cursor: pointer; border-radius: 8px 8px 0 0; background: rgba(0,0,0,0.15); opacity: 0.6; font-weight: bold; transition: 0.2s; flex: 1 1 0; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.1; font-size: clamp(0.75em, 2vw, 0.9em); border: 1px solid transparent; position: relative; overflow: hidden; }
+        .sm-main-tab-btn > :is(i, .sm-tab-icon),
+        .sm-tab-btn > :is(i, .sm-tab-icon) {
+            width: 1.66em;
+            min-width: 1.66em;
+            height: 1.66em;
+            margin-right: 6px;
+            text-align: center;
+            line-height: 1;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        #sm-tab-btn-calendar > .sm-tab-icon {
+            width: 1.92em;
+            min-width: 1.92em;
+            height: 1.92em;
+        }
+        #sm-main-btn-memories > .sm-tab-icon {
+            width: 2em;
+            min-width: 2em;
+            height: 2em;
+        }
+        .sm-tab-icon {
+            fill: none;
+            stroke: var(--sm-tab-icon-stroke, currentColor);
+            stroke-width: 1.95;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vector-effect: non-scaling-stroke;
+            overflow: visible;
+            filter: none;
+            transition: filter 0.2s ease, transform 0.2s ease;
+        }
+        .sm-tab-icon .sm-tab-icon-bg {
+            fill: var(--sm-tab-icon-fill, currentColor);
+            stroke: none;
+            opacity: 1;
+            transition: fill 0.2s ease, opacity 0.2s ease;
+        }
+        .sm-tab-icon .sm-tab-icon-dot {
+            fill: var(--sm-tab-icon-dot, #f8fbff);
+            stroke: none;
+            opacity: 1;
+        }
+        .sm-tab-icon .sm-tab-icon-line {
+            fill: none;
+            stroke: var(--sm-tab-icon-stroke, currentColor);
+            stroke-width: 1.95;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
         .sm-tab-btn:hover { background: rgba(0,0,0,0.3); opacity: 0.9; }
         .sm-tab-btn.active { opacity: 1; background: var(--SmartThemeBlurTintColor); color: var(--SmartThemeBodyColor); box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.2); }
         #sunny_memories_settings .sm-main-tab-btn,
         #sunny_memories_settings .sm-tab-btn {
-            --sm-tab-accent: var(--SmartThemeQuoteColor, #feca57);
+            --sm-tab-accent: rgb(var(--sm-button-accent-rgb, 125, 211, 252));
+            --sm-tab-icon-fill: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.28);
+            --sm-tab-icon-stroke: currentColor;
+            --sm-tab-icon-dot: currentColor;
+            --sm-tab-icon-glow: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.22);
         }
-        #sm-main-btn-memories { --sm-tab-accent: rgba(147, 197, 253, 0.9); }
-        #sm-main-btn-calendar { --sm-tab-accent: rgba(252, 211, 77, 0.9); }
-        #sm-tab-btn-summary { --sm-tab-accent: rgba(147, 197, 253, 0.9); }
-        #sm-tab-btn-facts { --sm-tab-accent: rgba(110, 231, 183, 0.9); }
-        #sm-tab-btn-library { --sm-tab-accent: rgba(253, 186, 116, 0.9); }
-        #sm-tab-btn-quests { --sm-tab-accent: rgba(249, 168, 212, 0.9); }
-        #sm-tab-btn-calendar { --sm-tab-accent: rgba(103, 232, 249, 0.9); }
-        #sm-tab-btn-qcsettings { --sm-tab-accent: rgba(196, 181, 253, 0.9); }
-        .sm-main-tab-btn :is(i, .svg-inline--fa),
-        .sm-tab-btn :is(i, .svg-inline--fa) {
+        .sm-main-tab-btn :is(i, .svg-inline--fa, .sm-tab-icon),
+        .sm-tab-btn :is(i, .svg-inline--fa, .sm-tab-icon) {
             transition: color 0.2s ease, filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
         }
         .sm-main-tab-btn .svg-inline--fa,
@@ -63,21 +138,31 @@
             fill: currentColor !important;
             stroke: currentColor !important;
         }
-        .sm-main-tab-btn.active :is(i, .svg-inline--fa),
-        .sm-tab-btn.active :is(i, .svg-inline--fa) {
+        .sm-main-tab-btn.active :is(i, .svg-inline--fa, .sm-tab-icon),
+        .sm-tab-btn.active :is(i, .svg-inline--fa, .sm-tab-icon) {
             color: var(--sm-tab-accent) !important;
-            opacity: 0.95;
+            opacity: 1;
+            filter: drop-shadow(0 0 var(--sm-tab-glow-blur) color-mix(in srgb, currentColor 72%, transparent));
+            transform: none;
+        }
+        .sm-main-tab-btn.active .sm-tab-icon .sm-tab-icon-line,
+        .sm-main-tab-pane.active .sm-tab-btn.active .sm-tab-icon .sm-tab-icon-line {
+            stroke: var(--sm-tab-accent) !important;
+        }
+        .sm-main-tab-pane.active .sm-tab-btn :is(i, .svg-inline--fa, .sm-tab-icon) {
+            color: var(--sm-tab-accent) !important;
+            opacity: 0.88;
             filter: none;
             transform: none;
         }
-        .sm-main-tab-pane.active .sm-tab-btn :is(i, .svg-inline--fa) {
-            color: var(--sm-tab-accent) !important;
-            opacity: 0.58;
-            filter: none;
+        .sm-main-tab-pane.active .sm-tab-btn.active :is(i, .svg-inline--fa, .sm-tab-icon) {
+            opacity: 1;
+            filter: drop-shadow(0 0 var(--sm-tab-glow-blur) color-mix(in srgb, currentColor 72%, transparent));
+            transform: scale(1.02);
         }
-        .sm-main-tab-pane.active .sm-tab-btn.active :is(i, .svg-inline--fa) {
-            opacity: 0.95;
-            filter: none;
+        .sm-main-tab-btn.active .sm-tab-icon,
+        .sm-main-tab-pane.active .sm-tab-btn.active .sm-tab-icon {
+            filter: drop-shadow(0 0 var(--sm-tab-glow-blur) color-mix(in srgb, currentColor 72%, transparent));
         }
         .sm-tab-pane { display: none; animation: smFade 0.3s; }
         .sm-tab-pane.active { display: block; }
@@ -93,9 +178,9 @@
             right: 0;
             bottom: 0;
             border-radius: 999px;
-            border: 1px solid rgba(125, 211, 252, 0.5);
-            background: linear-gradient(180deg, rgba(10, 26, 43, 0.78), rgba(7, 19, 33, 0.9));
-            box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.06);
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.5);
+            background: linear-gradient(180deg, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.2), rgba(7, 19, 33, 0.9));
+            box-shadow: inset 0 0 0 1px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.16);
             box-sizing: border-box;
             transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -108,27 +193,27 @@
             top: 2px;
             border-radius: 50%;
             box-sizing: border-box;
-            background: radial-gradient(circle at 35% 30%, #ffffff 0%, #e0f2fe 55%, #bae6fd 100%);
-            border: 1px solid rgba(186, 230, 253, 0.65);
-            box-shadow: 0 0 4px rgba(186, 230, 253, 0.5);
+            background: radial-gradient(circle at 35% 30%, #ffffff 0%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.5) 58%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.78) 100%);
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.65);
+            box-shadow: 0 0 var(--sm-glow-blur-sm) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-knob));
             transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .sm-switch:hover .sm-slider {
-            border-color: rgba(125, 211, 252, 0.85);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.85);
         }
         .sm-switch input:focus-visible + .sm-slider {
-            outline: 2px solid rgba(125, 211, 252, 0.85);
+            outline: 2px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.85);
             outline-offset: 2px;
         }
         .sm-switch input:checked + .sm-slider {
-            border-color: rgba(125, 211, 252, 0.98);
-            background: linear-gradient(180deg, rgba(9, 54, 84, 0.9), rgba(7, 45, 73, 0.96));
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), inset 0 0 8px rgba(125, 211, 252, 0.22);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.98);
+            background: linear-gradient(180deg, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.52), rgba(7, 45, 73, 0.96));
+            box-shadow: 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong)), inset 0 0 var(--sm-glow-blur-inset) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-mid));
         }
         .sm-switch input:checked + .sm-slider::before {
             transform: translateX(16px);
-            border-color: rgba(224, 242, 254, 0.95);
-            box-shadow: 0 0 7px rgba(186, 230, 253, 0.7);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.95);
+            box-shadow: 0 0 var(--sm-glow-blur-sm) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong));
         }
         .sm-bypass-filter-row {
             display: flex;
@@ -193,7 +278,7 @@
             color: #c084fc;
             border-color: rgba(192, 132, 252, 0.95);
             background: rgba(168, 85, 247, 0.14);
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.55), inset 0 0 8px rgba(168, 85, 247, 0.22);
+            box-shadow: 0 0 var(--sm-glow-blur) rgba(168, 85, 247, var(--sm-glow-purple-alpha)), inset 0 0 var(--sm-glow-blur-inset) rgba(168, 85, 247, var(--sm-glow-alpha-mid));
         }
         .sm-check-row {
             display: inline-flex;
@@ -224,35 +309,69 @@
             height: 16px;
             min-width: 16px;
             border-radius: 999px;
-            border: 1px solid rgba(125, 211, 252, 0.55);
-            background: radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
-            box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.08);
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.55);
+            background: radial-gradient(circle at 30% 26%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
+            box-shadow: inset 0 0 0 1px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.16);
             transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
         }
         .sm-check-row:hover > span::before {
-            border-color: rgba(125, 211, 252, 0.9);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.9);
             background-color: rgba(7, 30, 49, 0.72);
         }
         .sm-check-row > input[type="checkbox"]:active + span::before {
             transform: scale(0.97);
         }
         .sm-check-row > input[type="checkbox"]:focus-visible + span::before {
-            outline: 2px solid rgba(125, 211, 252, 0.85);
+            outline: 2px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.85);
             outline-offset: 2px;
         }
         .sm-check-row > input[type="checkbox"]:checked + span::before {
-            border-color: rgba(125, 211, 252, 0.98);
-            background-color: rgba(7, 45, 73, 0.72);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.98);
+            background-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.28);
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.4 6.6 11.5 12.5 4.8' fill='none' stroke='%23e0f2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: center;
             background-size: 9px 9px;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.58), inset 0 0 10px rgba(125, 211, 252, 0.28);
+            box-shadow: 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong)), inset 0 0 var(--sm-glow-blur-inset) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha));
         }
         .sm-mod-tab-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 10px 15px;
+        }
+        .sm-customization-title {
+            font-weight: bold;
+            color: var(--SmartThemeQuoteColor);
+            margin-top: 14px;
+            margin-bottom: 8px;
+        }
+        .sm-customize-grid {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .sm-customize-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 2px;
+        }
+        .sm-customize-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 0;
+            flex-wrap: wrap;
+        }
+        .sm-color-input {
+            width: 44px;
+            height: 30px;
+            min-width: 44px;
+            padding: 2px;
+            border-radius: 7px;
+            border: 1px solid var(--SmartThemeBorderColor);
+            background: rgba(0, 0, 0, 0.25);
+            cursor: pointer;
         }
         .sm-mod-tab-grid .sm-check-row > span {
             gap: 10px;
@@ -264,9 +383,10 @@
             padding: 4px;
             width: 100%;
             max-width: 320px;
-            border: 1px solid var(--SmartThemeBorderColor, #555);
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.42);
             border-radius: 999px;
-            background: rgba(0, 0, 0, 0.2);
+            background: linear-gradient(180deg, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.16) 0%, rgba(5, 20, 34, 0.64) 100%);
+            box-shadow: inset 0 0 0 1px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.16), 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-ambient));
         }
         .sm-summary-mode-toggle input[type="radio"] {
             position: absolute;
@@ -278,20 +398,27 @@
             padding: 6px 10px;
             text-align: center;
             border-radius: 999px;
+            border: 1px solid transparent;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-            color: var(--SmartThemeBodyColor, #ddd);
-            background: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            color: rgba(203, 231, 247, 0.9);
+            background: rgba(2, 10, 18, 0.2);
             user-select: none;
         }
+        .sm-summary-mode-toggle label:hover {
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.45);
+            background: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.18);
+            color: #ecf8ff;
+        }
         .sm-summary-mode-toggle input[type="radio"]:checked + label {
-            background: var(--SmartThemeQuoteColor, #feca57);
-            color: #111;
-            box-shadow: 0 0 10px rgba(254, 202, 87, 0.35);
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.85);
+            background: linear-gradient(180deg, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.62) 0%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.34) 100%);
+            color: #effaff;
+            box-shadow: 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong)), inset 0 0 var(--sm-glow-blur-inset) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-mid));
         }
         .sm-summary-mode-toggle input[type="radio"]:focus-visible + label {
-            outline: 2px solid var(--SmartThemeQuoteColor, #feca57);
+            outline: 2px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.9);
             outline-offset: 2px;
         }
         .sm-summary-mode-header {
@@ -428,11 +555,11 @@
         .sm-lib-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px; border-radius: 6px; transition: background-color 0.2s; }
         .sm-lib-header:hover { background: rgba(255, 255, 255, 0.05); }
         .sm-sun-toggle { cursor: pointer; color: var(--SmartThemeBorderColor, #555); transition: 0.1s; font-size: 1.2em; padding: 2px 4px; }
-        .sm-sun-toggle.active { color: var(--SmartThemeQuoteColor, #feca57); text-shadow: 0 0 10px var(--SmartThemeQuoteColor, #feca57); transform: scale(1.1); }
+        .sm-sun-toggle.active { color: var(--SmartThemeQuoteColor, #feca57); text-shadow: 0 0 6px rgba(254, 202, 87, var(--sm-glow-gold-alpha)); transform: scale(1.1); }
         .sm-sun-toggle:not(.active):hover { color: var(--SmartThemeQuoteColor, #feca57); opacity: 0.5; transform: scale(1.1); }
         .sm-bulk-checkbox, .sm-bulk-select-all { cursor: pointer; color: var(--SmartThemeBorderColor, #555); transition: 0.2s; font-size: 1.2em; display: flex; align-items: center; justify-content: center; padding: 2px; }
         .sm-bulk-checkbox:hover, .sm-bulk-select-all:hover { color: #a29bfe; transform: scale(1.1); }
-        .sm-bulk-checkbox.selected, .sm-bulk-select-all.selected { color: #a29bfe; text-shadow: 0 0 10px rgba(162, 155, 254, 0.8); transform: scale(1.1); }
+        .sm-bulk-checkbox.selected, .sm-bulk-select-all.selected { color: #a29bfe; text-shadow: 0 0 7px rgba(162, 155, 254, 0.52); transform: scale(1.1); }
         .sm-lib-title-container { flex: 1; display: flex; align-items: center; gap: 5px; overflow: hidden; }
         .sm-lib-title-display { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; }
         .sm-lib-title-input { background: rgba(0,0,0,0.5); border: 1px solid var(--SmartThemeBorderColor); color: inherit; font-weight: bold; border-radius: 4px; padding: 2px 6px; width: 100%; font-size: 1em; display: none; outline: none; }
@@ -448,7 +575,7 @@
         .sm-lib-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 0.85em; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; }
         .sm-lib-controls label { margin: 0; opacity: 0.8; }
         .sm-lib-controls select, .sm-lib-controls input[type="number"] { padding: 0 4px !important; height: 26px !important; border-radius: 4px; border: 1px solid var(--SmartThemeBorderColor); background: var(--SmartThemeBlurTintColor); color: var(--SmartThemeBodyColor); flex-shrink: 0; box-sizing: border-box; }
-        .sm-lib-controls input[type="number"] { width: 35px !important; min-width: 35px !important; max-width: 35px !important; text-align: center; -moz-appearance: textfield; padding: 0 !important; }
+        .sm-lib-controls input[type="number"] { width: 35px !important; min-width: 35px !important; max-width: 35px !important; text-align: center; appearance: textfield; -moz-appearance: textfield; padding: 0 !important; }
         .sm-lib-controls input[type="number"]::-webkit-outer-spin-button, .sm-lib-controls input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .sm-depth-wrapper { display: inline-flex; align-items: center; gap: 8px; }
         .sm-archive-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--SmartThemeBorderColor); padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; color: var(--SmartThemeQuoteColor); cursor: pointer; user-select: none; transition: 0.2s; }
@@ -469,11 +596,11 @@
         .sm-library-list.grid-view .sm-lib-delete { position: absolute; bottom: 10px; right: 10px; opacity: 0.4; }
         .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-edit, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-pin, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-copy, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-delete { opacity: 0.9; }
         .sm-library-list.grid-view .sm-lib-title-container { margin-top: auto; margin-bottom: auto; text-align: center; width: 100%; justify-content: center; }
-        .sm-library-list.grid-view .sm-lib-title-display { font-size: 1.1em; color: var(--SmartThemeQuoteColor); white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .sm-library-list.grid-view .sm-lib-title-display { font-size: 1.1em; color: var(--SmartThemeQuoteColor); white-space: normal; display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         .sm-library-list.grid-view .sm-lib-title-input { text-align: center; }
         .sm-library-list.grid-view .sm-lib-expand-icon, .sm-library-list.grid-view .sm-lib-body { display: none !important; }
         .sm-lib-snippet { display: none; }
-        .sm-library-list.grid-view .sm-lib-snippet { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.85em; opacity: 0.75; line-height: 1.4; margin-top: 0; text-align: center; pointer-events: none; }
+        .sm-library-list.grid-view .sm-lib-snippet { display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.85em; opacity: 0.75; line-height: 1.4; margin-top: 0; text-align: center; pointer-events: none; }
         .sm-library-list.grid-view .sm-lib-item.grid-expanded { aspect-ratio: auto; height: auto; min-height: 150px; cursor: default; }
         .sm-library-list.grid-view .sm-lib-item.grid-expanded .sm-lib-snippet { display: none; }
         .sm-library-list.grid-view .sm-lib-item.grid-expanded .sm-lib-body { display: block !important; margin-bottom: 25px; }
@@ -482,6 +609,597 @@
         .sm-library-symbols-help-wrap { margin-right: 4px; }
         .sm-library-symbols-help-wrap .sm-library-symbols-help-popover { left: calc(100% + 8px); right: auto; }
         .sm-library-symbols-help-wrap.sm-popover-left .sm-library-symbols-help-popover { left: auto; right: calc(100% + 8px); }
+        .sm-album-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .sm-album-search-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+        .sm-album-search-row > i {
+            opacity: 0.65;
+        }
+        .sm-album-search-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: inherit;
+            padding: 2px 0;
+            min-width: 0;
+        }
+        .sm-album-folder-recent {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: -2px 0 8px;
+        }
+        .sm-album-recent-folder-btn {
+            border: 1px solid var(--SmartThemeBorderColor);
+            background: rgba(255,255,255,0.05);
+            color: inherit;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.72em;
+            line-height: 1.35;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .sm-album-recent-folder-btn:hover {
+            background: rgba(255,255,255,0.12);
+        }
+        .sm-album-recent-folder-btn.active {
+            background: rgba(125,211,252,0.18);
+            border-color: rgba(125,211,252,0.55);
+        }
+        .sm-album-actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .sm-album-folders-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .sm-album-options-row {
+            margin-bottom: 10px;
+        }
+        .sm-album-sort-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .sm-album-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 36px;
+        }
+        .sm-album-lock-btn.is-locked {
+            color: var(--SmartThemeQuoteColor, #7dd3fc);
+            border-color: rgba(125,211,252,0.6);
+            box-shadow: inset 0 0 0 1px rgba(125,211,252,0.22);
+        }
+        .sm-album-lock-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        #sm-album-new-folder-name {
+            min-width: 180px;
+            flex: 1;
+            max-width: 260px;
+            display: none;
+        }
+        .sm-album-folder-library-btn {
+            min-width: auto;
+            padding: 5px 10px;
+            font-size: 0.78em;
+            line-height: 1.2;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+        .sm-album-folder-library-btn > span {
+            display: inline-block;
+        }
+        .sm-album-current-folder-btn {
+            flex: 1;
+            min-width: 0;
+            justify-content: flex-start !important;
+            text-align: left;
+            gap: 8px;
+        }
+        .sm-album-current-folder-btn > span {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sm-album-folder-btn-caret {
+            transition: transform 0.18s ease;
+        }
+        #sm-album-folder-btn[aria-expanded="true"] .sm-album-folder-btn-caret {
+            transform: rotate(180deg);
+        }
+        .sm-album-folder-picker {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+        .sm-album-folder-picker .sm-album-current-folder-btn {
+            width: 100%;
+        }
+        .sm-album-current-folder-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .sm-album-current-folder {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sm-album-folder-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 60;
+            background: var(--SmartThemeBlurTintColor, rgba(20,20,28,0.95));
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 8px;
+            max-height: calc(5 * 34px + 10px);
+            overflow-y: auto;
+            padding: 4px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+        }
+        .sm-album-folder-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            min-height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .sm-album-folder-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .sm-album-folder-item.active {
+            background: rgba(125,211,252,0.18);
+        }
+        .sm-album-folder-item .sm-album-folder-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sm-album-folders-panel {
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.16);
+        }
+        #sm-album-folder-sort {
+            width: auto;
+            min-width: 180px;
+        }
+        .sm-album-folder-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 2px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .sm-album-folder-card {
+            border: 1px solid var(--SmartThemeBorderColor);
+            background: rgba(0,0,0,0.22);
+            border-radius: 8px;
+            padding: 6px;
+            cursor: pointer;
+            min-height: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 7px;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            overflow: hidden;
+        }
+        .sm-album-folder-card:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .sm-album-folder-card.active {
+            background: rgba(125,211,252,0.18);
+            border-color: rgba(125,211,252,0.6);
+            box-shadow: inset 0 0 0 1px rgba(125,211,252,0.24);
+        }
+        .sm-album-folder-card-thumb-wrap {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 6px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .sm-album-folder-card-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .sm-album-folder-card-thumb-empty {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.5;
+        }
+        .sm-album-folder-card-body {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sm-album-folder-card-title {
+            font-size: 0.82em;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sm-album-folder-card-meta {
+            font-size: 0.74em;
+            opacity: 0.7;
+        }
+        .sm-album-folder-empty {
+            padding: 10px;
+            text-align: center;
+            opacity: 0.7;
+            grid-column: 1 / -1;
+        }
+        #sm-image-save-quick {
+            position: fixed;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(20,22,28,0.92);
+            border: 1px solid rgba(125,211,252,0.5);
+            color: var(--SmartThemeBodyColor, #fff);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            font-size: 0.9em;
+            max-width: min(220px, calc(100vw - 20px));
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+        #sm-image-save-quick:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+        #sm-album-sort {
+            width: auto;
+            min-width: 165px;
+        }
+        .sm-album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            align-items: start;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .sm-album-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 8px;
+            padding: 8px;
+            position: relative;
+        }
+        .sm-album-thumb-wrap {
+            display: block;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 6px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.35);
+        }
+        .sm-album-thumb {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sm-album-caption {
+            margin-top: 6px;
+            font-size: 0.82em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sm-album-meta {
+            margin-top: 3px;
+            font-size: 0.74em;
+            opacity: 0.7;
+        }
+        .sm-album-prompt-controls {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            align-items: center;
+            gap: 6px;
+            min-height: 58px;
+        }
+        .sm-album-prompt-controls .sm-album-download,
+        .sm-album-prompt-controls .sm-album-delete {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+        .sm-album-meta-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+        }
+        .sm-album-action-btn {
+            border: none;
+            background: transparent;
+            color: inherit;
+            border-radius: 999px;
+            padding: 2px 6px;
+            font-size: 0.74em;
+            line-height: 1.2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex: 0 0 auto;
+            text-decoration: none;
+        }
+        .sm-album-action-btn:hover { text-decoration: underline; }
+        .sm-album-action-btn.is-danger { color: var(--SmartThemeAlertColor, #f87171); }
+        .sm-album-action-btn.is-danger:hover { color: var(--SmartThemeAlertColor, #f87171); }
+        .sm-album-meta-open {
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            padding: 3px 9px;
+            font-size: 0.7em;
+            letter-spacing: 0.01em;
+            min-width: 150px;
+            text-align: center;
+        }
+        .sm-album-meta-open:hover {
+            text-decoration: none;
+            background: rgba(255,255,255,0.14);
+        }
+        .sm-album-meta-placeholder {
+            display: block;
+            width: min(170px, 100%);
+            min-height: 24px;
+            visibility: hidden;
+        }
+        .sm-album-action-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .sm-album-prompt-copy {
+            min-width: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 6px;
+        }
+        .sm-album-prompt-panel {
+            margin-top: 6px;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.34);
+            padding: 6px;
+        }
+        .sm-album-prompt-mode-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 999px;
+            padding: 3px;
+        }
+        .sm-album-prompt-mode-btn {
+            border: none;
+            background: transparent;
+            color: inherit;
+            opacity: 0.85;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 0.72em;
+            line-height: 1.2;
+            cursor: pointer;
+        }
+        .sm-album-prompt-mode-btn.is-active {
+            background: rgba(125, 211, 252, 0.22);
+            opacity: 1;
+        }
+        .sm-album-prompt-text {
+            width: 100%;
+            min-height: 90px;
+            resize: vertical;
+            font-size: 0.76em;
+            line-height: 1.35;
+            padding: 6px;
+            box-sizing: border-box;
+        }
+        #sm-album-meta-viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 5200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(2px);
+            padding: 18px;
+            box-sizing: border-box;
+        }
+        #sm-album-meta-viewer.sm-open {
+            display: flex;
+        }
+        .sm-album-meta-viewer-content {
+            position: relative;
+            width: min(920px, 95vw);
+            max-height: 92vh;
+            background: rgba(16, 16, 16, 0.94);
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 12px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        .sm-album-meta-viewer-caption {
+            font-size: 0.92em;
+            opacity: 0.92;
+            line-height: 1.2;
+            word-break: break-word;
+            padding-right: 34px;
+        }
+        .sm-album-meta-viewer-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #sm-album-meta-viewer-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #sm-album-meta-viewer-copy:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+        #sm-album-meta-viewer-text {
+            width: 100%;
+            min-height: 220px;
+            max-height: calc(92vh - 170px);
+            resize: vertical;
+            font-size: 0.82em;
+            line-height: 1.36;
+            box-sizing: border-box;
+            padding: 8px;
+            overflow: auto;
+        }
+        body.sm-album-viewer-open {
+            overflow: hidden;
+        }
+        #sm-album-image-viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 5100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(2px);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        #sm-album-image-viewer.sm-open {
+            display: flex;
+        }
+        .sm-album-image-viewer-content {
+            position: relative;
+            max-width: min(96vw, 1500px);
+            max-height: min(92vh, 1100px);
+            width: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .sm-album-image-viewer-close {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255,255,255,0.45);
+            border-radius: 50%;
+            background: rgba(0,0,0,0.72);
+            color: #fff;
+            font-size: 1.05em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .sm-album-image-viewer-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .sm-album-image-viewer-img {
+            max-width: min(96vw, 1500px);
+            max-height: calc(92vh - 54px);
+            width: auto;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+            display: block;
+            object-fit: contain;
+        }
+        .sm-album-image-viewer-caption {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            line-height: 1.25;
+            text-align: center;
+            max-width: min(96vw, 1500px);
+            word-break: break-word;
+        }
+        .sm-album-image-viewer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .sm-album-image-viewer-actions .sm-album-action-btn {
+            font-size: 0.82em;
+            padding: 6px 10px;
+            min-height: 34px;
+        }
         .sm-summary-inject-warning-anchor {
             position: relative;
             display: block;
@@ -492,6 +1210,7 @@
             left: 0;
             z-index: 260;
             width: min(360px, calc(100vw - 80px));
+            box-sizing: border-box;
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
@@ -602,7 +1321,7 @@
         .sm-summary-inject-warning-dismiss-row input:checked + .sm-summary-inject-warning-sun .sm-summary-inject-warning-sun-core {
             fill: #facc15;
             stroke: #fde68a;
-            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.65));
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.44));
         }
         .sm-summary-inject-warning-dismiss-row input:checked + .sm-summary-inject-warning-sun .sm-summary-inject-warning-sun-rays {
             stroke: #fde047;
@@ -632,7 +1351,7 @@
         #sm-summary-inject-warning-ok:active {
             transform: translateY(0);
         }
-        #sm-delete-popover, #sm-restore-popover { position: fixed; background: var(--SmartThemeWindowColor, #1a1a1a); border-radius: 8px; padding: 15px; min-width: 220px; width: max-content; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.9); display: none; z-index: 999999; text-align: center; }
+        #sm-delete-popover, #sm-restore-popover { position: fixed; background: var(--SmartThemeWindowColor, #1a1a1a); border-radius: 8px; padding: 15px; min-width: min(220px, calc(100vw - 20px)); width: min(320px, calc(100vw - 20px)); max-width: calc(100vw - 20px); box-shadow: 0 10px 25px rgba(0,0,0,0.9); display: none; z-index: 999999; text-align: center; box-sizing: border-box; }
         #sm-delete-popover { border: 1px solid var(--SmartThemeAlertColor, #ff4757); }
         #sm-restore-popover { border: 1px solid var(--SmartThemeQuoteColor, #feca57); }
         .sm-popover-text { font-size: 0.9em; margin-bottom: 15px; color: var(--SmartThemeBodyColor); white-space: normal; word-break: break-word; }
@@ -647,7 +1366,7 @@
         .sm-popover-btn { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin: 0; padding: 6px 8px; font-weight: 600; font-size: 0.8em; border-radius: 7px; background: rgba(0,0,0,0.2) !important; transition: 0.2s; border: 1px solid transparent !important; white-space: nowrap !important; word-break: normal !important; line-height: 1.1; text-align: left; height: 100%; min-height: 0; overflow: hidden; }
         .sm-popover-btn i { margin-right: 0 !important; width: 14px; flex: 0 0 14px; text-align: center; }
         .sm-popover-btn span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .sm-popover-btn:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: #111 !important; box-shadow: 0 0 10px rgba(254, 202, 87, 0.4); }
+        .sm-popover-btn:hover { background: var(--SmartThemeQuoteColor, #feca57) !important; color: #111 !important; box-shadow: 0 0 var(--sm-glow-blur) rgba(254, 202, 87, var(--sm-glow-gold-alpha)); }
         .sm-qc-section-title { font-weight: bold; padding: 5px 0; border-bottom: 1px solid var(--SmartThemeBorderColor); margin: 15px 0 10px 0; color: var(--SmartThemeQuoteColor); }
         #sm-list-quests-main, #sm-list-quests-side, #sm-list-quests-short, #sm-list-quests-completed { max-height: 400px; overflow-y: auto; padding-right: 5px; }
         #sm-list-calendar-events { max-height: 400px; overflow-y: auto; padding-right: 5px; }
@@ -661,7 +1380,13 @@
         .sm-qc-actions i { cursor: pointer; margin-left: 8px; opacity: 0.6; transition: 0.2s; }
         .sm-qc-actions i:hover { opacity: 1; color: var(--SmartThemeQuoteColor); }
         .sm-hidden-form { display: none; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--SmartThemeBorderColor); }
-        #sunny_memories_settings .menu_button { white-space: normal; line-height: 1.2; height: auto; min-height: 35px; text-align: center; }
+        #sunny_memories_settings .menu_button {
+            white-space: normal;
+            line-height: 1.2;
+            height: auto;
+            min-height: 35px;
+            text-align: center;
+        }
         .sm-archive-toolbar .menu_button, .sm-restore-btn { white-space: nowrap !important; word-break: normal !important; flex: none !important; }
         .sm-classic-cal { background: rgba(0,0,0,0.2); border: 1px solid var(--SmartThemeBorderColor); border-radius: 8px; padding: 10px; margin-bottom: 15px; }
         .sm-cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -672,7 +1397,7 @@
         .sm-cal-day-name { font-size: 0.8em; opacity: 0.6; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px; }
         .sm-cal-cell { padding: 6px 0; border-radius: 4px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-size: 0.9em; position: relative; user-select: none; }
         .sm-cal-cell:hover:not(.empty) { background: rgba(255,255,255,0.1); border-color: var(--SmartThemeBorderColor); }
-        .sm-cal-cell.active { background: var(--SmartThemeQuoteColor); color: #111; font-weight: bold; box-shadow: 0 0 10px rgba(254, 202, 87, 0.4); }
+        .sm-cal-cell.active { background: var(--SmartThemeQuoteColor); color: #111; font-weight: bold; box-shadow: 0 0 var(--sm-glow-blur) rgba(254, 202, 87, var(--sm-glow-gold-alpha)); }
         .sm-cal-cell.empty { cursor: default; }
         .sm-cal-has-event::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: var(--SmartThemeAlertColor, #ff4757); }
         .sm-cal-btn { cursor: pointer; opacity: 0.7; transition: 0.2s; padding: 4px 8px; }
@@ -771,18 +1496,18 @@
     font-weight: 700;
     background: linear-gradient(
       180deg,
-      rgba(255,255,255,0.08),
+      rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.18),
       rgba(255,255,255,0.03)
     );
-    border: 1px solid var(--SmartThemeBorderColor);
+    border: 1px solid transparent;
     box-shadow: 0 8px 24px rgba(0,0,0,0.18);
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   }
 
   .sm-events-toolbar .menu_button:hover {
     transform: translateY(-1px);
-    border-color: var(--SmartThemeQuoteColor);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.24);
+    border-color: transparent;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.24), 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha));
   }
 
   .sm-feature-btn {
@@ -798,18 +1523,18 @@
     font-weight: 700;
     background: linear-gradient(
       180deg,
-      rgba(255,255,255,0.08),
+      rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.18),
       rgba(255,255,255,0.03)
     );
-    border: 1px solid var(--SmartThemeBorderColor);
+    border: 1px solid transparent;
     box-shadow: 0 8px 24px rgba(0,0,0,0.18);
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   }
 
   .sm-feature-btn:hover {
     transform: translateY(-1px);
-    border-color: var(--SmartThemeQuoteColor);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.24);
+    border-color: transparent;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.24), 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha));
   }
 
   .sm-tool-card {
@@ -1030,15 +1755,15 @@
     min-width: 16px;
     margin-top: 1px;
     border-radius: 999px;
-    border: 1px solid rgba(125, 211, 252, 0.55);
-    background: radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
-    box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.08);
+    border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.55);
+    background: radial-gradient(circle at 30% 26%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.24), rgba(14, 28, 45, 0) 62%), rgba(8, 17, 31, 0.62);
+    box-shadow: inset 0 0 0 1px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.16);
     transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
   }
 
   .sm-radio-row:hover > span::before,
   .sm-qc-radio-row:hover > span::before {
-    border-color: rgba(125, 211, 252, 0.9);
+    border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.9);
     background-color: rgba(7, 30, 49, 0.72);
   }
 
@@ -1049,18 +1774,18 @@
 
   .sm-radio-row > input[type="radio"]:focus-visible + span::before,
   .sm-qc-radio-row > input[type="radio"]:focus-visible + span::before {
-    outline: 2px solid rgba(125, 211, 252, 0.85);
+    outline: 2px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.85);
     outline-offset: 2px;
   }
 
   .sm-radio-row > input[type="radio"]:checked + span::before,
   .sm-qc-radio-row > input[type="radio"]:checked + span::before {
-    border-color: rgba(125, 211, 252, 0.98);
+    border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.98);
     background:
       radial-gradient(circle at center, rgba(224, 242, 254, 0.96) 0 30%, rgba(224, 242, 254, 0) 36%),
-      radial-gradient(circle at 30% 26%, rgba(186, 230, 253, 0.28), rgba(14, 28, 45, 0) 62%),
-      rgba(7, 45, 73, 0.72);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.58), inset 0 0 10px rgba(125, 211, 252, 0.28);
+      radial-gradient(circle at 30% 26%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.3), rgba(14, 28, 45, 0) 62%),
+      rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.28);
+    box-shadow: 0 0 var(--sm-glow-blur) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong)), inset 0 0 var(--sm-glow-blur-inset) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha));
   }
 
   .sm-qc-depth-row {
@@ -1176,11 +1901,13 @@
 
 @media (max-width: 700px) {
   #sm-summary-inject-warning-modal {
-    padding: 10px;
+    width: min(340px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
   }
 
   .sm-summary-inject-warning-card {
-    width: min(340px, calc(100vw - 20px));
+    width: 100%;
+    box-sizing: border-box;
     border-radius: 10px;
     padding: 12px 12px 10px;
   }
@@ -1282,6 +2009,184 @@
   .sm-qc-depth-row {
     gap: 5px;
   }
+
+  .sm-album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    max-height: 56vh;
+    padding-right: 2px;
+  }
+
+  .sm-album-folders-head {
+    align-items: stretch;
+  }
+
+  .sm-album-folder-library-btn {
+    min-width: auto;
+    flex: 0 0 auto;
+    font-size: 0.74em;
+    padding: 4px 8px;
+  }
+
+  .sm-album-current-folder-btn {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sm-album-folder-list {
+    max-height: calc(5 * 32px + 10px);
+  }
+
+  #sm-album-folder-sort {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sm-album-folders-panel {
+    padding: 8px;
+  }
+
+  .sm-album-folder-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 46vh;
+  }
+
+  .sm-album-folder-card {
+    min-height: 145px;
+    padding: 6px;
+  }
+
+  .sm-album-folder-card-title {
+    font-size: 0.78em;
+  }
+
+  .sm-album-folder-card-meta {
+    font-size: 0.7em;
+  }
+
+  .sm-album-card {
+    padding: 7px;
+    border-radius: 7px;
+  }
+
+  .sm-album-caption {
+    margin-top: 5px;
+    font-size: 0.78em;
+  }
+
+  .sm-album-meta {
+    font-size: 0.7em;
+    line-height: 1.25;
+  }
+
+  .sm-album-prompt-controls {
+    margin-top: 7px;
+    gap: 5px;
+  }
+  .sm-album-prompt-controls {
+    min-height: 54px;
+  }
+  .sm-album-meta-open { min-width: 136px; }
+
+  .sm-album-action-btn { min-height: auto; min-width: auto; padding: 3px 6px; font-size: 0.76em; }
+
+  .sm-album-meta-open {
+    width: auto;
+    justify-content: center;
+  }
+
+  #sm-album-image-viewer {
+    padding: 10px;
+  }
+
+  .sm-album-image-viewer-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    gap: 8px;
+  }
+
+  .sm-album-image-viewer-close {
+    top: 4px;
+    right: 4px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .sm-album-image-viewer-img {
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 86px);
+    border-radius: 8px;
+  }
+
+  .sm-album-image-viewer-caption {
+    font-size: 0.82em;
+    max-width: calc(100vw - 24px);
+  }
+
+  #sm-album-meta-viewer {
+    padding: 8px;
+  }
+
+  .sm-album-meta-viewer-content {
+    width: min(100vw - 12px, 920px);
+    max-height: calc(100vh - 12px);
+    border-radius: 10px;
+    padding: 11px;
+    gap: 8px;
+  }
+
+  .sm-album-meta-viewer-caption {
+    font-size: 0.86em;
+    padding-right: 40px;
+  }
+
+  .sm-album-meta-viewer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sm-album-meta-viewer-toolbar .sm-album-prompt-mode-switch {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .sm-album-meta-viewer-toolbar .sm-album-prompt-mode-btn {
+    flex: 1 1 50%;
+    min-height: 34px;
+    font-size: 0.8em;
+  }
+
+  #sm-album-meta-viewer-copy {
+    width: 100%;
+    justify-content: center;
+    min-height: 36px;
+  }
+
+  #sm-album-meta-viewer-text {
+    min-height: 180px;
+    max-height: calc(100vh - 250px);
+    font-size: 0.8em;
+    line-height: 1.34;
+    padding: 7px;
+  }
+}
+
+@media (max-width: 700px) and (max-height: 560px) {
+  .sm-album-grid {
+    max-height: 50vh;
+  }
+
+  .sm-album-image-viewer-img {
+    max-height: calc(100vh - 70px);
+  }
+
+  #sm-album-meta-viewer-text {
+    min-height: 130px;
+    max-height: calc(100vh - 210px);
+  }
 }
 
     </style>
@@ -1315,6 +2220,13 @@
                             </div>
                             <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_quests_cal">Enable Quests &amp; Calendar</span>
                         </label>
+                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;">
+                            <div class="sm-switch">
+                                <input type="checkbox" id="sm-global-enable-album" checked>
+                                <span class="sm-slider"></span>
+                            </div>
+                            <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_album">Enable Album</span>
+                        </label>
                     </div>
                     <button id="sm-global-settings-btn" class="menu_button" data-i18n-title="global_settings" style="margin:0; padding: 10px 20px; display: flex; align-items: center; justify-content: center; font-size: 1.2em;"><i class="fa-solid fa-gear"></i></button>
                 </div>
@@ -1337,6 +2249,29 @@
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&amp;C Settings Tab</span></label>
                     </div>
+
+                    <div class="sm-customization-title" data-i18n="customization_title">Customization</div>
+                    <div class="sm-customize-grid">
+                        <label class="sm-customize-row">
+                            <span data-i18n="sidebar_color">Sidebar color</span>
+                            <input type="color" id="sm-custom-sidebar-color" class="sm-color-input" value="#ffd700">
+                        </label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;">
+                            <input type="checkbox" id="sm-custom-hide-sidebar">
+                            <span style="word-break: break-word;" data-i18n="hide_sidebar">Hide sidebar strip</span>
+                        </label>
+                        <label class="sm-customize-row">
+                            <span data-i18n="button_color">Buttons color</span>
+                            <input type="color" id="sm-custom-button-color" class="sm-color-input" value="#7dd3fc">
+                        </label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;">
+                            <input type="checkbox" id="sm-custom-disable-glow">
+                            <span style="word-break: break-word;" data-i18n="disable_glow">Disable glow effects</span>
+                        </label>
+                        <div class="sm-customize-actions">
+                            <button type="button" id="sm-custom-reset-defaults" class="menu_button" data-i18n="customization_reset_defaults">Reset defaults</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="sm-global-settings-filter-wrap">
@@ -1355,20 +2290,37 @@
 
                 <div class="sm-main-tabs-header">
     <div id="sm-main-btn-memories" class="sm-main-tab-btn active" data-maintab="memories">
-        <i class="fa-solid fa-brain" style="margin-right: 5px;"></i>
+        <svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path class="sm-tab-icon-line" d="M12 18V5m3 8a4.17 4.17 0 0 1-3-4a4.17 4.17 0 0 1-3 4m8.598-6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"></path>
+            <path class="sm-tab-icon-line" d="M17.997 5.125a4 4 0 0 1 2.526 5.77"></path>
+            <path class="sm-tab-icon-line" d="M18 18a4 4 0 0 0 2-7.464"></path>
+            <path class="sm-tab-icon-line" d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"></path>
+            <path class="sm-tab-icon-line" d="M6 18a4 4 0 0 1-2-7.464"></path>
+            <path class="sm-tab-icon-line" d="M6.003 5.125a4 4 0 0 0-2.526 5.77"></path>
+        </svg>
         <span data-i18n="memories"> Memories</span>
     </div>
     <div id="sm-main-btn-calendar" class="sm-main-tab-btn" data-maintab="calendar">
-        <i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i>
+        <svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path class="sm-tab-icon-line" d="M8 2v4m8-4v4m5 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8M3 10h18m-5 10l2 2l4-4"></path>
+        </svg>
         <span data-i18n="quests_cal"> Quests &amp; Calendar</span>
+    </div>
+    <div id="sm-main-btn-album" class="sm-main-tab-btn" data-maintab="album">
+        <svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <rect class="sm-tab-icon-line" x="3" y="4" width="18" height="16" rx="2"></rect>
+            <circle class="sm-tab-icon-line" cx="9" cy="10" r="1.6"></circle>
+            <path class="sm-tab-icon-line" d="m21 16-5.2-4.4a1.5 1.5 0 0 0-2 0L8 16"></path>
+        </svg>
+        <span data-i18n="album"> Album</span>
     </div>
 </div>
 
 <div id="sm-main-tab-memories" class="sm-main-tab-pane active">
     <div class="sm-tabs-header">
-                        <div id="sm-tab-btn-summary" class="sm-tab-btn active" data-tab="summary"><i class="fa-solid fa-file-lines" style="margin-right: 5px;"></i><span data-i18n="summary"> Summary</span></div>
-                        <div id="sm-tab-btn-facts" class="sm-tab-btn" data-tab="facts"><i class="fa-solid fa-thumbtack" style="margin-right: 5px;"></i><span data-i18n="facts"> Facts</span></div>
-                        <div id="sm-tab-btn-library" class="sm-tab-btn" data-tab="library"><i class="fa-solid fa-book" style="margin-right: 5px;"></i><span data-i18n="library"> Library</span></div>
+                        <div id="sm-tab-btn-summary" class="sm-tab-btn active" data-tab="summary"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="sm-tab-icon-line" d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zM7 11h10M7 15h6M7 7h8"></path></svg><span data-i18n="summary"> Summary</span></div>
+                        <div id="sm-tab-btn-facts" class="sm-tab-btn" data-tab="facts"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="sm-tab-icon-line" d="M13 5h8m-8 7h8m-8 7h8M3 17l2 2l4-4M3 7l2 2l4-4"></path></svg><span data-i18n="facts"> Facts</span></div>
+                        <div id="sm-tab-btn-library" class="sm-tab-btn" data-tab="library"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><rect class="sm-tab-icon-line" width="8" height="18" x="3" y="3" rx="1"></rect><path class="sm-tab-icon-line" d="M7 3v18m13.4-2.1c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"></path></svg><span data-i18n="library"> Library</span></div>
                     </div>
 
                     <div id="sm-tab-summary" class="sm-tab-pane active">
@@ -1430,8 +2382,8 @@
                                 <span id="sm-summary-mode-help-wrap" class="sm-summary-mode-help-wrap">
                                     <button id="sm-summary-mode-help-btn" type="button" class="sm-summary-mode-help-btn" aria-expanded="false" data-i18n-aria-label="summary_mode_help_aria">?</button>
                                     <div id="sm-summary-mode-help-popover" class="sm-summary-mode-help-popover" role="tooltip">
-                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_dynamic_bi">Dynamic / Динамичный: updates the same summary over time, compressing previous details while preserving story continuity.</div>
-                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_static_bi">Static / Статичный: adds a new immutable entry each generation; old entries are kept as history.</div>
+                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_dynamic_bi">Dynamic / Р”РёРЅР°РјРёС‡РЅС‹Р№: updates the same summary over time, compressing previous details while preserving story continuity.</div>
+                                        <div class="sm-summary-mode-help-line" data-i18n="summary_mode_help_static_bi">Static / РЎС‚Р°С‚РёС‡РЅС‹Р№: adds a new immutable entry each generation; old entries are kept as history.</div>
                                     </div>
                                 </span>
                             </div>
@@ -1443,6 +2395,11 @@
                                     <input type="radio" id="sm-summary-mode-static" name="sm_summary_mode" value="static">
                                     <label for="sm-summary-mode-static" data-i18n="summary_mode_static_short">Static</label>
                                 </div>
+
+                                <label class="sm-check-row flex-container alignitemscenter" style="margin-bottom: 0;">
+                                    <input type="checkbox" id="sm-summary-shared-prompt-enabled" checked>
+                                    <span data-i18n="summary_shared_prompt">Use one prompt for Dynamic and Static</span>
+                                </label>
 
                                 <div id="sm-summary-static-settings" class="flex-container alignitemscenter sm-summary-static-settings" style="gap: 10px; margin-top: 6px; display: none;">
                                     <label class="flex-container alignitemscenter" style="margin-bottom:0; gap: 6px;">
@@ -1662,9 +2619,9 @@
                 <div id="sm-main-tab-calendar" class="sm-main-tab-pane">
 
                     <div class="sm-tabs-header">
-                        <div id="sm-tab-btn-quests" class="sm-tab-btn active" data-tab="quests"><i class="fa-solid fa-khanda" style="margin-right: 5px;"></i><span data-i18n="timeline_quests"> Timeline &amp; Quests</span></div>
-                        <div id="sm-tab-btn-calendar" class="sm-tab-btn" data-tab="cal"><i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i><span data-i18n="cal_events"> Calendar Events</span></div>
-                        <div id="sm-tab-btn-qcsettings" class="sm-tab-btn" data-tab="qcsettings"><i class="fa-solid fa-gear" style="margin-right: 5px;"></i><span data-i18n="settings"> Settings</span></div>
+                        <div id="sm-tab-btn-quests" class="sm-tab-btn active" data-tab="quests"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle class="sm-tab-icon-line" cx="6" cy="19" r="3"></circle><path class="sm-tab-icon-line" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle class="sm-tab-icon-line" cx="18" cy="5" r="3"></circle></svg><span data-i18n="timeline_quests"> Timeline &amp; Quests</span></div>
+                        <div id="sm-tab-btn-calendar" class="sm-tab-btn" data-tab="cal"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle class="sm-tab-icon-line" cx="12" cy="12" r="10"></circle><path class="sm-tab-icon-line" d="M12 6v6h4"></path></svg><span data-i18n="cal_events"> Calendar Events</span></div>
+                        <div id="sm-tab-btn-qcsettings" class="sm-tab-btn" data-tab="qcsettings"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="sm-tab-icon-line" d="M14 17H5M19 7h-9"></path><circle class="sm-tab-icon-line" cx="17" cy="17" r="3"></circle><circle class="sm-tab-icon-line" cx="7" cy="7" r="3"></circle></svg><span data-i18n="settings"> Settings</span></div>
                     </div>
 
 <div id="sm-tab-quests" class="sm-tab-pane active">
@@ -1788,7 +2745,7 @@
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-wi" checked><span data-i18n="world_info_lorebook">World Info / Lorebook</span></label>
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-sum" checked><span data-i18n="story_summary">Story Summary</span></label>
                         <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-chat" checked><span data-i18n="chat_history">Chat History</span></label>
-                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-an" checked><span data-i18n="authors_note">Author’s Note</span></label>
+                        <label class="sm-check-row"><input type="checkbox" id="sm-ev-ctx-an" checked><span data-i18n="authors_note">Author's Note</span></label>
                     </div>
                 </div>
 
@@ -1815,9 +2772,9 @@
                                 <span id="sm-density-help-wrap" class="sm-density-help-wrap">
                                     <button id="sm-density-help-btn" type="button" class="sm-density-help-btn" aria-expanded="false" data-i18n-aria-label="density_help_aria">?</button>
                                     <div id="sm-density-help-popover" class="sm-density-help-popover" role="tooltip">
-                                        <div class="sm-density-help-line" data-i18n="density_help_line_low_bi">Low / Низкая: fewer generated events, wider spacing, calmer pace.</div>
-                                        <div class="sm-density-help-line" data-i18n="density_help_line_medium_bi">Medium / Средняя: balanced amount of events for regular world activity.</div>
-                                        <div class="sm-density-help-line" data-i18n="density_help_line_high_bi">High / Высокая: many generated events, denser timeline, faster pace.</div>
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_low_bi">Low / РќРёР·РєР°СЏ: fewer generated events, wider spacing, calmer pace.</div>
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_medium_bi">Medium / РЎСЂРµРґРЅСЏСЏ: balanced amount of events for regular world activity.</div>
+                                        <div class="sm-density-help-line" data-i18n="density_help_line_high_bi">High / Р’С‹СЃРѕРєР°СЏ: many generated events, denser timeline, faster pace.</div>
                                     </div>
                                 </span>
                             </span>
@@ -2080,6 +3037,80 @@
                     </div>
                 </div>
 
+                <div id="sm-main-tab-album" class="sm-main-tab-pane">
+                    <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px;">
+                        <div class="sm-album-header">
+                            <b data-i18n="album">Album</b>
+                            <span id="sm-album-count" style="font-size:0.82em; opacity:0.75;">0</span>
+                        </div>
+
+                        <div class="sm-album-search-row">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="sm-album-folder-search" data-i18n-placeholder="album_search_folders" placeholder="Search folders...">
+                        </div>
+
+                        <div id="sm-album-folder-recent" class="sm-album-folder-recent" style="display:none;"></div>
+
+                        <div class="sm-album-actions-row">
+                            <input type="text" id="sm-album-new-folder-name" class="text_pole" data-i18n-placeholder="album_new_folder_name_ph" placeholder="New folder name">
+
+                            <button type="button" id="sm-album-create-folder" class="menu_button sm-album-icon-btn" data-i18n-title="album_create_folder" title="Create folder">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+
+                            <button type="button" id="sm-album-folder-library-btn" class="menu_button sm-album-folder-library-btn" data-i18n-title="album_folder_library_section" title="Folders library" aria-expanded="false">
+                                <span data-i18n="album_all_folders">All folders</span>
+                            </button>
+                        </div>
+
+                        <div id="sm-album-folders-panel" class="sm-album-folders-panel" style="display:none;">
+                            <div class="sm-album-folders-head">
+                                <b data-i18n="album_folder_library_section">Folders Library</b>
+                                <select id="sm-album-folder-sort" class="text_pole">
+                                    <option value="name_asc" data-i18n="album_folder_sort_name_asc">Сортировать: A-Z</option>
+                                    <option value="date_desc" data-i18n="album_folder_sort_date_desc">Сортировать: newest first</option>
+                                    <option value="date_asc" data-i18n="album_folder_sort_date_asc">Сортировать: oldest first</option>
+                                </select>
+                            </div>
+
+                            <div id="sm-album-folder-grid" class="sm-album-folder-grid">
+                                <div class="sm-album-folder-empty" data-i18n="album_no_folders_match">No folders match your search.</div>
+                            </div>
+                        </div>
+
+                        <div class="sm-album-current-folder-pill">
+                            <div class="sm-album-folder-picker">
+                                <button type="button" id="sm-album-folder-btn" class="menu_button sm-album-current-folder-btn" aria-expanded="false">
+                                    <span id="sm-album-current-folder-label" class="sm-album-current-folder" data-i18n="album_all_folders">All folders</span>
+                                    <i class="fa-solid fa-caret-down sm-album-folder-btn-caret"></i>
+                                </button>
+                                <div id="sm-album-folder-list" class="sm-album-folder-list" style="display:none;"></div>
+                            </div>
+                            <button type="button" id="sm-album-folder-lock" class="menu_button sm-album-icon-btn sm-album-lock-btn" data-i18n-title="album_bind_lock" title="Bind this folder to current character" aria-pressed="false">
+                                <i class="fa-solid fa-lock-open"></i>
+                            </button>
+                        </div>
+
+                        <div class="sm-album-sort-row">
+                            <select id="sm-album-sort" class="text_pole">
+                                <option value="date_desc" data-i18n="album_sort_date_desc">Date: recent first</option>
+                                <option value="date_asc" data-i18n="album_sort_date_asc">Date: oldest first</option>
+                            </select>
+                        </div>
+
+                        <div class="sm-album-options-row">
+                            <label class="sm-check-row">
+                                <input type="checkbox" id="sm-album-save-generation-meta">
+                                <span data-i18n="album_save_generation_meta">Save generation metadata (if available)</span>
+                            </label>
+                        </div>
+
+                        <div id="sm-album-grid" class="sm-album-grid">
+                            <div style="opacity:0.6; text-align:center; grid-column: 1 / -1; padding: 14px;" data-i18n="album_no_images">No images in album yet.</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -2109,6 +3140,75 @@
             <button type="button" class="menu_button sm-popover-btn" data-action="events"><i class="fa-solid fa-calendar-day"></i><span data-i18n="events"> Events</span></button>
             <button type="button" class="menu_button sm-popover-btn" data-action="parse-events"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="parse_events_now">Parse Events Now</span></button>
             <button type="button" class="menu_button sm-popover-btn" data-action="next-day"><i class="fa-solid fa-forward-step"></i><span data-i18n="plus_1_day">+1 Day</span></button>
+        </div>
+    </div>
+
+    <button type="button" id="sm-image-save-quick" class="menu_button" data-i18n="album_save_image" data-i18n-title="album_save_image" title="Save image">
+        <i class="fa-solid fa-download"></i>
+        <span data-i18n="album_save_image">Save image</span>
+    </button>
+
+    <div id="sm-album-image-viewer" aria-hidden="true">
+        <div id="sm-album-image-viewer-content" class="sm-album-image-viewer-content">
+            <button
+                type="button"
+                id="sm-album-image-viewer-close"
+                class="sm-album-image-viewer-close"
+                data-i18n-title="album_image_viewer_close"
+                title="Close image viewer"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img class="sm-album-image-viewer-img" src="" alt="image">
+            <div class="sm-album-image-viewer-caption"></div>
+            <div class="sm-album-image-viewer-actions">
+                <button type="button" id="sm-album-image-viewer-download" class="sm-album-action-btn" data-i18n-title="album_download_image" title="Download">
+                    <span data-i18n="album_download_image">Download</span>
+                </button>
+                <button type="button" id="sm-album-image-viewer-delete" class="sm-album-action-btn is-danger" data-i18n-title="album_delete_image" title="Delete" disabled>
+                    <span data-i18n="album_delete_image">Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sm-album-meta-viewer" aria-hidden="true">
+        <div id="sm-album-meta-viewer-content" class="sm-album-meta-viewer-content">
+            <button
+                type="button"
+                id="sm-album-meta-viewer-close"
+                class="sm-album-image-viewer-close"
+                data-i18n-title="album_meta_viewer_close"
+                title="Close metadata window"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="sm-album-meta-viewer-caption"></div>
+
+            <div class="sm-album-meta-viewer-toolbar">
+                <div class="sm-album-prompt-mode-switch">
+                    <button
+                        type="button"
+                        class="sm-album-prompt-mode-btn is-active"
+                        data-mode="prompt"
+                        data-i18n="album_prompt_mode_prompt"
+                    >Prompt</button>
+                    <button
+                        type="button"
+                        class="sm-album-prompt-mode-btn"
+                        data-mode="style"
+                        data-i18n="album_prompt_mode_style"
+                    >Style</button>
+                </div>
+
+                <button type="button" id="sm-album-meta-viewer-copy" class="sm-album-action-btn" data-i18n="album_copy_prompt">
+                    <i class="fa-solid fa-copy"></i>
+                    <span data-i18n="album_copy_prompt">Copy prompt</span>
+                </button>
+            </div>
+
+            <textarea id="sm-album-meta-viewer-text" class="text_pole" readonly></textarea>
         </div>
     </div>
 </div>
