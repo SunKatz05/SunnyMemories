@@ -12,7 +12,7 @@
             --sm-glow-blur-inset: 7px;
             --sm-glow-drop-1: 6px;
             --sm-glow-drop-2: 9px;
-            --sm-tab-glow-blur: 2px;
+            --sm-tab-glow-blur: 3.3px;
             --sm-glow-gold-alpha: 0.34;
             --sm-glow-purple-alpha: 0.4;
         }
@@ -166,6 +166,9 @@
         }
         .sm-tab-pane { display: none; animation: smFade 0.3s; }
         .sm-tab-pane.active { display: block; }
+        .sm-memories-gen-range-panel.is-hidden {
+            display: none !important;
+        }
 
         @keyframes smFade { from {opacity: 0;} to {opacity: 1;} }
         .sm-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
@@ -195,7 +198,7 @@
             box-sizing: border-box;
             background: radial-gradient(circle at 35% 30%, #ffffff 0%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.5) 58%, rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.78) 100%);
             border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.65);
-            box-shadow: 0 0 var(--sm-glow-blur-sm) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-knob));
+            box-shadow: 0 0 3px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.2);
             transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .sm-switch:hover .sm-slider {
@@ -213,7 +216,12 @@
         .sm-switch input:checked + .sm-slider::before {
             transform: translateX(16px);
             border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.95);
-            box-shadow: 0 0 var(--sm-glow-blur-sm) rgba(var(--sm-button-accent-rgb, 125, 211, 252), var(--sm-glow-alpha-strong));
+            box-shadow: 0 0 4px rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.28);
+        }
+        .sm-custom-hide-enable-toggle-memories .sm-enable-toggles-wrap .sm-enable-toggle-memories,
+        .sm-custom-hide-enable-toggle-quests .sm-enable-toggles-wrap .sm-enable-toggle-quests,
+        .sm-custom-hide-enable-toggle-album .sm-enable-toggles-wrap .sm-enable-toggle-album {
+            display: none;
         }
         .sm-bypass-filter-row {
             display: flex;
@@ -229,6 +237,338 @@
             display: inline-flex;
             align-items: center;
             line-height: 1.2;
+        }
+        .sm-mini-guide-toggle {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 6px 10px;
+            font-size: 0.82em;
+            border-radius: 8px;
+        }
+        .sm-mini-guide-toggle i {
+            opacity: 0.88;
+        }
+        #sm-mini-guide-panel {
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.16);
+            padding: 10px;
+        }
+        .sm-mini-guide-title {
+            font-size: 0.92em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--SmartThemeQuoteColor, #7dd3fc);
+        }
+        .sm-mini-guide-layout {
+            display: grid;
+            grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+            gap: 12px;
+        }
+        .sm-mini-guide-nav-title {
+            font-size: 0.72em;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.72;
+            margin-bottom: 6px;
+        }
+        .sm-mini-guide-main-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            padding: 4px;
+        }
+        .sm-mini-guide-main-btn {
+            min-height: 32px;
+            padding: 5px 8px 5px 10px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: rgba(255,255,255,0.86);
+            text-align: left;
+            font-size: 0.78em;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .sm-mini-guide-main-btn.is-active {
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.62);
+            background: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.08);
+            color: #fff;
+        }
+        .sm-mini-guide-content {
+            min-width: 0;
+        }
+        .sm-mini-guide-pane {
+            display: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            padding: 9px 10px;
+        }
+        .sm-mini-guide-pane.is-active {
+            display: block;
+        }
+        .sm-mini-guide-section-title {
+            font-size: 0.84em;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: rgba(255,255,255,0.96);
+        }
+        .sm-mini-guide-section-note {
+            font-size: 0.75em;
+            line-height: 1.3;
+            opacity: 0.75;
+            margin-bottom: 8px;
+        }
+        .sm-mini-guide-topic-layout {
+            display: grid;
+            grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+            gap: 10px;
+        }
+        .sm-mini-guide-subtopics-col {
+            min-width: 0;
+        }
+        .sm-mini-guide-topics-title {
+            font-size: 0.7em;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        .sm-mini-guide-subtabs {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 7px;
+            background: rgba(0,0,0,0.12);
+            padding: 4px;
+        }
+        .sm-mini-guide-subtab-btn {
+            min-height: 30px;
+            padding: 4px 8px 4px 10px;
+            border-radius: 6px;
+            font-size: 0.74em;
+            font-weight: 600;
+            border: 1px solid transparent;
+            background: transparent;
+            color: rgba(255,255,255,0.84);
+            text-align: left;
+        }
+        .sm-mini-guide-subtab-btn.is-active {
+            border-color: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.55);
+            background: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.08);
+            color: #fff;
+        }
+        .sm-mini-guide-article-wrap {
+            min-width: 0;
+        }
+        .sm-mini-guide-subpane {
+            display: none;
+        }
+        .sm-mini-guide-subpane.is-active {
+            display: block;
+        }
+        .sm-mini-guide-article-title {
+            font-size: 0.81em;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: rgba(255,255,255,0.95);
+        }
+        .sm-mini-guide-text {
+            font-size: 0.78em;
+            line-height: 1.36;
+            opacity: 0.88;
+            white-space: pre-line;
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 8px;
+            padding: 8px 9px;
+            background: rgba(255,255,255,0.02);
+        }
+        .sm-mini-guide-type-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .sm-mini-guide-type-card {
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+            padding: 9px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .sm-mini-guide-type-card-title {
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.86;
+            margin-bottom: 4px;
+        }
+        .sm-mini-guide-type-card-text {
+            font-size: 0.78em;
+            line-height: 1.35;
+            opacity: 0.92;
+            white-space: pre-line;
+        }
+        @media (max-width: 900px) {
+            .sm-mini-guide-layout {
+                grid-template-columns: 1fr;
+            }
+            .sm-mini-guide-main-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .sm-mini-guide-topic-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 620px) {
+            .sm-mini-guide-main-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        #sm-mini-guide-panel,
+        #sm-mini-guide-panel * {
+            box-sizing: border-box;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-view-controls {
+            display: none;
+            margin-bottom: 4px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-view-btn {
+            width: 18px;
+            height: 18px;
+            min-height: 18px;
+            padding: 0;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.66em;
+            line-height: 1;
+        }
+        #sm-mini-guide-panel[data-guide-view="main"] .sm-mini-guide-layout {
+            display: block !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="main"] .sm-mini-guide-nav {
+            width: 100%;
+        }
+        #sm-mini-guide-panel[data-guide-view="main"] .sm-mini-guide-main-btn.is-active {
+            border-color: transparent;
+            background: transparent;
+            color: rgba(255,255,255,0.86);
+        }
+        #sm-mini-guide-panel[data-guide-view="main"] .sm-mini-guide-content {
+            display: none !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-layout,
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-layout {
+            display: block !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-nav,
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-nav {
+            display: none !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-content,
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-content {
+            display: block !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-view-controls,
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-view-controls {
+            display: flex;
+            align-items: center;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-topic-layout,
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-topic-layout {
+            display: block !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-subtopics-col {
+            display: block;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-section-title,
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-section-note,
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-topics-title {
+            display: none;
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-subtab-btn.is-active {
+            border-color: transparent;
+            background: transparent;
+            color: rgba(255,255,255,0.84);
+        }
+        #sm-mini-guide-panel[data-guide-view="topics"] .sm-mini-guide-article-wrap {
+            display: none !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-subtopics-col {
+            display: none !important;
+        }
+        #sm-mini-guide-panel[data-guide-view="article"] .sm-mini-guide-article-wrap {
+            display: block !important;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-pane {
+            border: 0 !important;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-main-list,
+        #sm-mini-guide-panel .sm-mini-guide-subtabs,
+        #sm-mini-guide-panel .sm-mini-guide-text {
+            border-color: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.015);
+        }
+        #sm-mini-guide-panel .sm-mini-guide-main-btn {
+            font-size: 0.86em;
+            padding: 7px 10px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-subtab-btn {
+            font-size: 0.83em;
+            padding: 6px 10px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-section-title {
+            font-size: 0.95em;
+            margin-bottom: 3px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-section-note {
+            font-size: 0.82em;
+            margin-bottom: 6px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-article-title {
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-text {
+            font-size: 0.87em;
+            line-height: 1.45;
+            padding: 10px 11px;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-main-list,
+        #sm-mini-guide-panel .sm-mini-guide-subtabs {
+            align-items: stretch;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-main-btn,
+        #sm-mini-guide-panel .sm-mini-guide-subtab-btn {
+            width: 100%;
+            white-space: normal;
+            word-break: break-word;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-pane {
+            display: none !important;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-pane.is-active {
+            display: block !important;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-subpane {
+            display: none !important;
+        }
+        #sm-mini-guide-panel .sm-mini-guide-subpane.is-active {
+            display: block !important;
         }
         #sm-global-settings-panel {
             margin-bottom: 8px;
@@ -681,6 +1021,35 @@
         }
         .sm-album-options-row {
             margin-bottom: 10px;
+        }
+        .sm-album-diary-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .sm-album-diary-edit-btn {
+            min-width: auto;
+            padding: 4px 9px;
+            font-size: 0.76em;
+            line-height: 1.15;
+            display: none;
+            flex: 0 0 auto;
+        }
+        .sm-album-diary-edit-btn.is-active {
+            border-color: rgba(125,211,252,0.55);
+            background: rgba(125,211,252,0.14);
+        }
+        #sm-album-diary-prompt-editor {
+            display: none;
+            margin-top: 6px;
+        }
+        #sm-album-diary-prompt {
+            width: 100%;
+            min-height: 86px;
+            font-size: 0.84em;
+            line-height: 1.35;
+            box-sizing: border-box;
         }
         .sm-album-sort-row {
             display: flex;
@@ -1185,7 +1554,9 @@
             font-size: 0.9em;
             line-height: 1.25;
             text-align: center;
-            max-width: min(96vw, 1500px);
+            max-width: min(72vw, 860px);
+            padding: 0 10px;
+            margin: 0 auto;
             word-break: break-word;
         }
         .sm-album-image-viewer-actions {
@@ -1199,6 +1570,53 @@
             font-size: 0.82em;
             padding: 6px 10px;
             min-height: 34px;
+        }
+        /* Mobile / small-screen tweaks: center modal, darken backdrop, larger buttons */
+        @media (max-width: 700px) {
+            #sm-album-image-viewer {
+                padding: 12px;
+                background: rgba(0,0,0,0.98);
+                /* prefer dynamic viewport height on modern browsers */
+                height: 100dvh;
+                min-height: 100vh;
+                align-items: center;
+                justify-content: center;
+            }
+            .sm-album-image-viewer-content {
+                max-width: 100%;
+                width: 100%;
+                max-height: calc(100vh - 40px);
+                padding: 8px;
+                box-sizing: border-box;
+                gap: 8px;
+                justify-content: center;
+                align-items: center;
+            }
+            .sm-album-image-viewer-img {
+                max-width: 100%;
+                max-height: calc(100vh - 160px);
+                width: auto;
+                height: auto;
+                border-radius: 8px;
+                box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+            }
+            .sm-album-image-viewer-caption {
+                font-size: 0.95em;
+                padding: 6px 8px;
+            }
+            .sm-album-image-viewer-actions .sm-album-action-btn {
+                font-size: 1.02em;
+                padding: 10px 14px;
+                min-height: 44px;
+                border-radius: 8px;
+            }
+            .sm-album-image-viewer-close {
+                top: 8px;
+                right: 8px;
+                width: 44px;
+                height: 44px;
+                font-size: 1.15em;
+            }
         }
         .sm-summary-inject-warning-anchor {
             position: relative;
@@ -1970,6 +2388,25 @@
     right: auto;
   }
 
+  .sm-bypass-filter-row {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sm-mini-guide-toggle {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sm-mini-guide-subtabs {
+    gap: 5px;
+  }
+
+  #sm-mini-guide-panel {
+    padding: 8px;
+  }
+
   .sm-date-card {
     padding: 10px;
     gap: 8px;
@@ -2122,7 +2559,8 @@
 
   .sm-album-image-viewer-caption {
     font-size: 0.82em;
-    max-width: calc(100vw - 24px);
+    max-width: calc(100vw - 56px);
+    padding: 0 4px;
   }
 
   #sm-album-meta-viewer {
@@ -2204,23 +2642,23 @@
                     <select id="sunny-memories-profile" class="text_pole flex1" style="min-width: 150px;"></select>
                 </div>
 
-                <div class="flex-container margin-bottom-10" style="gap: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; align-items: stretch; flex-wrap: wrap;">
+                <div class="flex-container margin-bottom-10 sm-enable-toggles-wrap" style="gap: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; align-items: stretch; flex-wrap: wrap;">
                     <div class="flex-container flexFlowColumn" style="gap: 12px; flex: 1; justify-content: center; min-width: 200px;">
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;">
+                        <label class="flex-container alignitemscenter sm-enable-toggle-memories" style="cursor:pointer; margin:0;">
                             <div class="sm-switch">
                                 <input type="checkbox" id="sm-global-enable-memories" checked>
                                 <span class="sm-slider"></span>
                             </div>
                             <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_memories">Enable Memories</span>
                         </label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;">
+                        <label class="flex-container alignitemscenter sm-enable-toggle-quests" style="cursor:pointer; margin:0;">
                             <div class="sm-switch">
                                 <input type="checkbox" id="sm-global-enable-quests" checked>
                                 <span class="sm-slider"></span>
                             </div>
                             <span style="margin-left:10px; font-weight: bold;" data-i18n="enable_quests_cal">Enable Quests &amp; Calendar</span>
                         </label>
-                        <label class="flex-container alignitemscenter" style="cursor:pointer; margin:0;">
+                        <label class="flex-container alignitemscenter sm-enable-toggle-album" style="cursor:pointer; margin:0;">
                             <div class="sm-switch">
                                 <input type="checkbox" id="sm-global-enable-album" checked>
                                 <span class="sm-slider"></span>
@@ -2268,6 +2706,18 @@
                             <input type="checkbox" id="sm-custom-disable-glow">
                             <span style="word-break: break-word;" data-i18n="disable_glow">Disable glow effects</span>
                         </label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;">
+                            <input type="checkbox" id="sm-custom-hide-enable-toggle-memories">
+                            <span style="word-break: break-word;" data-i18n="hide_enable_toggle_memories">Hide "Enable Memories" toggle</span>
+                        </label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;">
+                            <input type="checkbox" id="sm-custom-hide-enable-toggle-quests">
+                            <span style="word-break: break-word;" data-i18n="hide_enable_toggle_quests">Hide "Enable Quests &amp; Calendar" toggle</span>
+                        </label>
+                        <label class="sm-check-row flex-container alignitemscenter" style="margin:0;">
+                            <input type="checkbox" id="sm-custom-hide-enable-toggle-album">
+                            <span style="word-break: break-word;" data-i18n="hide_enable_toggle_album">Hide "Enable Album" toggle</span>
+                        </label>
                         <div class="sm-customize-actions">
                             <button type="button" id="sm-custom-reset-defaults" class="menu_button" data-i18n="customization_reset_defaults">Reset defaults</button>
                         </div>
@@ -2284,6 +2734,201 @@
                         </svg>
                     </button>
                     <span data-i18n="bypass_filter">Anti-Filter Mode</span>
+                    <button type="button" id="sm-mini-guide-toggle" class="menu_button sm-mini-guide-toggle" aria-expanded="false">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span data-i18n="mini_guide">Mini Guide</span>
+                    </button>
+                </div>
+
+                <div id="sm-mini-guide-panel" style="display:none;">
+                    <div class="sm-mini-guide-title" data-i18n="mini_guide_title">SunnyMemories Quick Guide</div>
+
+                    <div class="sm-mini-guide-layout">
+                        <div class="sm-mini-guide-nav">
+                            <div class="sm-mini-guide-nav-title" data-i18n="mini_guide_nav_title">Knowledge Base</div>
+                            <div class="sm-mini-guide-main-list">
+                                <button type="button" class="menu_button sm-mini-guide-main-btn is-active" data-guide-tab="settings" data-i18n="mini_guide_section_settings">General</button>
+                                <button type="button" class="menu_button sm-mini-guide-main-btn" data-guide-tab="memories" data-i18n="mini_guide_section_memories">Memories: Summary, Facts, Library</button>
+                                <button type="button" class="menu_button sm-mini-guide-main-btn" data-guide-tab="calendar" data-i18n="mini_guide_section_calendar">Quests and Calendar</button>
+                                <button type="button" class="menu_button sm-mini-guide-main-btn" data-guide-tab="album" data-i18n="mini_guide_section_album">Album and image archive</button>
+                            </div>
+                        </div>
+
+                        <div class="sm-mini-guide-content">
+                            <div class="sm-mini-guide-view-controls">
+                                <button
+                                    type="button"
+                                    class="menu_button sm-mini-guide-view-btn sm-mini-guide-back-main"
+                                    data-guide-back="auto"
+                                    data-i18n-title="mini_guide_back_step"
+                                    title="Back"
+                                    aria-label="Back"
+                                >
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                </button>
+                            </div>
+                            <div class="sm-mini-guide-pane is-active" data-guide-pane="settings">
+                                <div class="sm-mini-guide-topic-layout">
+                                    <div class="sm-mini-guide-subtopics-col">
+                                        <div class="sm-mini-guide-topics-title" data-i18n="mini_guide_topics_title">Topics</div>
+                                        <div class="sm-mini-guide-subtabs">
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn is-active" data-guide-subtab="settings-modules" data-i18n="mini_guide_topic_settings_modules">Enable modules and tabs</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="settings-custom" data-i18n="mini_guide_topic_settings_custom">Customization and colors</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="settings-filter" data-i18n="mini_guide_topic_settings_filter">Anti-Filter mode</button>
+                                        </div>
+                                    </div>
+                                    <div class="sm-mini-guide-article-wrap">
+                                        <div class="sm-mini-guide-subpane is-active" data-guide-subpane="settings-modules">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_settings_modules">Enable modules and tabs</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_depth_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">How Depth works (Depth)?</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_depth_body">Depth controls where a memory block is inserted in chat context.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_frequency_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">How Frequency works (Frequency / F)?</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_frequency_body">Frequency controls how often entries are injected.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="settings-custom">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_settings_custom">Customization and colors</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_custom">Use Customization to adjust accent colors, glow, and visual density.
+Keep only the controls you need visible, so the panel stays clean and focused.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="settings-filter">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_settings_filter">Anti-Filter mode</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_filter">Enable Anti-Filter mode only when your backend aggressively censors or trims model output.
+If generation quality is normal, keep it disabled.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-mini-guide-pane" data-guide-pane="memories">
+                                <div class="sm-mini-guide-topic-layout">
+                                    <div class="sm-mini-guide-subtopics-col">
+                                        <div class="sm-mini-guide-topics-title" data-i18n="mini_guide_topics_title">Topics</div>
+                                        <div class="sm-mini-guide-subtabs">
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn is-active" data-guide-subtab="memories-summary" data-i18n="mini_guide_topic_memories_summary">Summary generation and modes</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="memories-facts" data-i18n="mini_guide_topic_memories_facts">Facts extraction</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="memories-library" data-i18n="mini_guide_topic_memories_library">Library entries and injection</button>
+                                        </div>
+                                    </div>
+                                    <div class="sm-mini-guide-article-wrap">
+                                        <div class="sm-mini-guide-subpane is-active" data-guide-subpane="memories-summary">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_memories_summary">Summary generation and modes</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_summary_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">Summary</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_summary_body">Summary keeps a compact story retelling for context.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_dynamic_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Dynamic</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_dynamic_body">Dynamic summary compresses as the story progresses.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_static_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Static</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_static_body">Static summary keeps each retelling in its original form and appends new entries.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_prompt_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">How to write a summary prompt?</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_prompt_body">There are no strict rules, but concise and clear instructions work best.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="memories-facts">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_memories_facts">Facts extraction</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_facts_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">Facts</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_facts_body">Facts store RP details that are often skipped in a regular summary.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_facts_prompt_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Prompt for Facts</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_facts_prompt_body">In Facts Prompt, list what AI must track: NPCs, clothing and its condition, relationships, and more.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;"><i class="fa-solid fa-layer-group" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_facts_split_title">Split</span></div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_facts_split_body">Split lets AI divide facts by category and send separated pieces to Library.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="memories-library">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_memories_library">Library entries and injection</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">Library</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_library_body">Library stores important fragments from Summary and Facts for long-term use.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_controls_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Library control panel</div>
+                                            <div class="sm-mini-guide-text"><i class="fa-regular fa-moon" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_library_controls_moon">Moon — select one or multiple entries. Then you can apply actions to selected items.</span></div>
+                                            <div class="sm-mini-guide-text" style="margin-top: 6px;"><i class="fa-solid fa-trash" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_library_controls_delete">Trash — delete selected entries.</span></div>
+                                            <div class="sm-mini-guide-text" style="margin-top: 6px;"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_library_controls_merge">Merge — after selecting multiple entries, AI performs smart merge: both summary/fact texts are combined into one new entry. This new entry is more compact for storage and context injection, while chronology from old entries becomes clearer, making 'before → after' easier for AI to understand.</span></div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_injection_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">How injection works</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_library_injection_body">Each entry has its own enable toggle and injection parameters, including position, depth, and frequency.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-mini-guide-pane" data-guide-pane="calendar">
+                                <div class="sm-mini-guide-topic-layout">
+                                    <div class="sm-mini-guide-subtopics-col">
+                                        <div class="sm-mini-guide-topics-title" data-i18n="mini_guide_topics_title">Topics</div>
+                                        <div class="sm-mini-guide-subtabs">
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn is-active" data-guide-subtab="calendar-quests" data-i18n="mini_guide_topic_calendar_quests">Таймлайн и Квесты</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="calendar-events" data-i18n="mini_guide_topic_calendar_events">События Календаря</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="calendar-date" data-i18n="mini_guide_topic_calendar_date">Генерация событий</button>
+                                        </div>
+                                    </div>
+                                    <div class="sm-mini-guide-article-wrap">
+                                        <div class="sm-mini-guide-subpane is-active" data-guide-subpane="calendar-quests">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_calendar_quests">Таймлайн и квесты</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_quests">ИИ сканирует чат на квесты и цели и превращает их в простой список задач.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_calendar_quest_types_title">Типы квестов</div>
+                                            <div class="sm-mini-guide-type-grid">
+                                                <article class="sm-mini-guide-type-card">
+                                                    <div class="sm-mini-guide-type-card-title" data-i18n="mini_guide_calendar_quest_types_main_title">Главные Квесты и Цели</div>
+                                                    <div class="sm-mini-guide-type-card-text" data-i18n="mini_guide_calendar_quest_types_main_text">Особые задания, на которых строится РП. Самые важные по значению.</div>
+                                                </article>
+                                                <article class="sm-mini-guide-type-card">
+                                                    <div class="sm-mini-guide-type-card-title" data-i18n="mini_guide_calendar_quest_types_side_title">Второстепенные Цели</div>
+                                                    <div class="sm-mini-guide-type-card-text" data-i18n="mini_guide_calendar_quest_types_side_text">Сайд-квесты, могут быть важными или не очень.</div>
+                                                </article>
+                                                <article class="sm-mini-guide-type-card">
+                                                    <div class="sm-mini-guide-type-card-title" data-i18n="mini_guide_calendar_quest_types_short_title">Краткосрочные Задачи</div>
+                                                    <div class="sm-mini-guide-type-card-text" data-i18n="mini_guide_calendar_quest_types_short_text">Что-то не сильно значительное, что произойдет в самое ближайшее время.</div>
+                                                </article>
+                                            </div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="calendar-events">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_calendar_events">События календаря</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;" data-i18n="mini_guide_text_calendar_events_title">События</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_events">События — это важные сюжетные моменты, которые уже произошли или скоро произойдут. Извлечение делает их короткими. Для более подробных записей таймлайна используй парсер в настройках парсера.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_text_calendar_parser_title">Парсер</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_parser_body">Парсер собирает события во время RP и работает чуть шире обычного извлечения. Его можно включить в настройках парсера.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="calendar-date">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_calendar_date">Генерация событий</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_date">ИИ может генерировать подходящие события календаря на основе выбранного контекста. Ты сам контролируешь, откуда брать контекст, диапазон дат и стиль генерации.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_text_calendar_style_title">Стиль</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_style_body">Это тип событий, которые ИИ будет пытаться создавать.<br>Mixed — смесь разных типов.<br>Story — сюжетные события.<br>Random — случайные, «живые» события.<br>Social — разговоры, отношения, диалоги.<br>Weather — погода, климат, атмосфера.<br>Character — события с персонажами.<br>World — мир, общество, государство.<br>Quest — задания, цели, миссии.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_text_calendar_density_title">Плотность событий</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_density_body">Low — мало событий, спокойнее, реже.<br>Medium — нормальный баланс.<br>High — много событий, более насыщенный и быстрый ритм.<br><br>Простыми словами: Low = тихо и спокойно, Medium = обычная активность, High = очень насыщенная история.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_text_calendar_visibility_title">Видимость</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_visibility_body">Это то, насколько событие должно быть видно в календаре и в контексте.<br>Mixed — ИИ сам решает, какие сделать видимыми, а какие скрытыми.<br>Public — событие видно заранее и может «появляться» в контексте до даты.<br>Hidden — событие скрыто, пока не наступит его время.</div>
+                                            <div class="sm-mini-guide-inline-heading" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;" data-i18n="mini_guide_text_calendar_repeat_title">Показывать каждые N дней</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_calendar_repeat_body">Это настройка для публичных событий. Она говорит, как часто событие должно снова «напоминать» о себе до своей даты.<br>Например: «каждые 3 дня» — событие будет периодически всплывать в контексте; «0» — не будет повторяться.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm-mini-guide-pane" data-guide-pane="album">
+                                <div class="sm-mini-guide-topic-layout">
+                                    <div class="sm-mini-guide-subtopics-col">
+                                        <div class="sm-mini-guide-topics-title" data-i18n="mini_guide_topics_title">Topics</div>
+                                        <div class="sm-mini-guide-subtabs">
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn is-active" data-guide-subtab="album-save" data-i18n="mini_guide_topic_album_save">Saving images to album</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="album-folders" data-i18n="mini_guide_topic_album_folders">Folders, sorting, and search</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="album-diary" data-i18n="mini_guide_topic_album_diary">Diary captions and binding</button>
+                                        </div>
+                                    </div>
+                                    <div class="sm-mini-guide-article-wrap">
+                                        <div class="sm-mini-guide-subpane is-active" data-guide-subpane="album-save">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_album_save">Saving images to album</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_album_save">Save images from chat directly into the album.
+The extension stores copied files for durable local history, not temporary message links.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="album-folders">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_album_folders">Folders, sorting, and search</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_album_folders">Use folder controls to group images by scene, arc, or character.
+Sort by date/name and use search to quickly navigate large collections.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="album-diary">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_album_diary">Diary captions and binding</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_album_diary">Diary mode generates short in-character captions using chat context and image metadata.
+Folder binding links saves to the active character for faster consistent workflow.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
         </div>
@@ -2435,10 +3080,38 @@
                                     <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-summary-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
                                         <span data-i18n="as">as</span>
-                                        <select id="sunny-memories-summary-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0">System</option><option value="1">User</option><option value="2">Assistant</option></select>
+                                        <select id="sunny-memories-summary-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0" data-i18n="sys">System</option><option value="1" data-i18n="usr">User</option><option value="2" data-i18n="ast">Assistant</option></select>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="margin-bottom-10 sm-memories-gen-range-panel" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
+                            <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="gen_range_opts">Generation Range Options</b></div>
+                            <div class="flex-container flexFlowColumn" style="gap: 10px;">
+                                <label class="sm-radio-row">
+                                    <input type="radio" name="sm_range_mode" value="all">
+                                    <span data-i18n="all_msgs">All Messages (Visible Chat)</span>
+                                </label>
+                                <div class="flex-container alignitemscenter" style="gap: 15px; flex-wrap: wrap;">
+                                    <label class="sm-radio-row">
+                                        <input type="radio" name="sm_range_mode" value="first">
+                                        <span data-i18n="from_start">From Start (First N)</span>
+                                    </label>
+                                    <label class="sm-radio-row">
+                                        <input type="radio" name="sm_range_mode" value="last">
+                                        <span data-i18n="from_end">From End (Last N)</span>
+                                    </label>
+                                    <div class="flex-container alignitemscenter" style="gap: 5px;">
+                                        <span data-i18n="amount_n">Amount (N):</span>
+                                        <input type="number" id="sunny-memories-range-amount" class="text_pole" style="width:60px; text-align:center;" min="1" value="50">
+                                    </div>
+                                </div>
+                            </div>
+                            <label class="sm-check-row flex-container alignitemscenter margin-top-10" style="margin-bottom:0;">
+                                <input type="checkbox" id="sunny-memories-scan-wi">
+                                <span data-i18n="enable_wi_scan">Enable World Info Scanning</span>
+                            </label>
                         </div>
                     </div>
 
@@ -2489,7 +3162,7 @@
                                     <label class="flex-container alignitemscenter" style="margin-bottom:0; margin-left:10px;" data-i18n-title="freq_msgs_title"><span style="white-space:nowrap;" data-i18n="freq_short">Freq</span><input type="number" id="sunny-memories-facts-freq" class="text_pole" min="1" value="1" style="width: 50px; margin-left:5px;"></label>
                                     <div class="flex-container alignitemscenter" style="gap: 5px; flex-wrap: wrap;">
                                         <span data-i18n="as">as</span>
-                                        <select id="sunny-memories-facts-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0">System</option><option value="1">User</option><option value="2">Assistant</option></select>
+                                        <select id="sunny-memories-facts-role" class="text_pole" style="width: auto; padding-right: 25px;"><option value="0" data-i18n="sys">System</option><option value="1" data-i18n="usr">User</option><option value="2" data-i18n="ast">Assistant</option></select>
                                     </div>
                                 </div>
                             </div>
@@ -2531,7 +3204,6 @@
                                         class="text_pole"
                                         style="width: 100%;"
                                         data-i18n-placeholder="search_summary_title"
-                                        placeholder="Search summary titles..."
                                     >
                                 </div>
                                 <div id="sm-library-list-summary" class="sm-library-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;"></div>
@@ -2562,7 +3234,6 @@
                                         class="text_pole"
                                         style="width: 100%;"
                                         data-i18n-placeholder="search_facts_title"
-                                        placeholder="Search fact titles..."
                                     >
                                 </div>
                                 <div id="sm-library-list-facts" class="sm-library-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
@@ -2586,34 +3257,6 @@
                         </div>
                     </div>
 
-                    <div class="margin-bottom-10" style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;">
-                        <div style="margin-bottom: 10px; opacity: 0.8;"><b data-i18n="gen_range_opts">Generation Range Options</b></div>
-                        <div class="flex-container flexFlowColumn" style="gap: 10px;">
-                            <label class="sm-radio-row">
-                                <input type="radio" name="sm_range_mode" value="all">
-                                <span data-i18n="all_msgs">All Messages (Visible Chat)</span>
-                            </label>
-                            <div class="flex-container alignitemscenter" style="gap: 15px; flex-wrap: wrap;">
-                                <label class="sm-radio-row">
-                                    <input type="radio" name="sm_range_mode" value="first">
-                                    <span data-i18n="from_start">From Start (First N)</span>
-                                </label>
-                                <label class="sm-radio-row">
-                                    <input type="radio" name="sm_range_mode" value="last">
-                                    <span data-i18n="from_end">From End (Last N)</span>
-                                </label>
-                                <div class="flex-container alignitemscenter" style="gap: 5px;">
-                                    <span data-i18n="amount_n">Amount (N):</span>
-                                    <input type="number" id="sunny-memories-range-amount" class="text_pole" style="width:60px; text-align:center;" min="1" value="50">
-                                </div>
-                            </div>
-                        </div>
-                        <label class="sm-check-row flex-container alignitemscenter margin-top-10" style="margin-bottom:0;">
-                            <input type="checkbox" id="sunny-memories-scan-wi">
-                            <span data-i18n="enable_wi_scan">Enable World Info Scanning</span>
-                        </label>
-                    </div>
-
                 </div>
 
                 <div id="sm-main-tab-calendar" class="sm-main-tab-pane">
@@ -2623,6 +3266,8 @@
                         <div id="sm-tab-btn-calendar" class="sm-tab-btn" data-tab="cal"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle class="sm-tab-icon-line" cx="12" cy="12" r="10"></circle><path class="sm-tab-icon-line" d="M12 6v6h4"></path></svg><span data-i18n="cal_events"> Calendar Events</span></div>
                         <div id="sm-tab-btn-qcsettings" class="sm-tab-btn" data-tab="qcsettings"><svg class="sm-tab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="sm-tab-icon-line" d="M14 17H5M19 7h-9"></path><circle class="sm-tab-icon-line" cx="17" cy="17" r="3"></circle><circle class="sm-tab-icon-line" cx="7" cy="7" r="3"></circle></svg><span data-i18n="settings"> Settings</span></div>
                     </div>
+
+                    <div class="sm-calendar-subtab-panes">
 
 <div id="sm-tab-quests" class="sm-tab-pane active">
     <div class="flex-container alignitemscenter margin-bottom-10" style="gap: 10px; flex-wrap: wrap;">
@@ -2641,14 +3286,14 @@
         <textarea id="sm-quest-form-desc" class="text_pole" rows="2" data-i18n-placeholder="desc_notes_ph"></textarea>
         <div class="flex-container" style="gap: 10px; flex-wrap: wrap;">
             <select id="sm-quest-form-type" class="text_pole" style="flex: 1; min-width: 120px;">
-                <option value="main">Main Event/Quest</option>
-                <option value="side">Side Objective</option>
-                <option value="short">Short Task</option>
+                <option value="main" data-i18n="main_event">Main Event/Quest</option>
+                <option value="side" data-i18n="side_obj">Side Objective</option>
+                <option value="short" data-i18n="short_task">Short Task</option>
             </select>
             <select id="sm-quest-form-status" class="text_pole" style="flex: 1; min-width: 120px;">
-                <option value="current">Current</option>
-                <option value="future">Future</option>
-                <option value="past">Past</option>
+                <option value="current" data-i18n="current">Current</option>
+                <option value="future" data-i18n="future">Future</option>
+                <option value="past" data-i18n="past">Past</option>
             </select>
         </div>
 
@@ -2657,7 +3302,6 @@
             <input type="number" id="sm-quest-form-day" class="text_pole" data-i18n-placeholder="day_ph" style="width: 50px;">
             <select id="sm-quest-form-month" class="text_pole flex1" style="min-width: 100px;"></select>
             <input type="number" id="sm-quest-form-year" class="text_pole" data-i18n-placeholder="year_ph" style="width: 60px;">
-            <button id="sm-btn-clear-quest-date" class="menu_button" data-i18n-title="clear_date" style="padding: 0 10px; margin: 0;"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="flex-container" style="gap: 10px; margin-top: 10px; flex-wrap: wrap;">
@@ -2755,14 +3399,14 @@
                         <label>
                             <span data-i18n="style">Style</span>
                             <select id="sm-ev-param-style" class="text_pole">
-                                <option value="mixed">Mixed</option>
-                                <option value="story">Story</option>
-                                <option value="random">Random</option>
-                                <option value="social">Social</option>
-                                <option value="weather">Weather</option>
-                                <option value="character">Character</option>
-                                <option value="world">World</option>
-                                <option value="quest">Quest</option>
+                                <option value="mixed" data-i18n="style_mixed">Mixed</option>
+                                <option value="story" data-i18n="style_story">Story</option>
+                                <option value="random" data-i18n="style_random">Random</option>
+                                <option value="social" data-i18n="style_social">Social</option>
+                                <option value="weather" data-i18n="style_weather">Weather</option>
+                                <option value="character" data-i18n="style_character">Character</option>
+                                <option value="world" data-i18n="style_world">World</option>
+                                <option value="quest" data-i18n="style_quest">Quest</option>
                             </select>
                         </label>
 
@@ -2779,18 +3423,18 @@
                                 </span>
                             </span>
                             <select id="sm-ev-param-density" class="text_pole">
-                                <option value="low">Low</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="high">High</option>
+                                <option value="low" data-i18n="density_low">Low</option>
+                                <option value="medium" selected data-i18n="density_medium">Medium</option>
+                                <option value="high" data-i18n="density_high">High</option>
                             </select>
                         </label>
 
                         <label>
                             <span data-i18n="visibility">Visibility</span>
                             <select id="sm-ev-param-visibility" class="text_pole">
-                                <option value="mixed">Mixed</option>
-                                <option value="public">Public</option>
-                                <option value="hidden">Hidden</option>
+                                <option value="mixed" data-i18n="visibility_mixed">Mixed</option>
+                                <option value="public" data-i18n="public">Public</option>
+                                <option value="hidden" data-i18n="hidden">Hidden</option>
                             </select>
                         </label>
 
@@ -2842,9 +3486,9 @@
       <label>
         <span data-i18n="range_mode">Range mode</span>
         <select id="sm-event-range-mode" class="text_pole">
-          <option value="last">Last N</option>
-          <option value="first">First N</option>
-          <option value="all">All visible</option>
+          <option value="last" data-i18n="range_last_n">Last N</option>
+          <option value="first" data-i18n="range_first_n">First N</option>
+          <option value="all" data-i18n="range_all_visible">All visible</option>
         </select>
       </label>
 
@@ -2880,9 +3524,9 @@
       <label>
         <span data-i18n="auto_range_mode">Auto range mode</span>
         <select id="sm-event-auto-range-mode" class="text_pole">
-          <option value="last">Last N</option>
-          <option value="first">First N</option>
-          <option value="all">All visible</option>
+          <option value="last" data-i18n="range_last_n">Last N</option>
+          <option value="first" data-i18n="range_first_n">First N</option>
+          <option value="all" data-i18n="range_all_visible">All visible</option>
         </select>
       </label>
 
@@ -3015,8 +3659,8 @@
                             <div class="sm-qc-card">
                                 <div class="sm-qc-card-title" data-i18n="cal_mode">Calendar Mode</div>
                                 <select id="sm-cal-mode" class="text_pole margin-bottom-10" style="width:100%;">
-                                    <option value="classic">Classic (Standard Real-World Months)</option>
-                                    <option value="custom">Custom (Define Your Own)</option>
+                                    <option value="classic" data-i18n="classic_mode">Classic (Standard Real-World Months)</option>
+                                    <option value="custom" data-i18n="custom_mode">Custom (Define Your Own)</option>
                                 </select>
 
                                 <div id="sm-cal-custom-settings" style="display:none;">
@@ -3035,6 +3679,8 @@
                             <textarea id="sm-prompt-event" class="text_pole" rows="6" style="width: 100%; font-size: 0.85em;"></textarea>
                         </div>
                     </div>
+
+                    </div>
                 </div>
 
                 <div id="sm-main-tab-album" class="sm-main-tab-pane">
@@ -3046,19 +3692,19 @@
 
                         <div class="sm-album-search-row">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="sm-album-folder-search" data-i18n-placeholder="album_search_folders" placeholder="Search folders...">
+                            <input type="text" id="sm-album-folder-search" data-i18n-placeholder="album_search_folders">
                         </div>
 
                         <div id="sm-album-folder-recent" class="sm-album-folder-recent" style="display:none;"></div>
 
                         <div class="sm-album-actions-row">
-                            <input type="text" id="sm-album-new-folder-name" class="text_pole" data-i18n-placeholder="album_new_folder_name_ph" placeholder="New folder name">
+                            <input type="text" id="sm-album-new-folder-name" class="text_pole" data-i18n-placeholder="album_new_folder_name_ph">
 
-                            <button type="button" id="sm-album-create-folder" class="menu_button sm-album-icon-btn" data-i18n-title="album_create_folder" title="Create folder">
+                            <button type="button" id="sm-album-create-folder" class="menu_button sm-album-icon-btn" data-i18n-title="album_create_folder">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
 
-                            <button type="button" id="sm-album-folder-library-btn" class="menu_button sm-album-folder-library-btn" data-i18n-title="album_folder_library_section" title="Folders library" aria-expanded="false">
+                            <button type="button" id="sm-album-folder-library-btn" class="menu_button sm-album-folder-library-btn" data-i18n-title="album_folder_library_section" aria-expanded="false">
                                 <span data-i18n="album_all_folders">All folders</span>
                             </button>
                         </div>
@@ -3067,9 +3713,9 @@
                             <div class="sm-album-folders-head">
                                 <b data-i18n="album_folder_library_section">Folders Library</b>
                                 <select id="sm-album-folder-sort" class="text_pole">
-                                    <option value="name_asc" data-i18n="album_folder_sort_name_asc">Сортировать: A-Z</option>
-                                    <option value="date_desc" data-i18n="album_folder_sort_date_desc">Сортировать: newest first</option>
-                                    <option value="date_asc" data-i18n="album_folder_sort_date_asc">Сортировать: oldest first</option>
+                                    <option value="name_asc" data-i18n="album_folder_sort_name_asc">Сортировать: А-Я</option>
+                                    <option value="date_desc" data-i18n="album_folder_sort_date_desc">Сортировать: сначала новые</option>
+                                    <option value="date_asc" data-i18n="album_folder_sort_date_asc">Сортировать: сначала старые</option>
                                 </select>
                             </div>
 
@@ -3103,6 +3749,30 @@
                                 <input type="checkbox" id="sm-album-save-generation-meta">
                                 <span data-i18n="album_save_generation_meta">Save generation metadata (if available)</span>
                             </label>
+
+                            <div class="sm-album-diary-row">
+                                <label class="sm-check-row" style="margin:0;">
+                                    <input type="checkbox" id="sm-album-diary-mode">
+                                    <span data-i18n="album_diary_mode">Diary mode</span>
+                                </label>
+
+                                <button
+                                    type="button"
+                                    id="sm-album-diary-edit-prompt"
+                                    class="menu_button sm-album-diary-edit-btn"
+                                    data-i18n="album_diary_edit_prompt"
+                                    aria-expanded="false"
+                                >Edit diary prompt</button>
+                            </div>
+
+                            <div id="sm-album-diary-prompt-editor">
+                                <textarea
+                                    id="sm-album-diary-prompt"
+                                    class="text_pole"
+                                    rows="4"
+                                    data-i18n-placeholder="album_diary_prompt_ph"
+                                ></textarea>
+                            </div>
                         </div>
 
                         <div id="sm-album-grid" class="sm-album-grid">
