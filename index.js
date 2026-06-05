@@ -10789,7 +10789,9 @@ $(document).on("click", function (e) {
     $(document).on("click", "#sm-album-meta-viewer-close", function (e) {
       e.preventDefault();
       e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       closeAlbumMetaViewer();
+      return false;
     });
 
     $(document).on("click", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", function (e) {
@@ -10930,7 +10932,10 @@ $(document).on("click", function (e) {
     $(document).on("click", "#sm-album-image-viewer-close", function (e) {
       e.preventDefault();
       e.stopPropagation();
+      // Prevent other click handlers from running and ensure viewer only closes overlay
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       closeAlbumImageViewer();
+      return false;
     });
 
     $(document).on("click", "#sm-album-image-viewer-content", function (e) {
