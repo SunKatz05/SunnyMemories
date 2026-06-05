@@ -1551,6 +1551,25 @@
             display: block;
             object-fit: contain;
         }
+
+        /* When the image is larger than the viewer, allow showing it at natural size
+           and enable scrolling/panning inside the viewer. */
+        #sm-album-image-viewer.sm-image-fullsize .sm-album-image-viewer-content {
+            align-items: flex-start;
+            justify-content: flex-start;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px;
+        }
+
+        #sm-album-image-viewer.sm-image-fullsize .sm-album-image-viewer-img {
+            max-width: none;
+            max-height: none;
+            width: auto;
+            height: auto;
+            object-fit: initial;
+            border-radius: 6px;
+        }
         .sm-album-image-viewer-caption {
             color: rgba(255,255,255,0.9);
             font-size: 0.9em;
