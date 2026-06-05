@@ -609,6 +609,28 @@ function openAlbumImageViewer(imageUrl, imageName = "", itemId = "") {
 
   viewer.addClass("sm-open").attr("aria-hidden", "false");
   $("body").addClass("sm-album-viewer-open");
+
+  // Ensure large images can be shown at natural size and scrolled/panned inside the viewer.
+  const $img = viewer.find(".sm-album-image-viewer-img");
+  $img.off("load.smViewer").on("load.smViewer", function () {
+    try {
+      const el = this;
+      const naturalW = el.naturalWidth || el.width || 0;
+      const naturalH = el.naturalHeight || el.height || 0;
+      const contentEl = viewer.find(".sm-album-image-viewer-content").get(0);
+      if (!contentEl) return;
+      const contentW = contentEl.clientWidth;
+      const contentH = contentEl.clientHeight;
+      if (naturalW > contentW || naturalH > contentH) {
+        viewer.addClass("sm-image-fullsize");
+      } else {
+        viewer.removeClass("sm-image-fullsize");
+      }
+    } catch (err) {
+      console.warn("SunnyMemories: failed to evaluate image size for fullsize mode", err);
+      viewer.removeClass("sm-image-fullsize");
+    }
+  });
 }
 
 function closeAlbumImageViewer() {
@@ -625,7 +647,7 @@ function closeAlbumImageViewer() {
     .removeAttr("data-item-id")
     .prop("disabled", true);
 
-  viewer.removeClass("sm-open").attr("aria-hidden", "true");
+  viewer.removeClass("sm-open sm-image-fullsize").attr("aria-hidden", "true");
   $("body").removeClass("sm-album-viewer-open");
 }
 
