@@ -26,6 +26,11 @@ const ALBUM_SORT_VALUES = new Set([
 ]);
 const ALBUM_FOLDER_SORT_VALUES = new Set(["name_asc", "date_desc", "date_asc"]);
 const ALBUM_REMOTE_SAVE_CATEGORY = "temp";
+const ALBUM_DIARY_MAX_WORDS = 50;
+const ALBUM_DIARY_CHAT_CONTEXT_MESSAGES = 5;
+const ALBUM_DIARY_CHAT_CONTEXT_MAX_CHARS = 2000;
+const DEFAULT_ALBUM_DIARY_PROMPT =
+  "Write a short diary entry strictly in first person as {{char}}. It must read like a personal journal note with thoughts, emotions, and opinion, while staying grounded in context details. Do not narrate every action step by step.";
 
 let albumQuickSaveState = {
   imageUrl: "",
@@ -44,6 +49,25 @@ let albumMetaViewerState = {
 };
 
 let albumQuickSaveViewportEventsBound = false;
+let albumQuickSaveHandlersBound = false;
+
+// Internal handle for lightbox poller so we don't create multiple timers
+let _sm_lightboxPollerId = null;
+
+function disableAlbumQuickSaveHandlers() {
+  if (!albumQuickSaveHandlersBound) return;
+  albumQuickSaveHandlersBound = false;
+  try {
+    $(document).off("pointerdown", "#chat .mes img");
+    $(document).off("pointerup", "#chat .mes img");
+    $(document).off("click", "#chat .mes");
+  } catch (err) {
+    console.warn("SunnyMemories: failed to unbind quick-save handlers", err);
+  }
+  try {
+    hideAlbumQuickSaveButton();
+  } catch (_e) {}
+}
 
 if (!extension_settings[extensionName]) {
   extension_settings[extensionName] = {};
@@ -558,8 +582,12 @@ function openAlbumImageViewer(imageUrl, imageName = "", itemId = "") {
   if (!src) return;
 
   const name = String(imageName || "").trim();
+  const fallbackImageName = t("album_image_fallback_name");
   const normalizedItemId = String(itemId || "").trim();
-  viewer.find(".sm-album-image-viewer-img").attr("src", src).attr("alt", name || "image");
+  viewer
+    .find(".sm-album-image-viewer-img")
+    .attr("src", src)
+    .attr("alt", name || fallbackImageName);
   viewer.find(".sm-album-image-viewer-caption").text(name);
   viewer.attr("data-item-id", normalizedItemId);
   const downloadLabel = t("album_download_image");
@@ -567,7 +595,7 @@ function openAlbumImageViewer(imageUrl, imageName = "", itemId = "") {
   viewer
     .find("#sm-album-image-viewer-download")
     .attr("data-image-url", src)
-    .attr("data-image-name", name || "image")
+    .attr("data-image-name", name || fallbackImageName)
     .attr("title", downloadLabel)
     .find("span")
     .text(downloadLabel);
@@ -814,6 +842,90 @@ function resolveAlbumQuickSaveMetaFromImageElement(imageElement, imageUrl) {
   };
 }
 
+function trimToWordLimit(text, maxWords = ALBUM_DIARY_MAX_WORDS) {
+  const words = String(text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length <= maxWords) return words.join(" ");
+  return words.slice(0, maxWords).join(" ");
+}
+
+function getAlbumDiaryRecentChatContext(
+  limit = ALBUM_DIARY_CHAT_CONTEXT_MESSAGES,
+  maxChars = ALBUM_DIARY_CHAT_CONTEXT_MAX_CHARS,
+) {
+  const chat = getVisibleChatRange(0, null);
+  if (!Array.isArray(chat) || chat.length === 0) return "";
+
+  const safeLimit = Math.max(1, normalizeNumber(limit, ALBUM_DIARY_CHAT_CONTEXT_MESSAGES));
+  const tail = chat.slice(-safeLimit);
+  const lines = [];
+
+  for (const message of tail) {
+    const rawText = cleanMessage(message?.mes || "").replace(/\s+/g, " ").trim();
+    if (!rawText) continue;
+    const role = message?.is_user === true ? "User" : "Assistant";
+    const clipped = rawText.length > 420 ? `${rawText.slice(0, 417)}...` : rawText;
+    lines.push(`${role}: ${clipped}`);
+  }
+
+  const combined = lines.join("\n").trim();
+  if (!combined) return "";
+  if (combined.length <= maxChars) return combined;
+  return `${combined.slice(0, maxChars).trimEnd()}...`;
+}
+
+function buildAlbumDiaryCaptionPrompt(
+  userPrompt,
+  generationPrompt = "",
+  recentChatContext = "",
+) {
+  const promptBase =
+    String(userPrompt || "").trim() || DEFAULT_ALBUM_DIARY_PROMPT;
+  const safeGenerationPrompt = String(generationPrompt || "").trim().slice(0, 1600);
+  const safeRecentChatContext = String(recentChatContext || "").trim();
+
+  const contextLines = [];
+  if (safeGenerationPrompt) {
+    contextLines.push(`- Generation prompt context: ${safeGenerationPrompt}`);
+  }
+
+  const metadataContextBlock = contextLines.length
+    ? `\n\nGeneration metadata context:\n${contextLines.join("\n")}`
+    : "";
+  const recentChatBlock = safeRecentChatContext
+    ? `\n\nRecent chat context (latest messages):\n${safeRecentChatContext}`
+    : "";
+
+  return `${promptBase}${metadataContextBlock}${recentChatBlock}\n\nOutput rules:\n- Return plain text only.\n- One diary entry paragraph.\n- Write strictly in first person as {{char}}.\n- Make it feel like a diary note with personal thoughts, emotions, and opinion.\n- Do not describe every action step-by-step; this is not a narrative chronicle.\n- Maximum ${ALBUM_DIARY_MAX_WORDS} words.`;
+}
+
+async function generateAlbumDiaryEntryFromContext(
+  generationMeta,
+  recentChatContext,
+  settings = null,
+) {
+  const s = settings || ensureAlbumSettings();
+  if (s.albumDiaryMode !== true) return "";
+
+  const generationPrompt = getAlbumPromptTextFromGenerationMeta(generationMeta);
+  const diaryPrompt = buildAlbumDiaryCaptionPrompt(
+    s.albumDiaryPrompt,
+    generationPrompt,
+    recentChatContext,
+  );
+
+  try {
+    const captionRaw = await safeGenerateRaw(diaryPrompt);
+    return trimToWordLimit(captionRaw, ALBUM_DIARY_MAX_WORDS);
+  } catch (error) {
+    console.warn("SunnyMemories: diary caption generation failed", error);
+    toastr.warning(t("album_diary_caption_failed"));
+    return "";
+  }
+}
+
 async function saveRemoteImageToAlbumFromUrl(url, saveOptions = "") {
   const normalizedUrl = String(url || "").trim();
   const canDirectFetch = Boolean(resolveImageFetchUrl(normalizedUrl));
@@ -879,10 +991,20 @@ async function saveRemoteImageToAlbumFromUrl(url, saveOptions = "") {
   }
 
   const savedUrl = await uploadBlobToAlbumStorage(imageBlob, normalizedUrl, imageNameHint);
+  const parsedGenerationMeta = parseAlbumGenerationMeta(normalizedOptions.generationMetaRaw);
   const generationMeta =
     s.albumSaveGenerationMeta === true
-      ? parseAlbumGenerationMeta(normalizedOptions.generationMetaRaw)
+      ? parsedGenerationMeta
       : null;
+  const recentChatContext = getAlbumDiaryRecentChatContext(ALBUM_DIARY_CHAT_CONTEXT_MESSAGES);
+  const diaryEntry =
+    s.albumDiaryMode === true
+      ? await generateAlbumDiaryEntryFromContext(
+          parsedGenerationMeta,
+          recentChatContext,
+          s,
+        )
+      : "";
   const alreadyExistsInTargetFolder = s.albumItems.some(
     (item) =>
       String(item?.url || "") === String(savedUrl || "") &&
@@ -905,6 +1027,7 @@ async function saveRemoteImageToAlbumFromUrl(url, saveOptions = "") {
     messageIndex: normalizedMessageIndex,
     messageId: normalizedMessageId,
     generationMeta,
+    diaryEntry,
   };
 
   s.albumItems.push(savedItem);
@@ -915,9 +1038,14 @@ async function saveRemoteImageToAlbumFromUrl(url, saveOptions = "") {
     itemId: savedItem.id,
     folderId: savedItem.folderId,
     hasGenerationMeta: Boolean(savedItem.generationMeta),
+    hasDiaryEntry: Boolean(savedItem.diaryEntry),
     sourceKey: savedItem.sourceKey,
   });
-  toastr.success(t("album_save_image_success"));
+  const hasDiaryEntry = Boolean(String(savedItem.diaryEntry || "").trim());
+  const successToastKey = hasDiaryEntry
+    ? "album_save_image_success_diary"
+    : "album_save_image_success";
+  toastr.success(t(successToastKey));
 }
 
 function canBindAlbumFolderId(folderId, settings = null) {
@@ -1190,6 +1318,9 @@ function ensureAlbumSettings(settings = null) {
   if (!Array.isArray(s.albumFolders)) s.albumFolders = [];
   if (!Array.isArray(s.albumItems)) s.albumItems = [];
   if (typeof s.albumSaveGenerationMeta !== "boolean") s.albumSaveGenerationMeta = false;
+  if (typeof s.albumDiaryMode !== "boolean") s.albumDiaryMode = false;
+  if (typeof s.albumDiaryPrompt !== "string") s.albumDiaryPrompt = DEFAULT_ALBUM_DIARY_PROMPT;
+  s.albumDiaryPrompt = String(s.albumDiaryPrompt || "").trim() || DEFAULT_ALBUM_DIARY_PROMPT;
 
   const normalizedFolders = [];
   const folderIds = new Set();
@@ -1238,6 +1369,7 @@ function ensureAlbumSettings(settings = null) {
         : null,
       messageId: item?.messageId ?? null,
       generationMeta: item?.generationMeta ?? null,
+      diaryEntry: String(item?.diaryEntry || item?.diaryCaption || "").trim(),
     });
   }
   s.albumItems = normalizedItems;
@@ -1335,6 +1467,36 @@ function resolveAlbumSaveFolderIdForCurrentCharacter(settings = null) {
   return s.albumFolders.some((folder) => folder.id === binding.folder_id)
     ? binding.folder_id
     : fallbackFolderId;
+}
+
+function resolveCharacterBoundAlbumFolderId(settings = null) {
+  const s = settings || ensureAlbumSettings();
+  const activeCharacter = getActiveCharacterState();
+  if (!activeCharacter) return "";
+
+  const binding = readCharacterImageSaveBinding(activeCharacter.character);
+  if (!binding?.enabled || !binding.folder_id) return "";
+
+  return s.albumFolders.some((folder) => folder.id === binding.folder_id)
+    ? String(binding.folder_id)
+    : "";
+}
+
+function syncAlbumViewToCharacterBoundFolder(settings = null, options = {}) {
+  const s = settings || ensureAlbumSettings();
+  const boundFolderId = resolveCharacterBoundAlbumFolderId(s);
+  if (!boundFolderId) return false;
+
+  s.albumActiveFolderId = boundFolderId;
+
+  if (options?.openFolderPanel === true) {
+    setAlbumFolderLibraryOpen(true, {
+      animate: options?.animate !== false,
+      render: options?.render !== false,
+    });
+  }
+
+  return true;
 }
 
 function getWriteExtensionFieldFn() {
@@ -1437,6 +1599,22 @@ function applyCharacterAlbumSaveBinding(settings = null) {
 
 function getAlbumTargetFolderIdForImageSave() {
   return applyCharacterAlbumSaveBinding();
+}
+
+function syncAlbumDiaryControls(root = null) {
+  const activeRoot = root && root.length ? root : getActiveSettingsRoot();
+  const scopedRoot = activeRoot.length ? activeRoot : $("#sunny_memories_settings").last();
+  if (!scopedRoot.length) return;
+
+  const diaryEnabled = scopedRoot.find("#sm-album-diary-mode").is(":checked");
+  const editBtn = scopedRoot.find("#sm-album-diary-edit-prompt");
+  const editorWrap = scopedRoot.find("#sm-album-diary-prompt-editor");
+  editBtn.toggle(diaryEnabled);
+
+  if (!diaryEnabled) {
+    editorWrap.hide();
+    editBtn.removeClass("is-active").attr("aria-expanded", "false");
+  }
 }
 
 function collectChatImagesForAlbum() {
@@ -1548,6 +1726,8 @@ function renderAlbum() {
         : escapeHtml(dateLabel);
       const promptText = getAlbumPromptTextFromGenerationMeta(item?.generationMeta);
       const styleText = getAlbumStyleTextFromGenerationMeta(item?.generationMeta);
+      const diaryEntry = String(item?.diaryEntry || "").trim();
+      const cardCaptionText = diaryEntry || String(item?.name || "").trim() || t("album_image_fallback_name");
       const hasPromptText = Boolean(promptText);
       const hasStyleText = Boolean(styleText);
       const hasPromptPanel = hasPromptText || hasStyleText;
@@ -1561,7 +1741,7 @@ function renderAlbum() {
               class="sm-album-action-btn sm-album-meta-open"
               data-prompt-encoded="${escapeHtml(encodedPromptText)}"
               data-style-encoded="${escapeHtml(encodedStyleText)}"
-              data-image-name="${escapeHtml(item.name || "image")}"
+              data-image-name="${escapeHtml(item.name || t("album_image_fallback_name"))}"
               title="${escapeHtml(t("album_view_meta"))}">
               <span>${escapeHtml(t("album_view_meta"))}</span>
             </button>
@@ -1574,7 +1754,7 @@ function renderAlbum() {
             type="button"
             class="sm-album-action-btn sm-album-download"
             data-image-url="${escapeHtml(item.url)}"
-            data-image-name="${escapeHtml(item.name || "image")}"
+            data-image-name="${escapeHtml(item.name || t("album_image_fallback_name"))}"
             title="${escapeHtml(t("album_download_image"))}">
             <span>${escapeHtml(t("album_download_image"))}</span>
           </button>
@@ -1594,9 +1774,9 @@ function renderAlbum() {
       grid.append(`
         <div class="sm-album-card" data-id="${escapeHtml(item.id)}">
           <a class="sm-album-thumb-wrap" href="${escapeHtml(item.url)}">
-            <img class="sm-album-thumb" src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name || "image")}">
+            <img class="sm-album-thumb" src="${escapeHtml(item.url)}" alt="${escapeHtml(cardCaptionText)}">
           </a>
-          <div class="sm-album-caption" title="${escapeHtml(item.name || "")}">${escapeHtml(item.name || "image")}</div>
+          <div class="sm-album-caption" title="${escapeHtml(cardCaptionText)}">${escapeHtml(cardCaptionText)}</div>
           <div class="sm-album-meta">${meta}</div>
           ${cardControlsHtml}
         </div>
@@ -1857,7 +2037,7 @@ function renderAlbumFolderGrid(settings = null) {
   const renderFolderCardThumb = (item, emptyIconClass) => {
     const previewUrl = String(item?.url || "").trim();
     if (previewUrl) {
-      return `<img class="sm-album-folder-card-thumb" src="${escapeHtml(previewUrl)}" alt="folder preview">`;
+      return `<img class="sm-album-folder-card-thumb" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(t("album_folder_preview_alt"))}">`;
     }
     return `<div class="sm-album-folder-card-thumb-empty"><i class="${escapeHtml(emptyIconClass)}"></i></div>`;
   };
@@ -2011,7 +2191,7 @@ function ensureEventDefaults() {
   if (s.eventRangeMode === undefined) s.eventRangeMode = "last";
   if (s.eventRangeAmount === undefined) s.eventRangeAmount = 25;
 
-  if (s.eventAutoParseEnabled === undefined) s.eventAutoParseEnabled = true;
+  if (s.eventAutoParseEnabled === undefined) s.eventAutoParseEnabled = false;
   if (s.eventAutoParseEvery === undefined) s.eventAutoParseEvery = 5;
   if (s.eventAutoRangeMode === undefined)
     s.eventAutoRangeMode = s.eventRangeMode || "last";
@@ -2036,6 +2216,7 @@ let contextUpdateTimer;
 let currentAbortController = null;
 let pendingAiEvents = [];
 let globalProcessingLock = false;
+let uiLockDepth = 0;
 let generationButtonUiSnapshot = [];
 
 const SUMMARY_MODE_DYNAMIC = "dynamic";
@@ -2059,9 +2240,11 @@ function snapshotGenerationButtonsUi() {
   generationButtonUiSnapshot = [];
 
   $(generationButtonSelectors).each(function () {
+    const $button = $(this);
     generationButtonUiSnapshot.push({
       element: this,
-      html: $(this).html(),
+      html: $button.html(),
+      disabled: $button.prop("disabled"),
     });
   });
 }
@@ -2073,90 +2256,38 @@ function restoreGenerationButtonsUi() {
 
   generationButtonUiSnapshot.forEach((snapshot) => {
     if (!snapshot?.element || !document.contains(snapshot.element)) return;
-    $(snapshot.element).html(snapshot.html);
+    const $button = $(snapshot.element);
+    $button.html(snapshot.html);
+    $button.prop("disabled", Boolean(snapshot.disabled));
   });
 }
 
-function resetQuestFormState({ hide = true } = {}) {
-  $("#sm-quest-edit-id").val("");
-  $("#sm-quest-form-title").val("");
-  $("#sm-quest-form-desc").val("");
-  $("#sm-quest-form-day").val("");
-  $("#sm-quest-form-year").val("");
-
-  const questType = $("#sm-quest-form-type");
-  if (questType.length) {
-    questType.val("main");
-  }
-
-  const questStatus = $("#sm-quest-form-status");
-  if (questStatus.length) {
-    questStatus.val("current");
-  }
-
-  if (hide) {
-    $("#sm-form-add-quest").slideUp(200);
-  }
-}
-
-function resetManualEventFormState({ hide = true } = {}) {
-  $("#sm-event-form-desc").val("");
-  $("#sm-event-form-day").val("");
-  $("#sm-event-form-year").val("");
-
-  const mem = getChatMemory();
-  const cal = ensureCalendar(mem);
-  const monthName = cal?.currentDate?.month || DEFAULT_CALENDAR.currentDate.month;
-  const monthField = $("#sm-event-form-month");
-  if (monthField.length) {
-    monthField.val(monthName);
-  }
-
-  if (hide) {
-    $("#sm-form-add-event").slideUp(200);
-  }
-}
-
-function closeAiEventsPanel({ clearPending = true } = {}) {
-  if (clearPending) {
-    pendingAiEvents = [];
-  }
-
-  $("#sm-events-preview-inline").hide();
-  $("#sm-events-generator-inline").hide();
-  $("#sm-events-parser-inline").hide();
-  $("#sm-events-inline-panel").slideUp(150);
-}
-
-const INTERNAL_SUMMARY_PROMPTS = {
-  [SUMMARY_MODE_DYNAMIC]: `You are maintaining a living story recap.
-Preserve stable facts, character relationships, unresolved threads, goals, and continuity.
-Do not drop important continuity. Compress older details into shorter durable wording.
-Reduce repetition and avoid verbose restating.
-When details become less relevant, shorten them instead of deleting key continuity.
-Output only the updated summary text in plain text.`,
-  [SUMMARY_MODE_STATIC]: `You are generating a new append-only summary entry.
-Summarize only the provided messages as a standalone entry without rewriting prior entries.
-Preserve key facts, relationships, goals, unresolved threads, and continuity signals present in this range.
-Be concise and avoid repetition.
-Output only the new summary entry text in plain text.`,
-};
-
 function lockUI() {
+  uiLockDepth += 1;
+  if (uiLockDepth > 1) return;
+
+  globalProcessingLock = true;
   snapshotGenerationButtonsUi();
-  $(".sm-generate-btn, #sm-btn-generate-quests, #sm-btn-generate-events, #sm-btn-run-ai-events, #sm-btn-parse-events-now, #sm-btn-refresh-events-now, #sm-btn-clean-date-signals").prop(
-    "disabled",
-    true,
-  );
+  $(generationButtonSelectors).prop("disabled", true);
   $(".sm-btn-cancel-gen").addClass("sm-active");
 }
 
-function unlockUI() {
-  $(".sm-generate-btn, #sm-btn-generate-quests, #sm-btn-generate-events, #sm-btn-run-ai-events, #sm-btn-parse-events-now, #sm-btn-refresh-events-now, #sm-btn-clean-date-signals").prop(
-    "disabled",
-    false,
-  );
+function unlockUI(options = {}) {
+  const force = options?.force === true;
+
+  if (force) {
+    uiLockDepth = 0;
+  } else if (uiLockDepth <= 0) {
+    globalProcessingLock = false;
+    return;
+  } else {
+    uiLockDepth -= 1;
+    if (uiLockDepth > 0) return;
+  }
+
+  globalProcessingLock = false;
   $(".sm-btn-cancel-gen").removeClass("sm-active");
+  restoreGenerationButtonsUi();
 }
 
 function normInt(value, fallback = 0) {
@@ -2272,7 +2403,7 @@ function isLikelyDateText(text) {
 
   if (/\d{1,4}\s*[./-]\s*\d{1,2}/u.test(normalized)) return true;
 
-  return /\b(?:date|РґР°С‚Р°|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|СЏРЅРІ|С„РµРІ|РјР°СЂ|Р°РїСЂ|РјР°Р№|РјР°СЏ|РёСЋРЅ|РёСЋР»|Р°РІРі|СЃРµРЅ|СЃРµРЅС‚|РѕРєС‚|РЅРѕСЏ|РґРµРє|january|february|march|april|june|july|august|september|october|november|december|СЏРЅРІР°СЂ|С„РµРІСЂР°Р»|РјР°СЂС‚|Р°РїСЂРµР»|РёСЋРЅ|РёСЋР»|Р°РІРіСѓСЃС‚|СЃРµРЅС‚СЏР±СЂ|РѕРєС‚СЏР±СЂ|РЅРѕСЏР±СЂ|РґРµРєР°Р±СЂ)\b/u.test(
+  return /\b(?:date|РґР°С‚Р°|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|СЏРЅРІ|С„РµРІ|РјР°СЂ|Р°РїСЂ|РјР°Р№|РёСЋРЅ|РёСЋР»|Р°РІРі|СЃРµРЅ|СЃРµРЅС‚|РѕРєС‚|РЅРѕСЏ|РґРµРє|january|february|march|april|june|july|august|september|october|november|december|СЏРЅРІР°СЂ|С„РµРІСЂР°Р»|РјР°СЂС‚|Р°РїСЂРµР»|РёСЋРЅ|РёСЋР»|Р°РІРіСѓСЃС‚|СЃРµРЅС‚СЏР±СЂ|РѕРєС‚СЏР±СЂ|РЅРѕСЏР±СЂ|РґРµРєР°Р±СЂ)\b/u.test(
     normalized,
   );
 }
@@ -2481,9 +2612,12 @@ CALENDAR:
 
 RULES:
 - Extract only concrete timeline events that actually happened or are clearly implied.
+- Prefer a few meaningful, high-signal events over many weak or trivial ones.
+- Ignore minor chatter, repeated small actions, and vague statements unless they clearly matter to the timeline.
 - If the chat contains an explicit infoblock date, treat it as the current world date and keep calendar.currentDate in sync with it.
 - Hidden events must use "visibility": "hidden" and "exposureEveryDays": 0.
 - Public events must use "visibility": "public".
+- If something is uncertain, skip it rather than inventing a date or detail.
 - Do not invent extra dates.
 - Output JSON only.
 
@@ -2501,7 +2635,7 @@ SCHEMA:
       "title": "Short title",
       "summary": "What happened",
       "type": "story | social | random | weather | quest | character | world",
-      "priority": "low | medium | high",
+      "priority": "low | normal | high",
       "tags": ["tag1", "tag2"],
       "visibility": "public | hidden",
       "exposureEveryDays": number,
@@ -2545,72 +2679,117 @@ function normalizeEventText(text) {
     .trim();
 }
 
-async function maybeRunAutoEventParser() {
-  const s = extension_settings[extensionName] || {};
-  if (s.eventAutoParseEnabled !== true) return;
-  if (isAutoParsingEvents || globalProcessingLock) return;
+function buildEventParseValidationBounds(calData, anchorDate) {
+  const anchor = anchorDate || calData?.currentDate || DEFAULT_CALENDAR.currentDate;
+  const months = calData?.months || DEFAULT_CLASSIC_MONTHS;
+  const anchorAbs = getAbsoluteDay(anchor.year, anchor.month, anchor.day, months);
+  const windowDays = 180;
 
-  const chatLength = getAbsoluteChatLength();
-  if (chatLength <= 0) return;
-
-  const cadence = Math.max(1, normalizeNumber(s.eventAutoParseEvery, 5));
-  const mem = getChatMemory();
-  const cal = ensureCalendar(mem);
-  const lastAutoParseChatLength = Math.max(
-    0,
-    normalizeNumber(cal.lastAutoParseChatLength, 0),
-  );
-
-  if (chatLength - lastAutoParseChatLength < cadence) {
-    return;
-  }
-
-  isAutoParsingEvents = true;
-
-  try {
-    const changed = syncCalendarStateFromChat(mem, chatLength - 1);
-
-    cal.lastAutoParseChatLength = chatLength;
-    setChatMemory({ calendar: cal });
-
-    if (changed) {
-      renderCalendar();
-      scheduleContextUpdate();
-    }
-  } catch (err) {
-    console.error("SunnyMemories auto calendar sync failed:", err);
-  } finally {
-    isAutoParsingEvents = false;
-  }
+  return {
+    rangeStartAbs: Math.max(0, anchorAbs - windowDays),
+    rangeEndAbs: anchorAbs + windowDays,
+  };
 }
 
-async function requestParsedEvents({
+function buildCalendarEventSavePayload(ev, existing = null, calMonths = DEFAULT_CLASSIC_MONTHS) {
+  return {
+    id: ev.id || existing?.id || "ai_ev_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
+    day: ev.day,
+    month: ev.month,
+    year: ev.year,
+    title: ev.title,
+    description: ev.description,
+    type: ev.type,
+    priority: ev.priority,
+    tags: ev.tags,
+    visibility: ev.visibility,
+    state: ev.visibility === "hidden" ? "hidden" : "revealed",
+    wasHidden:
+      existing?.wasHidden === true ||
+      ev?.wasHidden === true ||
+      String(ev?.state || "").toLowerCase().trim() === "hidden" ||
+      String(ev?.visibility || "public").toLowerCase().trim() === "hidden" ||
+      String(ev?.visibility || "public").toLowerCase().trim() === "visible",
+    revealAtAbs: Number.isFinite(Number(ev.revealAtAbs))
+      ? Number(ev.revealAtAbs)
+      : getAbsoluteDay(ev.year, ev.month, ev.day, calMonths),
+    retainDays:
+      ev.visibility === "hidden"
+        ? Math.max(7, normalizeNumber(ev.retainDays, 30))
+        : normalizeNumber(ev.retainDays, 0),
+    exposureEveryDays: ev.exposureEveryDays,
+    leadTimeDays: ev.leadTimeDays,
+    confidence: ev.confidence ?? null,
+    sourceMessageId: ev.sourceMessageId ?? null,
+    dateSource: ev.dateSource ?? "calendar",
+    parserMode: ev.parserMode ?? "manual",
+  };
+}
+
+function commitCalendarEvents(events) {
+  const mem = getChatMemory();
+  const normalizedEvents = Array.isArray(events) ? events : [];
+
+  if (!mem.calendar) {
+    mem.calendar = JSON.parse(JSON.stringify(DEFAULT_CALENDAR));
+  }
+
+  if (!Array.isArray(mem.calendar.events)) {
+    mem.calendar.events = [];
+  }
+
+  const calMonths = mem.calendar.months || DEFAULT_CLASSIC_MONTHS;
+  let addedCount = 0;
+  let updatedCount = 0;
+
+  for (const ev of normalizedEvents) {
+    if (!ev?.title && !ev?.description) continue;
+
+    const existing = findMatchingCalendarEvent(mem.calendar.events, ev);
+    const payload = buildCalendarEventSavePayload(ev, existing, calMonths);
+
+    if (existing) {
+      Object.assign(existing, payload);
+      updatedCount++;
+    } else {
+      mem.calendar.events.push(payload);
+      addedCount++;
+    }
+  }
+
+  const hasChanges = addedCount > 0 || updatedCount > 0;
+  if (hasChanges) {
+    refreshCalendarAfterDateChange(mem, mem.calendar, {
+      dateChanged: true,
+    });
+  }
+
+  return { addedCount, updatedCount, calendarChanged: hasChanges };
+}
+
+async function runEventParseFromChat({
   fromMessageId = 0,
   toMessageId = null,
   rangeMode = null,
   rangeAmount = null,
+  parserMode = "manual",
+  allowOverwrite = false,
 } = {}) {
-  if (globalProcessingLock) return;
-  if (isGeneratingEvents) return;
+  if (isGeneratingEvents) {
+    return null;
+  }
 
-  lockUI();
   isGeneratingEvents = true;
-
-  const btn = $("#sm-btn-parse-events-now");
-  const originalText = btn.length ? btn.html() : "";
 
   let profileSwitched = false;
   const originalProfile = getCurrentProfileName();
 
   try {
-    if (btn.length) {
-      btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> Parsing...`);
-    }
-
     const mem = getChatMemory();
     const calData = mem?.calendar || DEFAULT_CALENDAR;
-    const targetProfile = getExtensionProfileName();
     const settings = extension_settings[extensionName] || {};
+    const targetProfile = getExtensionProfileName();
+    const isAutoParser = parserMode === "auto";
 
     if (targetProfile && targetProfile !== originalProfile) {
       await switchProfile(targetProfile);
@@ -2619,13 +2798,17 @@ async function requestParsedEvents({
 
     const visibleChat = getVisibleChatRange(fromMessageId, toMessageId);
 
-    const effectiveRangeMode = rangeMode || (settings.eventRangeMode || "last");
+    const effectiveRangeMode =
+      rangeMode ||
+      (isAutoParser ? settings.eventAutoRangeMode : settings.eventRangeMode) ||
+      "last";
 
     const effectiveRangeAmount = Math.max(
       1,
       normalizeNumber(
-        rangeAmount ?? settings.eventRangeAmount,
-        25,
+        rangeAmount ??
+          (isAutoParser ? settings.eventAutoRangeAmount : settings.eventRangeAmount),
+        isAutoParser ? 12 : 25,
       ),
     );
 
@@ -2636,7 +2819,9 @@ async function requestParsedEvents({
           ? visibleChat.slice(0, effectiveRangeAmount)
           : visibleChat.slice(-effectiveRangeAmount);
 
-    if (selectedChat.length === 0) throw new Error(t("err_no_chat"));
+    if (selectedChat.length === 0) {
+      throw new Error(t("err_no_chat"));
+    }
 
     const historyText = selectedChat
       .map((m) => `${m.name ? m.name + ": " : ""}${cleanMessage(m.mes)}`)
@@ -2648,10 +2833,7 @@ async function requestParsedEvents({
 
     const lastSelectedMessage = selectedChat[selectedChat.length - 1];
 
-    if (
-      anchorDate?.source !== "calendar" &&
-      lastSelectedMessage
-    ) {
+    if (anchorDate?.source !== "calendar" && lastSelectedMessage) {
       writeCalendarSignalToMessage(lastSelectedMessage, {
         mode: "setDate",
         day: anchorDate.day,
@@ -2685,30 +2867,21 @@ async function requestParsedEvents({
       throw new Error("AI returned invalid JSON structure.");
     }
 
+    const bounds = buildEventParseValidationBounds(calData, anchorDate);
     const validEvents = validateEvents(parsedEvents, calData, {
-      ...settings,
+      ...bounds,
       anchorDate,
       sourceMessageId: toMessageId,
-      parserMode: "manual",
-      allowOverwrite: Boolean(settings.allowOverwrite),
+      parserMode,
+      allowOverwrite,
+      style: "mixed",
+      density: "low",
+      visibility: "mixed",
     });
 
-    if (validEvents.length === 0) {
-      toastr.warning("No valid events found in that slice.");
-      return;
-    }
-
-    pendingAiEvents = validEvents;
-    showPreviewModal();
-  } catch (e) {
-    if (e?.name === "AbortError") return;
-    console.error("AI Event Parsing Failed:", e);
-    toastr.error("Failed to parse events. Check console.");
+    return { validEvents, calData };
   } finally {
-    unlockUI();
     isGeneratingEvents = false;
-
-    if (btn.length) btn.html(originalText);
 
     if (profileSwitched && originalProfile) {
       try {
@@ -2717,6 +2890,136 @@ async function requestParsedEvents({
         console.error("Failed to restore profile after event parse:", restoreErr);
       }
     }
+  }
+}
+
+async function maybeRunAutoEventParser() {
+  const s = extension_settings[extensionName] || {};
+  if (s.eventAutoParseEnabled !== true) return;
+  if (isAutoParsingEvents || globalProcessingLock || isGeneratingEvents) return;
+
+  const chatLength = getAbsoluteChatLength();
+  if (chatLength <= 0) return;
+
+  const cadence = Math.max(1, normalizeNumber(s.eventAutoParseEvery, 5));
+  const mem = getChatMemory();
+  const cal = ensureCalendar(mem);
+  const lastAutoParseChatLength = Math.max(
+    0,
+    normalizeNumber(cal.lastAutoParseChatLength, 0),
+  );
+
+  if (chatLength - lastAutoParseChatLength < cadence) {
+    return;
+  }
+
+  isAutoParsingEvents = true;
+  let parseSucceeded = false;
+
+  try {
+    const parseResult = await runEventParseFromChat({
+      toMessageId: chatLength - 1,
+      rangeMode: s.eventAutoRangeMode || "last",
+      rangeAmount: s.eventAutoRangeAmount ?? 12,
+      parserMode: "auto",
+      allowOverwrite: Boolean(s.allowOverwrite),
+    });
+
+    if (!parseResult) return;
+
+    parseSucceeded = true;
+
+    const validEvents = parseResult.validEvents || [];
+    if (validEvents.length === 0) {
+      return;
+    }
+
+    const { addedCount, updatedCount, calendarChanged } = commitCalendarEvents(validEvents);
+
+    if (calendarChanged) {
+      renderCalendar();
+      scheduleContextUpdate();
+    }
+
+    if (addedCount > 0 || updatedCount > 0) {
+      toastr.info(
+        t("saved_events_new_updated_x_y")
+          .replace("{0}", String(addedCount))
+          .replace("{1}", String(updatedCount)),
+      );
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") return;
+    console.error("SunnyMemories auto event parse failed:", err);
+  } finally {
+    if (parseSucceeded) {
+      cal.lastAutoParseChatLength = chatLength;
+      setChatMemory({ calendar: cal });
+    }
+    isAutoParsingEvents = false;
+  }
+}
+
+async function requestParsedEvents({
+  fromMessageId = 0,
+  toMessageId = null,
+  rangeMode = null,
+  rangeAmount = null,
+} = {}) {
+  if (globalProcessingLock) return;
+  if (isGeneratingEvents || isAutoParsingEvents) return;
+
+  lockUI();
+
+  const btn = $("#sm-btn-parse-events-now");
+  const originalText = btn.length ? btn.html() : "";
+
+  try {
+    if (btn.length) {
+      btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> ${t("parsing")}`);
+    }
+
+    const settings = extension_settings[extensionName] || {};
+    const parseResult = await runEventParseFromChat({
+      fromMessageId,
+      toMessageId,
+      rangeMode,
+      rangeAmount,
+      parserMode: "manual",
+      allowOverwrite: Boolean(settings.allowOverwrite),
+    });
+
+    if (!parseResult) return;
+
+    const validEvents = parseResult.validEvents || [];
+    if (validEvents.length === 0) {
+      toastr.warning(t("no_valid_events_slice"));
+      return;
+    }
+
+    const { addedCount, updatedCount, calendarChanged } = commitCalendarEvents(validEvents);
+
+    if (calendarChanged) {
+      renderCalendar();
+      scheduleContextUpdate();
+    }
+
+    if (addedCount > 0 || updatedCount > 0) {
+      toastr.success(
+        t("saved_events_new_updated_x_y")
+          .replace("{0}", String(addedCount))
+          .replace("{1}", String(updatedCount)),
+      );
+    } else {
+      toastr.info(t("no_valid_events_slice"));
+    }
+  } catch (e) {
+    if (e?.name === "AbortError") return;
+    console.error("AI Event Parsing Failed:", e);
+    toastr.error(t("failed_parse_events_console"));
+  } finally {
+    unlockUI();
+    if (btn.length) btn.html(originalText);
   }
 }
 
@@ -2735,11 +3038,11 @@ async function requestManualCalendarSync() {
   scheduleContextUpdate();
 
   if (changed) {
-    toastr.success("Calendar date synced from chat infoblock.");
+    toastr.success(t("calendar_synced_from_chat_infoblock"));
   } else if (latestSignal?.mode === "setDate") {
-    toastr.info("Date infoblock found. Calendar is already up to date.");
+    toastr.info(t("date_infoblock_already_up_to_date"));
   } else {
-    toastr.info("No date infoblock found in visible chat messages.");
+    toastr.info(t("no_date_infoblock_found_visible_chat"));
   }
 }
 
@@ -2753,7 +3056,7 @@ async function requestCleanDateSignals() {
   const chat = getVisibleChatRange(0, getAbsoluteChatLength() - 1);
 
   if (!Array.isArray(chat) || chat.length === 0) {
-    toastr.info("No visible chat messages to clean.");
+    toastr.info(t("no_visible_chat_messages_to_clean"));
     return;
   }
 
@@ -2779,9 +3082,9 @@ async function requestCleanDateSignals() {
 
     setChatMemory({ calendar: mem.calendar });
     if (ctx?.saveChat) ctx.saveChat();
-    toastr.success(`Cleaned ${cleaned} date signal(s).`);
+    toastr.success(t("cleaned_date_signals_x").replace("{0}", String(cleaned)));
   } else {
-    toastr.info("No date signal metadata found to clean.");
+    toastr.info(t("no_date_signal_metadata_to_clean"));
   }
 }
 
@@ -2804,6 +3107,9 @@ const sm_translations = {
     hide_sidebar: "Hide sidebar strip",
     button_color: "Buttons color",
     disable_glow: "Disable glow effects",
+    hide_enable_toggle_memories: 'Hide "Enable Memories" toggle',
+    hide_enable_toggle_quests: 'Hide "Enable Quests & Calendar" toggle',
+    hide_enable_toggle_album: 'Hide "Enable Album" toggle',
     customization_reset_defaults: "Reset defaults",
     show_summary_tab: "Show Summary Tab",
     show_facts_tab: "Show Facts Tab",
@@ -2811,9 +3117,9 @@ const sm_translations = {
     show_quests_tab: "Show Quests Tab",
     show_cal_tab: "Show Calendar Tab",
     show_qc_settings_tab: "Show Q&C Settings Tab",
-    memories: " Memories",
-    quests_cal: " Quests & Calendar",
-    album: " Album",
+    memories: "Memories",
+    quests_cal: "Quests & Calendar",
+    album: "Album",
     album_all_folders: "All folders",
     album_lobby: "Lobby",
     album_folder_list: "Folders",
@@ -2829,6 +3135,7 @@ const sm_translations = {
     album_folder_sort_date_desc: "Сортировать: newest first",
     album_folder_sort_date_asc: "Сортировать: oldest first",
     album_folder_library_section: "Folders Library",
+    album_folder_preview_alt: "Folder preview",
     album_folder_more: "More...",
     album_no_images: "No images in album yet.",
     album_imported_x: "Imported {0} images.",
@@ -2843,11 +3150,17 @@ const sm_translations = {
     album_bind_no_character: "No active character selected.",
     album_save_image: "Save image",
     album_save_image_success: "Image saved to album.",
+    album_save_image_success_diary: "Image saved with caption.",
     album_save_image_failed: "Failed to save image.",
     album_save_image_host_not_allowed: "This image host is not allowed by server whitelist.",
     album_save_image_invalid_url: "Unsupported image URL.",
     album_save_image_already_saved: "This image is already saved in album.",
     album_save_generation_meta: "Save generation metadata (if available)",
+    album_diary_mode: "Diary mode",
+    album_diary_edit_prompt: "Edit diary prompt",
+    album_diary_prompt_ph:
+      "Describe what kind of diary entry AI should write for saved images...",
+    album_diary_caption_failed: "Failed to generate diary caption. Image was saved without it.",
     album_image_viewer_close: "Close image viewer",
     album_meta_viewer_close: "Close metadata window",
     album_view_meta: "Open metadata",
@@ -2866,12 +3179,13 @@ const sm_translations = {
     album_hide_prompt: "Hide prompt",
     album_copy_prompt: "Copy prompt",
     album_prompt_not_found: "No saved prompt metadata for this image.",
-    summary: " Summary",
-    facts: " Facts",
-    library: " Library",
-    timeline_quests: " Timeline & Quests",
-    cal_events: " Calendar Events",
-    settings: " Settings",
+    album_image_fallback_name: "image",
+    summary: "Summary",
+    facts: "Facts",
+    library: "Library",
+    timeline_quests: "Timeline & Quests",
+    cal_events: "Calendar Events",
+    settings: "Settings",
     summary_prompt: "Story Summary Prompt:",
     summary_mode_title: "Summary Mode",
     summary_mode_dynamic: "Evolving summary (Dynamic)",
@@ -2886,6 +3200,8 @@ const sm_translations = {
     summary_shared_prompt: "Use one prompt for Dynamic and Static",
     summary_keep_latest: "Inject latest entries",
     summary_max_entries: "Store up to entries",
+    summary_static_near_limit_warning:
+      "Only 2 static summary slots remain before older entries start being replaced.",
     gen_summary: "Generate Summary",
     inject_summary: "Inject Current Summary into Context",
     summary_inject_warning_title: "Summary Injection Notice",
@@ -2911,8 +3227,8 @@ const sm_translations = {
     save_lib: "Move to Library (Single)",
     inject_facts: "Inject Current Facts into Context",
     curr_facts_pos: "Current Facts Position",
-    summary_archive: " Summary Archive",
-    facts_archive: " Facts Archive",
+    summary_archive: "Summary Archive",
+    facts_archive: "Facts Archive",
     select_all: "Select All",
     del_selected: "Delete Selected",
     merge_selected: "Merge Selected with AI",
@@ -3015,8 +3331,35 @@ const sm_translations = {
       "Failed to extract quests. AI may have returned bad JSON.",
     analyzing: " Analyzing...",
     extracting: " Extracting...",
+    parsing: "Parsing...",
     added_x_events: "Added {0} events!",
     failed_extract_events: "Failed to extract events.",
+    no_valid_events_slice: "No valid events found in that slice.",
+    failed_parse_events_console: "Failed to parse events. Check console.",
+    calendar_synced_from_chat_infoblock: "Calendar date synced from chat infoblock.",
+    date_infoblock_already_up_to_date: "Date infoblock found. Calendar is already up to date.",
+    no_date_infoblock_found_visible_chat: "No date infoblock found in visible chat messages.",
+    no_visible_chat_messages_to_clean: "No visible chat messages to clean.",
+    cleaned_date_signals_x: "Cleaned {0} date signal(s).",
+    no_date_signal_metadata_to_clean: "No date signal metadata found to clean.",
+    generation_cancelled: "Generation cancelled.",
+    wait_current_generation_finish: "Please wait for the current generation to finish.",
+    ai_generating_summary: "AI is generating summary...",
+    ai_extracting_facts: "AI is extracting facts...",
+    summary_updated_success: "Summary successfully updated!",
+    facts_updated_success: "Facts successfully updated!",
+    generation_failed: "Generation failed.",
+    error_prefix: "Error",
+    analyzing_quests_progress: "Analyzing quests...",
+    quests_updated_success: "Quests successfully updated!",
+    extracting_events_progress: "Extracting events...",
+    events_extracted_new_x: "Events extracted (new: {0})!",
+    no_valid_events_generated_adjust_settings:
+      "No valid events generated. Try adjusting settings.",
+    failed_generate_events_console: "Failed to generate events. Check console.",
+    failed_regenerate_event: "Failed to regenerate event.",
+    saved_events_new_updated_x_y: "Saved {0} new, updated {1} events.",
+    select_items_first: "Select at least one item first.",
     nothing_to_save: "Nothing to save!",
     moved_to_lib: "Moved to Library!",
     split_into_x: "Split into {0} categories!",
@@ -3037,6 +3380,172 @@ const sm_translations = {
     notes: "Notes:",
     bypass_filter: "Anti-Filter Mode",
     bypass_filter_title: "Bypass strict filtering.",
+    mini_guide: "Quick Guide",
+    mini_guide_title: "SunnyMemories Quick Guide",
+    mini_guide_nav_title: "Knowledge Base",
+    mini_guide_topics_title: "Topics",
+    mini_guide_back_step: "Back",
+    mini_guide_back_sections: "Back to sections",
+    mini_guide_back_topics: "Back to topics",
+    mini_guide_section_settings: "General",
+    mini_guide_section_settings_note:
+      "How to enable modules, configure tabs, and tune extension behavior.",
+    mini_guide_section_memories: "Memories: Summary, Facts, Library",
+    mini_guide_section_memories_note:
+      "Core memory workflows for creating, storing, and injecting context.",
+    mini_guide_section_calendar: "Quests and Calendar",
+    mini_guide_section_calendar_note:
+      "Track objectives, world events, and timeline continuity.",
+    mini_guide_section_album: "Album and image archive",
+    mini_guide_section_album_note:
+      "Save generated images, organize folders, and attach metadata captions.",
+    mini_guide_topic_settings_modules: "Depth and Frequency",
+    mini_guide_topic_settings_custom: "Customization and colors",
+    mini_guide_topic_settings_filter: "Anti-Filter mode",
+    mini_guide_text_settings_modules:
+      "Depth controls where a memory block is inserted in chat context, while Frequency controls how often it is injected (based on user messages).\nUse lower depth for newer memories and higher depth for older stable records to balance relevance and token usage.",
+    mini_guide_text_settings_depth_title: "How Depth works (Depth)?",
+    mini_guide_text_settings_depth_body:
+      "Depth controls where a memory block is inserted in chat context, while Frequency controls how often it is injected (based on user messages).\nUse lower depth for newer memories and higher depth for older stable records to balance relevance and token usage.",
+    mini_guide_text_settings_frequency_title: "How Frequency works (Frequency / F)?",
+    mini_guide_text_settings_frequency_body:
+      "Frequency controls how often entries are injected based on user messages.",
+    mini_guide_text_settings_custom:
+      "Use Customization to adjust accent colors, glow, and visual density.\nKeep only the controls you need visible, so the panel stays clean and focused.",
+    mini_guide_text_settings_filter:
+      "When Anti-Filter is enabled, the extension replaces regular spaces with non-breaking special symbols \\u2007 before sending the prompt to AI, then converts them back to normal spaces after receiving the response. This can help bypass strict system filters used by some providers. However, it does not guarantee a complete filter bypass.",
+    mini_guide_topic_memories_summary: "Summary generation and modes",
+    mini_guide_topic_memories_facts: "Facts extraction",
+    mini_guide_topic_memories_library: "Library entries and injection",
+    mini_guide_text_memories_summary_title: "Summary",
+    mini_guide_text_memories_summary_body:
+      "Summary stores a compact retelling of the story. In the Summary Prompt field, you enter what should appear in that retelling. It helps to give specific instructions and optional limits, for example: write only in English and no more than 300 words. For convenience, there are two modes: Static and Dynamic. You can use one shared prompt for both modes or separate prompts.",
+    mini_guide_text_memories_dynamic_title: "Dynamic",
+    mini_guide_text_memories_dynamic_body:
+      "Dynamic summary compresses as the story progresses. Example: early on it may contain detailed notes like 'the character entered the busy Golden Hand tavern and was met by bandits, a skinny bartender, and women'. As the story advances, older details become less expanded, and eventually this may become 'the character visited the Golden Hand tavern'. This keeps continuity while saving tokens and keeping entry size almost stable when old details are less important. Good for playthroughs with many events that do not strongly affect the present.",
+    mini_guide_text_memories_static_title: "Static",
+    mini_guide_text_memories_static_body:
+      "Static summary keeps each retelling in its original form. New retellings do not overwrite previous ones; a new block is simply added with fresh data. The Store up to entries setting is the limit for how many retellings can be kept so records do not grow too long. Inject latest entries controls how many most recent retellings the AI can see. Older ones remain in the field unless the Store up to entries limit is reached. Once that limit is reached, old entries are removed. This prevents context from being overloaded by a very long retelling. A warning appears when the limit is getting close. You can move finished entries to Library so they are not lost.",
+    mini_guide_text_memories_prompt_title: "How to write a summary prompt?",
+    mini_guide_text_memories_prompt_body:
+      "There are no strict rules for writing a summary prompt. Recommendation: keep instructions concise and dry, preferably in English. Communities often share ready summary prompt examples that can be used in the extension.",
+    mini_guide_text_memories_facts_title: "Facts",
+    mini_guide_text_memories_facts_body:
+      "Facts store small RP details. This includes information that is often not captured in a regular retelling.",
+    mini_guide_text_memories_facts_prompt_title: "Prompt for Facts",
+    mini_guide_text_memories_facts_prompt_body:
+      "In the Facts Prompt field, it is best to specify what AI should track: NPCs, clothing and its condition, relationships between characters, and more. For clarity, separate each point (for example, XML-like tags such as <clothes> or simple sub-items). This separation also makes split processing easier.",
+    mini_guide_text_memories_facts_split_title: "Split",
+    mini_guide_text_memories_facts_split_body:
+      "Split gives AI a task to break facts into categories and send those separated pieces to Library. This helps split one large fact block into separate categories and assign each its own settings. You may not need to remind relationship levels too often, while another fact might need to stay in character memory almost constantly.",
+    mini_guide_text_memories_library_title: "Library",
+    mini_guide_text_memories_library_body:
+      "Library stores important fragments from Summary and Facts for long-term use.",
+    mini_guide_text_memories_library_controls_title: "Library control panel",
+    mini_guide_text_memories_library_controls_moon:
+      "Moon — select one or multiple entries. Then you can apply actions to selected items.",
+    mini_guide_text_memories_library_controls_delete:
+      "Trash — delete selected entries.",
+    mini_guide_text_memories_library_controls_merge:
+      "Merge — after selecting multiple entries, AI performs smart merge: both summary/fact texts are combined into one new entry. This new entry is more compact for storage and context injection, while chronology from old entries becomes clearer, making 'before → after' easier for AI to understand.",
+    mini_guide_text_memories_library_injection_title: "How injection works",
+    mini_guide_text_memories_library_injection_body:
+      "Each entry has its own enable toggle and injection parameters, including position, depth, and frequency.",
+    mini_guide_text_memories_summary:
+      "Summary keeps a compact story state for context.\nDynamic mode updates one evolving summary; Static mode stores immutable history entries.",
+    mini_guide_text_memories_facts:
+      "Facts store small RP details. This includes information that is often not captured in a regular retelling.",
+    mini_guide_text_memories_library:
+      "Save important summary/facts fragments to Library for long-term storage.\nEach entry can be enabled, positioned, and injected with its own depth/frequency settings.",
+    mini_guide_topic_calendar_quests: "Timeline & Quests",
+    mini_guide_topic_calendar_events: "Calendar Events",
+    mini_guide_topic_calendar_date: "Event Generation",
+    mini_guide_text_calendar_quests:
+      "AI scans chat for quests and goals and turns them into a simple task list.\nMain Quests & Goals — the most important story objectives.\nSide Goals — secondary quests and supporting tasks.\nShort-Term Tasks — small tasks that are close in time.",
+    mini_guide_calendar_quest_types_title: "Quest Types",
+    mini_guide_calendar_quest_types_main_title: "Main Quests & Goals",
+    mini_guide_calendar_quest_types_main_text:
+      "Core story tasks that drive the RP. These are the most important objectives.",
+    mini_guide_calendar_quest_types_side_title: "Side Goals",
+    mini_guide_calendar_quest_types_side_text:
+      "Secondary quests and supporting tasks that enrich the story.",
+    mini_guide_calendar_quest_types_short_title: "Short-Term Tasks",
+    mini_guide_calendar_quest_types_short_text:
+      "Small tasks that happen in the nearest future and do not carry heavy plot weight.",
+    mini_guide_text_calendar_events_title: "Events",
+    mini_guide_text_calendar_events:
+      "Events are important story moments that already happened or are about to happen. Extraction keeps them compact. For fuller timeline entries, use the parser in the parser settings.",
+    mini_guide_text_calendar_parser_title: "Parser",
+    mini_guide_text_calendar_parser_body:
+      "The parser collects events during RP and is slightly broader than standard extraction. You can enable automatic parsing in the parser settings.",
+    mini_guide_text_calendar_date:
+      "AI can generate fitting calendar events from the selected context. You can control the source, the date range, and the generation style.",
+    mini_guide_text_calendar_style_title: "Style",
+    mini_guide_text_calendar_style_body:
+      "This defines the type of events the AI will try to create.\nMixed — a mix of different types.\nStory — story events.\nRandom — random, lively events.\nSocial — conversations, relationships, talks.\nWeather — weather, climate, atmosphere.\nCharacter — events involving characters.\nWorld — world, society, state events.\nQuest — tasks, goals, missions.",
+    mini_guide_text_calendar_density_title: "Event density",
+    mini_guide_text_calendar_density_body:
+      "Low — few events, calmer, less frequent.\nMedium — normal balance.\nHigh — many events, denser and faster pacing.\n\nIn simple words: Low = quiet and calm. Medium = normal activity. High = very dense story.",
+    mini_guide_text_calendar_visibility_title: "Visibility",
+    mini_guide_text_calendar_visibility_body:
+      "This defines how visible an event should be in the calendar and context.\nMixed — AI decides which events are visible and which stay hidden.\nPublic — the event is visible in advance and may appear in context before its date.\nHidden — the event stays hidden until its time comes.",
+    mini_guide_text_calendar_repeat_title: "Show every N days",
+    mini_guide_text_calendar_repeat_body:
+      "This setting applies to public events. It tells how often the event should remind you of itself before its date.\nFor example: 'every 3 days' — the event will periodically appear in context; '0' — it will not repeat.",
+    mini_guide_topic_album_save: "Saving images to album",
+    mini_guide_topic_album_folders: "Folders, sorting, and search",
+    mini_guide_topic_album_diary: "Diary captions and binding",
+    mini_guide_text_album_save:
+      "Save images from chat directly into the album.\nThe extension stores copied files for durable local history, not temporary message links.",
+    mini_guide_text_album_folders:
+      "Use folder controls to group images by scene, arc, or character.\nSort by date/name and use search to quickly navigate large collections.",
+    mini_guide_text_album_diary:
+      "Diary mode generates short in-character captions using chat context and image metadata.\nFolder binding links saves to the active character for faster consistent workflow.",
+    mini_guide_reference_title: "Reference structure",
+    mini_guide_reference_hint:
+      "Guide tabs removed. This is a section-based reference skeleton you can fill later.",
+    mini_guide_reference_placeholder:
+      "Placeholder: detailed description will be filled later.",
+    mini_guide_tab_general: "General",
+    mini_guide_tab_memories: "Memories",
+    mini_guide_tab_calendar: "Calendar & Quests",
+    mini_guide_tab_album: "Album",
+    mini_guide_general_block_start_title: "Start",
+    mini_guide_general_block_start_text:
+      "Enable needed modules at the top: Memories, Quests/Calendar, Album.\nThen open global settings via the gear icon.",
+    mini_guide_general_block_flow_title: "Basic flow",
+    mini_guide_general_block_flow_text:
+      "Switch to a tab, adjust prompt/settings, then press Generate.\nReview result and save useful entries into Library/Album.",
+    mini_guide_general_block_ui_title: "UI controls",
+    mini_guide_general_block_ui_text:
+      "Use Customization to tune colors/glow and hide unnecessary toggles.\nUse Anti-Filter mode only if your backend over-filters outputs.",
+    mini_guide_summary_block_summary_title: "Summary",
+    mini_guide_summary_block_summary_text:
+      "Keeps a compact running state of story progression.\nBest for always-on context reminders.",
+    mini_guide_summary_block_facts_title: "Facts",
+    mini_guide_summary_block_facts_text:
+      "Stores structured details: characters, places, decisions, secrets.\nUseful for stable lore anchors.",
+    mini_guide_summary_block_library_title: "Library",
+    mini_guide_summary_block_library_text:
+      "Save long-term entries and control injection manually.\nGood for curated memory snippets.",
+    mini_guide_calendar_block_quests_title: "Quests",
+    mini_guide_calendar_block_quests_text:
+      "Analyze chat to detect current/future/past objectives.\nYou can also create and edit quest items manually.",
+    mini_guide_calendar_block_events_title: "Events",
+    mini_guide_calendar_block_events_text:
+      "Parse or generate timeline events from selected message ranges.\nReview and save only relevant events.",
+    mini_guide_calendar_block_date_title: "Date & injection",
+    mini_guide_calendar_block_date_text:
+      "Advance world date manually and inject date/upcoming events into context.\nUse this to keep time continuity in RP.",
+    mini_guide_album_block_save_title: "Saving & folders",
+    mini_guide_album_block_save_text:
+      "Save chat images into album folders and sort them by date.\nUse folder search and quick folder switching for large collections.",
+    mini_guide_album_block_diary_title: "Diary mode",
+    mini_guide_album_block_diary_text:
+      "Creates short in-character captions based on diary prompt, metadata, and last chat messages.\nGood for mood logs and visual memories.",
+    mini_guide_album_block_bind_title: "Character binding",
+    mini_guide_album_block_bind_text:
+      "Bind a folder to current character for fast consistent saves.\nUnbind anytime when switching use-case.",
     cancel_generation: "Cancel Generation",
     freq_msgs_title: "Frequency: 1=Always, N=Every N messages",
     generate: "Generate",
@@ -3135,6 +3644,11 @@ const sm_translations = {
     remove: "Remove",
     public: "Public",
     hidden: "Hidden",
+    slash_sunny_summary_desc: "Generate Sunny Memories summary",
+    slash_sunny_facts_desc: "Generate Sunny Memories facts",
+    slash_sunny_quests_desc: "Generate Sunny Memories quests",
+    slash_sunny_events_desc: "Generate Sunny Memories events",
+    slash_cancel_memory_generation_desc: "Cancel memory generation",
     freq_short: "Freq",
     freq_ph: "Freq (msgs)",
   },
@@ -3148,10 +3662,13 @@ const sm_translations = {
     global_settings: "Глобальные настройки",
     mod_tab_settings: "Настройки вкладок",
     customization_title: "Кастомизация",
-    sidebar_color: "Цвет боковой полосы",
-    hide_sidebar: "Скрыть боковую полосу",
+    sidebar_color: "Цвет боковой полоски",
+    hide_sidebar: "Скрыть боковую полоску",
     button_color: "Цвет кнопок",
     disable_glow: "Отключить свечение",
+    hide_enable_toggle_memories: 'Скрыть тоггл "Включить Воспоминания"',
+    hide_enable_toggle_quests: 'Скрыть тоггл "Включить Квесты и Календарь"',
+    hide_enable_toggle_album: 'Скрыть тоггл "Включить Альбом"',
     customization_reset_defaults: "Сбросить по умолчанию",
     show_summary_tab: "Вкладка 'Саммари'",
     show_facts_tab: "Вкладка 'Факты'",
@@ -3177,6 +3694,7 @@ const sm_translations = {
     album_folder_sort_date_desc: "Сортировать: сначала новые",
     album_folder_sort_date_asc: "Сортировать: сначала старые",
     album_folder_library_section: "Библиотека папок",
+    album_folder_preview_alt: "Превью папки",
     album_folder_more: "Ещё...",
     album_no_images: "В альбоме пока нет изображений.",
     album_imported_x: "Импортировано {0} изображений.",
@@ -3191,11 +3709,18 @@ const sm_translations = {
     album_bind_no_character: "Активный персонаж не выбран.",
     album_save_image: "Сохранить",
     album_save_image_success: "Картинка сохранена в альбом.",
+    album_save_image_success_diary: "Картинка сохранена с подписью.",
     album_save_image_failed: "Не удалось сохранить картинку.",
     album_save_image_host_not_allowed: "Хост картинки не разрешён в серверном whitelist.",
     album_save_image_invalid_url: "Неподдерживаемый URL картинки.",
     album_save_image_already_saved: "Эта картинка уже сохранена в альбоме.",
     album_save_generation_meta: "Сохранять метаданные генерации (если доступны)",
+    album_diary_mode: "Режим дневника",
+    album_diary_edit_prompt: "Редактировать промпт дневника",
+    album_diary_prompt_ph:
+      "Опиши, какую запись дневника ИИ должен писать для сохранённых изображений...",
+    album_diary_caption_failed:
+      "Не удалось сгенерировать запись дневника. Картинка сохранена без неё.",
     album_image_viewer_close: "Закрыть просмотр изображения",
     album_meta_viewer_close: "Закрыть окно метаданных",
     album_view_meta: "Открыть метаданные",
@@ -3214,6 +3739,7 @@ const sm_translations = {
     album_hide_prompt: "Скрыть промпт",
     album_copy_prompt: "Скопировать промпт",
     album_prompt_not_found: "У этой картинки нет сохранённого промпта.",
+    album_image_fallback_name: "изображение",
     summary: " Саммари",
     facts: " Факты",
     library: " Библиотека",
@@ -3234,6 +3760,8 @@ const sm_translations = {
     summary_shared_prompt: "Один промпт для Динамичного и Статичного",
     summary_keep_latest: "В контекст: последних записей",
     summary_max_entries: "Хранить максимум записей",
+    summary_static_near_limit_warning:
+      "До лимита статичного саммари осталось 2 записи. Дальше старые записи начнут вытесняться.",
     gen_summary: "Сгенерировать Саммари",
     inject_summary: "Отправлять Саммари в контекст",
     summary_inject_warning_title: "Предупреждение о вставке саммари",
@@ -3359,11 +3887,38 @@ const sm_translations = {
     ctx_limit: "Лимит контекста. Проанализировано {0} сообщений.",
     err_no_chat: "Чат пуст или нет видимых сообщений",
     quests_updated: "Квесты обновлены!",
-    failed_extract_quests: "Ошибка извлечения. AI returned bad JSON.",
+    failed_extract_quests: "Ошибка извлечения. ИИ вернул некорректный JSON.",
     analyzing: " Анализирую...",
     extracting: " Извлекаю...",
+    parsing: "Парсинг...",
     added_x_events: "Добавлено {0} событий!",
     failed_extract_events: "Не удалось извлечь события.",
+    no_valid_events_slice: "В этом диапазоне не найдено валидных событий.",
+    failed_parse_events_console: "Не удалось распарсить события. Проверь консоль.",
+    calendar_synced_from_chat_infoblock: "Дата календаря синхронизирована из инфоблока чата.",
+    date_infoblock_already_up_to_date: "Инфоблок даты найден. Календарь уже актуален.",
+    no_date_infoblock_found_visible_chat: "В видимых сообщениях чата инфоблок даты не найден.",
+    no_visible_chat_messages_to_clean: "Нет видимых сообщений чата для очистки.",
+    cleaned_date_signals_x: "Очищено сигналов даты: {0}.",
+    no_date_signal_metadata_to_clean: "Метаданные сигналов даты для очистки не найдены.",
+    generation_cancelled: "Генерация отменена.",
+    wait_current_generation_finish: "Подожди завершения текущей генерации.",
+    ai_generating_summary: "ИИ генерирует саммари...",
+    ai_extracting_facts: "ИИ извлекает факты...",
+    summary_updated_success: "Саммари успешно обновлено!",
+    facts_updated_success: "Факты успешно обновлены!",
+    generation_failed: "Генерация не удалась.",
+    error_prefix: "Ошибка",
+    analyzing_quests_progress: "Анализирую квесты...",
+    quests_updated_success: "Квесты успешно обновлены!",
+    extracting_events_progress: "Извлекаю события...",
+    events_extracted_new_x: "События извлечены (новых: {0})!",
+    no_valid_events_generated_adjust_settings:
+      "Не удалось сгенерировать валидные события. Попробуй изменить настройки.",
+    failed_generate_events_console: "Не удалось сгенерировать события. Проверь консоль.",
+    failed_regenerate_event: "Не удалось пересоздать событие.",
+    saved_events_new_updated_x_y: "Сохранено новых: {0}, обновлено: {1} событий.",
+    select_items_first: "Сначала выбери хотя бы один элемент.",
     nothing_to_save: "Нечего сохранять!",
     moved_to_lib: "Перемещено в Библиотеку!",
     split_into_x: "Разделено на {0} категорий!",
@@ -3384,6 +3939,173 @@ const sm_translations = {
     notes: "Заметки: ",
     bypass_filter: "Обход фильтра",
     bypass_filter_title: "Обход строгой фильтрации.",
+    mini_guide: "Quick Guide",
+    mini_guide_title: "Краткий гайд по SunnyMemories",
+    mini_guide_nav_title: "База знаний",
+    mini_guide_topics_title: "Темы",
+    mini_guide_back_step: "Назад",
+    mini_guide_back_sections: "К разделам",
+    mini_guide_back_topics: "К темам",
+    mini_guide_section_settings: "Общее",
+    mini_guide_section_settings_note:
+      "Как включить модули, настроить вкладки и поведение расширения.",
+    mini_guide_section_memories: "Воспоминания: саммари, факты, библиотека",
+    mini_guide_section_memories_note:
+      "Основные процессы памяти: создание, хранение и инжект контекста.",
+    mini_guide_section_calendar: "Квесты и календарь",
+    mini_guide_section_calendar_note:
+      "Отслеживание целей, событий мира и целостности таймлайна.",
+    mini_guide_section_album: "Альбом и архив изображений",
+    mini_guide_section_album_note:
+      "Сохранение изображений, организация папок и подписи с метаданными.",
+    mini_guide_topic_settings_modules: "Глубина и частота",
+    mini_guide_topic_settings_custom: "Кастомизация и цвета",
+    mini_guide_topic_settings_filter: "Режим Anti-Filter",
+    mini_guide_text_settings_modules:
+      "Как работает Глубина (Depth)?\nГлубина определяет точную позицию вставки блока воспоминаний, фактов или саммари внутри контекста чата.\nКогда вы задаёте числовое значение глубины (например, Depth = 4), расширение отсчитывает указанное количество сообщений назад от самого последнего сообщения в чате и встраивает блок данных прямо туда.\nЕсли лорные данные или воспоминания находятся в самом верху (на нулевой глубине), ИИ со временем может начать их игнорировать или \"забывать\" из-за особенностей работы контекстного окна. Встраивание на небольшую глубину (например, 4–6 сообщений от конца) создаёт у нейросети иллюзию того, что этот факт всплыл или обсуждался совсем недавно, заставляя учитывать его в следующем ответе.\n\nЛичная рекомендация: новые воспоминания оставлять на глубине в районе 5-10. Для воспоминаний старше - от 15 и выше.\n\nКак работает Частота (Frequency / F)?\nЧастота отвечает за то, как часто будет вставляться запись в контекст. Внимание: частота зависит только от сообщений пользователя. Вставка работает только спустя N ваших сообщений.\n\nПараметр F в Библиотеке для примера:\nЕсли поставить F = 1: Персонаж помнит об этом всегда. В каждой реплике этот факт сидит у него в подкорке.\nЕсли поставить F = 5: Персонаж будет вспоминать об этом раз в 5 сообщений. В остальные 4 сообщения он про этот факт вообще забывает.\n\nТакая частота позволяет экономить токены, поскольку запись находиться в контексте не постоянно. Для новых записей лучше ставить в районе 3-5. Для старых от 7 и больше.\n\nВнимание: во вкладке Саммари частота работает иначе. Запись находится в контексте всегда, а спустя N сообщений перемещает запись ближе, но на выставленную глубину. На факты, библиотеку, календарь и квесты это не распространяется и работает так, как описано выше.",
+    mini_guide_text_settings_depth_title: "Как работает Глубина (Depth)?",
+    mini_guide_text_settings_depth_body:
+      "Глубина определяет точную позицию вставки блока воспоминаний, фактов или саммари внутри контекста чата.\nКогда вы задаёте числовое значение глубины (например, Depth = 4), расширение отсчитывает указанное количество сообщений назад от самого последнего сообщения в чате и встраивает блок данных прямо туда.\nЕсли лорные данные или воспоминания находятся в самом верху (на нулевой глубине), ИИ со временем может начать их игнорировать или \"забывать\" из-за особенностей работы контекстного окна. Встраивание на небольшую глубину (например, 4–6 сообщений от конца) создаёт у нейросети иллюзию того, что этот факт всплыл или обсуждался совсем недавно, заставляя учитывать его в следующем ответе.\n\nЛичная рекомендация: новые воспоминания оставлять на глубине в районе 5-10. Для воспоминаний старше - от 15 и выше.",
+    mini_guide_text_settings_frequency_title: "Как работает Частота (Frequency / F)?",
+    mini_guide_text_settings_frequency_body:
+      "Частота отвечает за то, как часто будет вставляться запись в контекст. Внимание: частота зависит только от сообщений пользователя. Вставка работает только спустя N ваших сообщений.\n\nПараметр F в Библиотеке для примера:\nЕсли поставить F = 1: Персонаж помнит об этом всегда. В каждой реплике этот факт сидит у него в подкорке.\nЕсли поставить F = 5: Персонаж будет вспоминать об этом раз в 5 сообщений. В остальные 4 сообщения эта информация не входит, ИИ не видит эту запись и не тратит на неё токены.\n\nТакая частота позволяет экономить токены, поскольку запись находиться в контексте не постоянно. Для новых записей лучше ставить в районе 3-5. Для старых от 7 и больше.\n\nВнимание: во вкладке Саммари частота работает иначе. Запись находится в контексте всегда, а спустя N сообщений перемещает запись ближе, но на выставленную глубину. На факты, библиотеку, календарь и квесты это не распространяется и работает так, как описано выше.",
+    mini_guide_text_settings_custom:
+      "В разделе Кастомизация настраиваются акцентный цвет, свечение и визуальная плотность.\nОставляйте видимыми только нужные элементы, чтобы панель была чище.",
+    mini_guide_text_settings_filter:
+      "При активации анти-фильтра расширение подменяет обычные пробелы на неразрывные спецсимволы \\u2007 перед отправкой промпта ИИ и возвращает их обратно в нормальный вид при получении ответа. Это позволяет обходить жесткие системные фильтры некоторых провайдеров. Однако, это не гарантирует полное пробитие фильтров.",
+    mini_guide_topic_memories_summary: "Генерация саммари и режимы",
+    mini_guide_topic_memories_facts: "Извлечение фактов",
+    mini_guide_topic_memories_library: "Библиотека и инжект записей",
+    mini_guide_text_memories_summary_title: "Саммари",
+    mini_guide_text_memories_summary_body:
+      "Саммари хранит компактный пересказ истории. В поле Промпт для Саммари вы вводите то, что хотите видеть в пересказе. Важно давать ИИ конкретику, а также можете дать определенные ограничения. Например, писать пересказ только на английском и не более 300 слов. Для удобства созданы два режима: статичный и динамичный. Для каждого режима можно использовать единый промпт или разный.",
+    mini_guide_text_memories_dynamic_title: "Динамичный режим",
+    mini_guide_text_memories_dynamic_body:
+      "Динамичный саммари сжимается по ходу истории. Вот как это происходит: вы делаете пересказ один раз и получаете определенные детали, например в самом начале \"персонаж вошел в местный оживленный паб Золотая Рука, его встретили бандиты, тощий бармен и женщины\". По ходу истории пересказ обновляется и старые детали становятся менее развернутыми. В конце концов исход будет похож на \"персонаж побывал в пабе Золотая рука\". Это помогает сохранять непрерывность истории и экономить токены, оставляя размер записи почти одинаковым, если подробности из прошлого не так важны. Подходит для игры с множеством событий, которые не имеют сильного влияния на настоящее.",
+    mini_guide_text_memories_static_title: "Статичный режим",
+    mini_guide_text_memories_static_body:
+      "Статичный саммари хранит пересказ в первозданном виде. Новые пересказы никак не перезаписывают прошлый, к нему лишь добавляется блок с новыми данными. Окошко Хранить максимум записей является лимитом возможных пересказов дабы не делать записи особо длинными. В контекст: последних записей позволяет настраивать, сколько из последних пересказов будет видно ИИ. Старые останутся в поле, если не упрутся в лимит Хранить максимум записей. При достижении лимита в этом поле, старые записи будут удалены. Это сделано для того, чтобы не засорять контекст длинным пересказом. Когда лимит будет подступать к указанной цифре, появится уведомление. Готовые записи можно перенести в библиотеку чтобы не потерять.",
+    mini_guide_text_memories_prompt_title: "Как писать промпт для саммари?",
+    mini_guide_text_memories_prompt_body:
+      "Строгого регламента как правильно писать промпт нет. Есть рекомендации: инструкции краткие, сухие, лучше всего на английском. В сообществах можно найти примеры промптов для пересказов и спокойно использовать в расширении.",
+    mini_guide_text_memories_facts_title: "Факты",
+    mini_guide_text_memories_facts_body:
+      "Факты хранят мелочи, связанные с РП. Сюда входит то, что обычно не учитывается в обычном пересказе.",
+    mini_guide_text_memories_facts_prompt_title: "Промпт для Фактов",
+    mini_guide_text_memories_facts_prompt_body:
+      "В поле Промпт для Фактов стоит вводить определенные вещи, которые будет отслеживать ИИ: НПС, одежду и её состояние, отношения между персонажами и прочее. Для удобства, чтобы нейронка не путалась, каждый пункт стоит выделять (прим. XML <> теги: <clothes> или просто разделение на подпункты). Также, разделение фактов значительно облегчает работу сплиту.",
+    mini_guide_text_memories_facts_split_title: "Сплит",
+    mini_guide_text_memories_facts_split_body:
+      "Сплит дает ИИ задачу разделить факты по их категориям и отправляет порубленные кусочки в библиотеку. Это сделано для того, чтобы разделить большой блок фактов на отдельные категории и задать каждой свои настройки. Вам может не понадобиться слишком часто напоминать об уровне отношений или наоборот, определенный факт должен держаться в голове персонажа почти постоянно.",
+    mini_guide_text_memories_library_title: "Library",
+    mini_guide_text_memories_library_body:
+      "The Library stores important snippets from Summaries and Facts for long-term use.",
+    mini_guide_text_memories_library_controls_title:
+      "Library controls panel",
+    mini_guide_text_memories_library_controls_moon:
+      "Moon - select one or more entries. After selection you can perform bulk actions on them.",
+    mini_guide_text_memories_library_controls_delete:
+      "Delete selected - remove the chosen entry.",
+    mini_guide_text_memories_library_controls_merge:
+      "Merge - select multiple entries to let the AI create a smart merged entry combining their content. The new entry is compact for storage and insertion into context while preserving timeline clarity.",
+    mini_guide_text_memories_library_injection_title: "How injection works",
+    mini_guide_text_memories_library_injection_body:
+      "Each entry has its own enable toggle and injection parameters: position, depth, and frequency. Older entries should appear less often. Set depth to 10+; apply the same reasoning to frequency.",
+    mini_guide_text_memories_summary:
+      "Summaries store a compact state of the story for context.\nDynamic updates an evolving summary, Static stores immutable historical records.",
+    mini_guide_text_memories_facts:
+      "Facts store small roleplay details usually omitted in regular summaries.",
+    mini_guide_text_memories_library:
+      "Save important summary/fact snippets to the Library for long-term storage.\nFor each entry you can configure enablement, position, and depth/frequency parameters.",
+    mini_guide_topic_calendar_quests: "Timeline and Quests",
+    mini_guide_topic_calendar_events: "Calendar Events",
+    mini_guide_topic_calendar_date: "Event Generation",
+    mini_guide_text_calendar_quests:
+      "The AI scans chat for quests and goals and turns them into a simple task list.\nMain quests and goals — the most important plot objectives.\nSide goals — secondary quests and supporting tasks.\nShort-term tasks — small tasks that will happen soon.",
+    mini_guide_calendar_quest_types_title: "Quest types",
+    mini_guide_calendar_quest_types_main_title: "Main quests and goals",
+    mini_guide_calendar_quest_types_main_text:
+      "Special tasks that form the core of RP. They are the most important objectives.",
+    mini_guide_calendar_quest_types_side_title: "Side goals",
+    mini_guide_calendar_quest_types_side_text:
+      "Side-quests and tasks that complement the story but don't directly drive it.",
+    mini_guide_calendar_quest_types_short_title: "Short-term tasks",
+    mini_guide_calendar_quest_types_short_text:
+      "Small tasks happening in the near future with little plot weight.",
+    mini_guide_text_calendar_events_title: "Events",
+    mini_guide_text_calendar_events:
+      "Events are important plot moments that already happened or will happen. Extraction keeps them short. For more detailed timeline entries use the parser in parser settings.",
+    mini_guide_text_calendar_parser_title: "Parser",
+    mini_guide_text_calendar_parser_body:
+      "The parser collects events during RP and works more broadly than standard extraction. Enable it in parser settings.",
+    mini_guide_text_calendar_date:
+      "The AI can generate suitable calendar events based on selected context. You control context sources, date range, and generation style.",
+    mini_guide_text_calendar_style_title: "Style",
+    mini_guide_text_calendar_style_body:
+      "These are the types of events the AI will attempt to create.\nMixed — a blend of different types.\nStory — plot events.\nRandom — random, 'living' events.\nSocial — conversations, relationships, dialogues.\nWeather — weather, climate, atmosphere.\nCharacter — character-focused events.\nWorld — world, society, state.\nQuest — tasks, goals, missions.",
+    mini_guide_text_calendar_density_title: "Event density",
+    mini_guide_text_calendar_density_body:
+      "Low — fewer events, quieter and less frequent.\nMedium — a normal balance.\nHigh — many events, denser timeline and faster pace.\n\nIn plain terms: Low = calm. Medium = normal activity. High = very busy story.",
+    mini_guide_text_calendar_visibility_title: "Visibility",
+    mini_guide_text_calendar_visibility_body:
+      "How visible an event should be in the calendar and in context.\nMixed — AI decides which events to make visible or hidden.\nPublic — the event is visible beforehand and may appear in context before the date.\nHidden — the event stays hidden until its time.",
+    mini_guide_text_calendar_repeat_title: "Show every N days",
+    mini_guide_text_calendar_repeat_body:
+      "This setting applies to public events. It controls how often the event should 'remind' before its date.\nFor example: 'every 3 days' — the event will surface periodically; '0' — it won't repeat.",
+    mini_guide_topic_album_save: "Saving images to album",
+    mini_guide_topic_album_folders: "Folders, sorting and search",
+    mini_guide_topic_album_diary: "Diary captions and binding",
+    mini_guide_text_album_save:
+      "Save images from chat directly to the album.\nThe extension stores copied files for a persistent local history rather than temporary message links.",
+    mini_guide_text_album_folders:
+      "Use folders to group images by scenes, arcs, or characters.\nSort by date/name and use search for large collections.\nUse the lock to bind a folder to a specific character.",
+    mini_guide_text_album_diary:
+      "Diary mode generates short in-character captions based on chat context and image metadata.\nBinding a folder to a character speeds up and stabilizes the saving process.",
+    mini_guide_reference_title: "Guide structure",
+    mini_guide_reference_hint:
+      "Guide tabs are removed. This is a sectioned guide skeleton that can be filled later.",
+    mini_guide_reference_placeholder:
+      "Placeholder: detailed descriptions will be added later.",
+    mini_guide_tab_general: "General",
+    mini_guide_tab_memories: "Memories",
+    mini_guide_tab_calendar: "Calendar and Quests",
+    mini_guide_tab_album: "Album",
+    mini_guide_general_block_start_title: "Start",
+    mini_guide_general_block_start_text:
+      "Enable the required modules above: Memories, Quests/Calendar, Album.\nThen open global settings via the gear button.",
+    mini_guide_general_block_flow_title: "Basic flow",
+    mini_guide_general_block_flow_text:
+      "Open a tab, configure the prompt/parameters and click Generate.\nReview the result and save useful entries to the Library or Album.",
+    mini_guide_general_block_ui_title: "UI controls",
+    mini_guide_general_block_ui_text:
+      "In Customization you can adjust color/glow and hide unnecessary toggles.\nEnable Anti-Filter only if the backend trims output too aggressively.",
+    mini_guide_summary_block_summary_title: "Summary",
+    mini_guide_summary_block_summary_text:
+      "Stores a compressed current state of the story.\nBest suited for continuously reminding context.",
+    mini_guide_summary_block_facts_title: "Facts",
+    mini_guide_summary_block_facts_text:
+      "Contains structured data: characters, locations, decisions, secrets.\nUseful as stable lore anchors.",
+    mini_guide_summary_block_library_title: "Library",
+    mini_guide_summary_block_library_text:
+      "Save long-lived entries and manage their injection manually.\nGood for selected important notes.",
+    mini_guide_calendar_block_quests_title: "Timeline and Quests",
+    mini_guide_calendar_block_quests_text:
+      "The AI analyzes chat for quests and objectives. After analysis a list of upcoming tasks and key RP directions appears.",
+    mini_guide_calendar_block_events_title: "Calendar Events",
+    mini_guide_calendar_block_events_text:
+      "Events are moments that already happened or will happen.\nExtraction provides compact important events, while the parser gathers a wider set for the timeline.",
+    mini_guide_calendar_block_date_title: "Event Generation",
+    mini_guide_calendar_block_date_text:
+      "The AI generates suitable events from the chosen context: style, density, visibility and reminder frequency can be configured manually.",
+    mini_guide_album_block_save_title: "Saving and folders",
+    mini_guide_album_block_save_text:
+      "Save images from chat into album folders and sort them by date.\nUse search and quick folder switching for large collections.",
+    mini_guide_album_block_diary_title: "Diary mode",
+    mini_guide_album_block_diary_text:
+      "Generates short in-character captions from the diary prompt, metadata and recent messages.\nUseful for an emotional visual journal.",
+    mini_guide_album_block_bind_title: "Character binding",
+    mini_guide_album_block_bind_text:
+      "Bind a folder to the current character for quick consistent saves.\nYou can unbind at any time when changing scenarios.",
     cancel_generation: "Отменить генерацию",
     freq_msgs_title: "Частота: 1=Всегда, N=Каждые N сообщений",
     generate: "Сгенерировать",
@@ -3482,6 +4204,11 @@ const sm_translations = {
     remove: "Удалить",
     public: "Видимый",
     hidden: "Скрытый",
+    slash_sunny_summary_desc: "Сгенерировать саммари Sunny Memories",
+    slash_sunny_facts_desc: "Сгенерировать факты Sunny Memories",
+    slash_sunny_quests_desc: "Сгенерировать квесты Sunny Memories",
+    slash_sunny_events_desc: "Сгенерировать события Sunny Memories",
+    slash_cancel_memory_generation_desc: "Отменить генерацию памяти",
     freq_short: "Частота",
     freq_ph: "Частота (каждые N)",
   },
@@ -4624,41 +5351,186 @@ function queueSettingsAutosave() {
   }, 60);
 }
 
+function normalizeMainTab(tab) {
+  const v = String(tab || "").toLowerCase().trim();
+  return ["memories", "calendar", "album"].includes(v) ? v : "memories";
+}
+
+function normalizeMemoriesTab(tab) {
+  const v = String(tab || "").toLowerCase().trim();
+  return ["summary", "facts", "library"].includes(v) ? v : "summary";
+}
+
+function getMemoriesGenRangePanel($memoriesPane) {
+  if (!$memoriesPane || !$memoriesPane.length) return $();
+
+  let panel = $memoriesPane.data("smGenRangePanel");
+  if (panel && panel.length) return panel;
+
+  panel = $memoriesPane.find(".sm-memories-gen-range-panel").first();
+  if (panel.length) {
+    $memoriesPane.data("smGenRangePanel", panel);
+  }
+  return panel;
+}
+
+function updateMemoriesGenRangePanelPlacement($memoriesPane, memTab) {
+  if (!$memoriesPane || !$memoriesPane.length) return;
+
+  const panel = getMemoriesGenRangePanel($memoriesPane);
+  if (!panel.length) return;
+
+  const tab = normalizeMemoriesTab(memTab);
+  if (tab === "library") {
+    panel.addClass("is-hidden").detach();
+    return;
+  }
+
+  const host = $memoriesPane.find(`#sm-tab-${tab}`).first();
+  if (!host.length) {
+    panel.addClass("is-hidden").detach();
+    return;
+  }
+
+  panel.removeClass("is-hidden").appendTo(host);
+}
+
+function normalizeCalendarTab(tab) {
+  const v = String(tab || "").toLowerCase().trim();
+  return ["quests", "cal", "qcsettings"].includes(v) ? v : "quests";
+}
+
+const CALENDAR_SUBTAB_IDS = ["quests", "cal", "qcsettings"];
+
+function ensureCalendarSubtabPanes($calendarPane) {
+  if (!$calendarPane || !$calendarPane.length) return;
+
+  const $settingsRoot = $calendarPane.closest("#sunny_memories_settings");
+  const $mount = $calendarPane.children(".sm-calendar-subtab-panes").first();
+  const $target = $mount.length ? $mount : $calendarPane;
+
+  CALENDAR_SUBTAB_IDS.forEach((tab) => {
+    const selector = `#sm-tab-${tab}`;
+    let $pane = $calendarPane.find(selector).first();
+    if (!$pane.length && $settingsRoot.length) {
+      $pane = $settingsRoot.find(selector).first();
+    }
+    if ($pane.length && !$pane.parent().is($target)) {
+      $pane.appendTo($target);
+    }
+  });
+}
+
+function activateSubTabPane($mainPane, tabName) {
+  if (!$mainPane || !$mainPane.length) return false;
+
+  const tab = String(tabName || "").trim();
+  if (!tab) return false;
+
+  const isCalendar = $mainPane.attr("id") === "sm-main-tab-calendar";
+  if (isCalendar) ensureCalendarSubtabPanes($mainPane);
+
+  const $mount = isCalendar
+    ? $mainPane.children(".sm-calendar-subtab-panes").first()
+    : $();
+  const $paneScope = $mount.length ? $mount : $mainPane;
+
+  $mainPane.find(".sm-tab-btn").removeClass("active");
+  $paneScope.find(".sm-tab-pane").removeClass("active");
+  $mainPane.find(`.sm-tab-btn[data-tab="${tab}"]`).first().addClass("active");
+
+  let $pane = $paneScope.find(`#sm-tab-${tab}`).first();
+  if (!$pane.length) {
+    $pane = $mainPane.find(`#sm-tab-${tab}`).first();
+  }
+  if (!$pane.length) {
+    const $settingsRoot = $mainPane.closest("#sunny_memories_settings");
+    if ($settingsRoot.length) {
+      $pane = $settingsRoot.find(`#sm-tab-${tab}`).first();
+      if ($pane.length && isCalendar) {
+        const $target = $mount.length ? $mount : $mainPane;
+        $pane.appendTo($target);
+      }
+    }
+  }
+
+  if (!$pane.length) return false;
+
+  $pane.addClass("active");
+  return true;
+}
+
 function applyVisibilityToggles() {
   const s = extension_settings[extensionName] || {};
   const modMem = s.enableModuleMemories !== false;
   const modQst = s.enableModuleQuests !== false;
   const modAlb = s.enableModuleAlbum !== false;
-  const $root = $("#sunny_memories_settings");
+  const allowedMainTabs = [];
+  if (modMem) allowedMainTabs.push("memories");
+  if (modQst) allowedMainTabs.push("calendar");
+  if (modAlb) allowedMainTabs.push("album");
 
-  $("#sm-main-btn-memories").toggle(modMem);
-  $("#sm-main-btn-calendar").toggle(modQst);
-  $("#sm-main-btn-album").toggle(modAlb);
+  const roots = $("#sunny_memories_settings");
+  if (!roots.length) return;
 
-  const visibleMainButtons = $root.find(".sm-main-tab-btn:visible");
-  if (
-    visibleMainButtons.length > 0 &&
-    !$root.find(".sm-main-tab-btn.active:visible").length
-  ) {
-    visibleMainButtons.first().click();
-  }
+  roots.each(function () {
+    const $root = $(this);
 
-  $("#sm-tab-btn-summary").toggle(modMem && s.enableTabSummary !== false);
-  $("#sm-tab-btn-facts").toggle(modMem && s.enableTabFacts !== false);
-  $("#sm-tab-btn-library").toggle(modMem && s.enableTabLibrary !== false);
+    $root.find("#sm-main-btn-memories").toggle(modMem);
+    $root.find("#sm-main-btn-calendar").toggle(modQst);
+    $root.find("#sm-main-btn-album").toggle(modAlb);
 
-  $("#sm-tab-btn-quests").toggle(modQst && s.enableTabQuests !== false);
-  $("#sm-tab-btn-calendar").toggle(modQst && s.enableTabCalendar !== false);
-  $("#sm-tab-btn-qcsettings").toggle(modQst && s.enableTabQcSettings !== false);
+    if (allowedMainTabs.length > 0) {
+      let nextMainKey = normalizeMainTab(
+        String($root.find(".sm-main-tab-btn.active").data("maintab") || s.lastMainTab),
+      );
+      if (!allowedMainTabs.includes(nextMainKey)) {
+        nextMainKey = allowedMainTabs[0];
+      }
 
-  ["memories", "calendar"].forEach((main) => {
-    const pane = $(`#sm-main-tab-${main}`);
-    const visibleTabs = pane.find(".sm-tab-btn:visible");
-    if (
-      visibleTabs.length > 0 &&
-      !pane.find(".sm-tab-btn.active:visible").length
-    ) {
-      visibleTabs.first().click();
+      $root.find(".sm-main-tab-btn").removeClass("active");
+      $root.find(".sm-main-tab-pane").removeClass("active");
+      $root.find(`.sm-main-tab-btn[data-maintab="${nextMainKey}"]`).first().addClass("active");
+      $root.find(`#sm-main-tab-${nextMainKey}`).first().addClass("active");
+    }
+
+    $root.find("#sm-tab-btn-summary").toggle(modMem && s.enableTabSummary !== false);
+    $root.find("#sm-tab-btn-facts").toggle(modMem && s.enableTabFacts !== false);
+    $root.find("#sm-tab-btn-library").toggle(modMem && s.enableTabLibrary !== false);
+
+    $root.find("#sm-tab-btn-quests").toggle(modQst && s.enableTabQuests !== false);
+    $root.find("#sm-tab-btn-calendar").toggle(modQst && s.enableTabCalendar !== false);
+    $root.find("#sm-tab-btn-qcsettings").toggle(modQst && s.enableTabQcSettings !== false);
+
+    const memoriesPane = $root.find("#sm-main-tab-memories");
+    const allowedMemoriesTabs = [];
+    if (modMem && s.enableTabSummary !== false) allowedMemoriesTabs.push("summary");
+    if (modMem && s.enableTabFacts !== false) allowedMemoriesTabs.push("facts");
+    if (modMem && s.enableTabLibrary !== false) allowedMemoriesTabs.push("library");
+    if (memoriesPane.length && allowedMemoriesTabs.length > 0) {
+      let nextMemTab = normalizeMemoriesTab(
+        String(memoriesPane.find(".sm-tab-btn.active").data("tab") || s.lastMemoriesTab),
+      );
+      if (!allowedMemoriesTabs.includes(nextMemTab)) {
+        nextMemTab = allowedMemoriesTabs[0];
+      }
+      activateSubTabPane(memoriesPane, nextMemTab);
+      updateMemoriesGenRangePanelPlacement(memoriesPane, nextMemTab);
+    }
+
+    const calendarPane = $root.find("#sm-main-tab-calendar");
+    const allowedCalendarTabs = [];
+    if (modQst && s.enableTabQuests !== false) allowedCalendarTabs.push("quests");
+    if (modQst && s.enableTabCalendar !== false) allowedCalendarTabs.push("cal");
+    if (modQst && s.enableTabQcSettings !== false) allowedCalendarTabs.push("qcsettings");
+    if (calendarPane.length && allowedCalendarTabs.length > 0) {
+      let nextCalTab = normalizeCalendarTab(
+        String(calendarPane.find(".sm-tab-btn.active").data("tab") || s.lastCalendarTab),
+      );
+      if (!allowedCalendarTabs.includes(nextCalTab)) {
+        nextCalTab = allowedCalendarTabs[0];
+      }
+      activateSubTabPane(calendarPane, nextCalTab);
     }
   });
 }
@@ -4943,6 +5815,14 @@ function appendStaticSummaryEntry(
   entries.push(entry);
 
   const maxEntries = getSummaryStaticMaxEntriesSetting();
+  const nearLimitRemainingSlots = 2;
+  if (
+    maxEntries > nearLimitRemainingSlots &&
+    entries.length === maxEntries - nearLimitRemainingSlots
+  ) {
+    toastr.warning(t("summary_static_near_limit_warning"), "", { timeOut: 3500 });
+  }
+
   if (entries.length > maxEntries) {
     entries = entries.slice(-maxEntries);
   }
@@ -6608,7 +7488,7 @@ async function safeGenerateRaw(promptText, prefillText = "") {
 globalThis.cancelMemoryGeneration = function cancelMemoryGeneration() {
   if (currentAbortController) {
     currentAbortController.abort();
-    toastr.warning("Generation cancelled");
+    toastr.warning(t("generation_cancelled"));
     currentAbortController = null;
   }
 
@@ -6620,8 +7500,7 @@ globalThis.cancelMemoryGeneration = function cancelMemoryGeneration() {
 
   loadActiveMemory();
 
-  restoreGenerationButtonsUi();
-  unlockUI();
+  unlockUI({ force: true });
   $(".sm-glow-active").removeClass("sm-glow-active");
   $("#sm-events-preview-inline").hide();
   $("#sm-events-generator-inline").hide();
@@ -6646,7 +7525,7 @@ async function getChatHistoryText(upToMessageId = null) {
 
 async function runGeneration(type, btnElement = null, upToMessageId = null) {
   if (globalProcessingLock) {
-    toastr.warning("Please wait for the current generation to finish.");
+    toastr.warning(t("wait_current_generation_finish"));
     return;
   }
 
@@ -6724,9 +7603,9 @@ async function runGeneration(type, btnElement = null, upToMessageId = null) {
     toastr.clear();
 
     if (isSummary) {
-      toastr.info("AI is generating summary...", "", { timeOut: 2000 });
+      toastr.info(t("ai_generating_summary"), "", { timeOut: 2000 });
     } else {
-      toastr.info("AI is extracting facts...", "", { timeOut: 2000 });
+      toastr.info(t("ai_extracting_facts"), "", { timeOut: 2000 });
     }
 
     const rangeMode = settings.rangeMode || "last";
@@ -6880,8 +7759,8 @@ ${isSummary
 
     toastr.success(
       isSummary
-        ? "Summary successfully updated!"
-        : "Facts successfully updated!",
+        ? t("summary_updated_success")
+        : t("facts_updated_success"),
     );
   } catch (error) {
     if (error.name === "AbortError") {
@@ -6889,8 +7768,8 @@ ${isSummary
       return;
     }
     console.error("SunnyMemories Error:", error);
-    output.val(`Error: ${error.message}`);
-    toastr.error("Generation failed.");
+    output.val(`${t("error_prefix")}: ${error.message}`);
+    toastr.error(t("generation_failed"));
   } finally {
     if (isSummary) isGeneratingSummary = false;
     else isGeneratingFacts = false;
@@ -6923,7 +7802,7 @@ async function runQuestGeneration(upToMessageId = null) {
   }
 
   toastr.clear();
-  toastr.info("Analyzing quests...", "", { timeOut: 2000 });
+  toastr.info(t("analyzing_quests_progress"), "", { timeOut: 2000 });
 
   let settings = extension_settings[extensionName] || {};
   const targetProfile = getExtensionProfileName();
@@ -7020,7 +7899,7 @@ async function runQuestGeneration(upToMessageId = null) {
     renderCalendar();
     scheduleContextUpdate();
 
-    toastr.success("Quests successfully updated!", "", { timeOut: 2000 });
+    toastr.success(t("quests_updated_success"), "", { timeOut: 2000 });
   } catch (e) {
     if (e.name === "AbortError") return;
     console.error("Quest Generation Error:", e);
@@ -7051,7 +7930,7 @@ async function runEventGeneration(upToMessageId = null) {
   }
 
   toastr.clear();
-  toastr.info("Extracting events...", "", { timeOut: 2000 });
+  toastr.info(t("extracting_events_progress"), "", { timeOut: 2000 });
 
   let settings = extension_settings[extensionName] || {};
   const targetProfile = getExtensionProfileName();
@@ -7131,7 +8010,7 @@ async function runEventGeneration(upToMessageId = null) {
       dateChanged: newCount > 0,
     });
 
-    toastr.success(`Events extracted (new: ${newCount})!`, "", {
+    toastr.success(t("events_extracted_new_x").replace("{0}", String(newCount)), "", {
       timeOut: 2000,
     });
   } catch (e) {
@@ -7188,6 +8067,55 @@ function hexColorToRgbString(hexColor, fallback = "125, 211, 252") {
   return `${r}, ${g}, ${b}`;
 }
 
+function normalizeToggleFlag(value, fallback = false) {
+  if (value === true || value === false) return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) return true;
+    if (["0", "false", "no", "off", ""].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
+function migrateLegacyEnableToggleSettings(s) {
+  let changed = false;
+  const hasLegacy = Object.prototype.hasOwnProperty.call(s, "customHideEnableToggleVisuals");
+  const legacyValue = normalizeToggleFlag(s.customHideEnableToggleVisuals, false);
+
+  if (s.customHideEnableToggleMemories === undefined && hasLegacy) {
+    s.customHideEnableToggleMemories = legacyValue;
+    changed = true;
+  }
+  if (s.customHideEnableToggleQuests === undefined && hasLegacy) {
+    s.customHideEnableToggleQuests = legacyValue;
+    changed = true;
+  }
+  if (s.customHideEnableToggleAlbum === undefined && hasLegacy) {
+    s.customHideEnableToggleAlbum = legacyValue;
+    changed = true;
+  }
+
+  if (hasLegacy) {
+    delete s.customHideEnableToggleVisuals;
+    changed = true;
+  }
+
+  const normalizedMemories = normalizeToggleFlag(s.customHideEnableToggleMemories, false);
+  const normalizedQuests = normalizeToggleFlag(s.customHideEnableToggleQuests, false);
+  const normalizedAlbum = normalizeToggleFlag(s.customHideEnableToggleAlbum, false);
+
+  if (s.customHideEnableToggleMemories !== normalizedMemories) changed = true;
+  if (s.customHideEnableToggleQuests !== normalizedQuests) changed = true;
+  if (s.customHideEnableToggleAlbum !== normalizedAlbum) changed = true;
+
+  s.customHideEnableToggleMemories = normalizedMemories;
+  s.customHideEnableToggleQuests = normalizedQuests;
+  s.customHideEnableToggleAlbum = normalizedAlbum;
+
+  return changed;
+}
+
 function applyCustomizationSettings() {
   const s = extension_settings[extensionName] || {};
   const sidebarColor = normalizeHexColor(
@@ -7200,15 +8128,25 @@ function applyCustomizationSettings() {
   );
   const hideSidebar = s.customHideSidebar === true;
   const disableGlow = s.customDisableGlow === true;
+  const hideEnableToggleMemories = s.customHideEnableToggleMemories === true;
+  const hideEnableToggleQuests = s.customHideEnableToggleQuests === true;
+  const hideEnableToggleAlbum = s.customHideEnableToggleAlbum === true;
   const buttonRgb = hexColorToRgbString(buttonColor, "125, 211, 252");
 
-  $("#sunny_memories_settings").each(function () {
+  $("#sunny_memories_settings, .sunny_memories_content").each(function () {
     const el = /** @type {HTMLElement} */ (this);
     el.style.setProperty("--sm-sidebar-color", sidebarColor);
     el.style.setProperty("--sm-sidebar-width", hideSidebar ? "0px" : "3px");
     el.style.setProperty("--sm-sidebar-padding", hideSidebar ? "0px" : "5px");
+    el.style.setProperty("border-left-width", hideSidebar ? "0px" : "3px");
+    el.style.setProperty("border-left-style", hideSidebar ? "solid" : "solid");
+    el.style.setProperty("border-left-color", hideSidebar ? "transparent" : "var(--sm-sidebar-color)");
+    el.style.setProperty("padding-left", hideSidebar ? "0px" : "var(--sm-sidebar-padding)");
     el.style.setProperty("--sm-button-accent-rgb", buttonRgb);
     el.classList.toggle("sm-custom-no-glow", disableGlow);
+    el.classList.toggle("sm-custom-hide-enable-toggle-memories", hideEnableToggleMemories);
+    el.classList.toggle("sm-custom-hide-enable-toggle-quests", hideEnableToggleQuests);
+    el.classList.toggle("sm-custom-hide-enable-toggle-album", hideEnableToggleAlbum);
   });
 }
 
@@ -7650,7 +8588,7 @@ Schema:
       "year": number,
       "title": "Short event title",
       "type": "story | social | random | weather | quest | character | world",
-      "priority": "low | medium | high",
+      "priority": "low | normal | high",
       "summary": "Detailed description of what happens",
       "tags": ["tag1", "tag2"],
       "visibility": "public | hidden",
@@ -7725,7 +8663,7 @@ async function requestGeneratedEvents() {
     const validEvents = validateEvents(parsedEvents, calData, options);
 
     if (validEvents.length === 0) {
-      toastr.warning("No valid events generated. Try adjusting settings.");
+      toastr.warning(t("no_valid_events_generated_adjust_settings"));
       $("#sm-events-generator-inline").hide();
       $("#sm-events-preview-inline").hide();
       return;
@@ -7736,7 +8674,7 @@ async function requestGeneratedEvents() {
   } catch (e) {
     if (e?.name === "AbortError") return;
     console.error("AI Event Generation Failed:", e);
-    toastr.error("Failed to generate events. Check console.");
+    toastr.error(t("failed_generate_events_console"));
   } finally {
     unlockUI();
     btn.html(originalText);
@@ -7794,9 +8732,9 @@ function validateEvents(rawEvents, calData, options) {
         ? normalizeEventType(e.type, "story")
         : styleFocus;
 
-    const priority = ["low", "medium", "high"].includes(String(e.priority).toLowerCase())
+    const priority = ["low", "normal", "high"].includes(String(e.priority).toLowerCase())
       ? String(e.priority).toLowerCase()
-      : "medium";
+      : "normal";
 
     const visibilityMode = normalizeVisibilityMode(e.visibility || options.visibility);
     const visibility =
@@ -8067,7 +9005,7 @@ SCHEMA:
     "title": "Short title",
     "description": "Detailed description",
     "type": "story | social | random | weather | quest | character | world | event",
-    "priority": "low | normal | medium | high",
+    "priority": "low | normal | high",
     "tags": ["tag1", "tag2"],
     "visibility": "public | hidden",
     "exposureEveryDays": number,
@@ -8104,7 +9042,7 @@ SCHEMA:
     showPreviewModal();
   } catch (err) {
     console.error("Single event regeneration failed:", err);
-    toastr.error("Failed to regenerate event.");
+    toastr.error(t("failed_regenerate_event"));
   } finally {
     btn.prop("disabled", false);
     btn.html(oldHtml);
@@ -8154,78 +9092,18 @@ function findMatchingCalendarEvent(events, ev) {
 }
 
 function saveEventsToCalendar() {
-  const mem = getChatMemory();
-
-  if (!mem.calendar) {
-    mem.calendar = JSON.parse(JSON.stringify(DEFAULT_CALENDAR));
-  }
-
-  if (!Array.isArray(mem.calendar.events)) {
-    mem.calendar.events = [];
-  }
-
   const editedEvents = readAiPreviewEvents();
-  let addedCount = 0;
-  let updatedCount = 0;
-
-  for (const ev of editedEvents) {
-    if (!ev.title && !ev.description) continue;
-
-    const existing = findMatchingCalendarEvent(mem.calendar.events, ev);
-
-    const payload = {
-      id: ev.id || existing?.id || ("ai_ev_" + Date.now() + "_" + Math.floor(Math.random() * 100000)),
-      day: ev.day,
-      month: ev.month,
-      year: ev.year,
-      title: ev.title,
-      description: ev.description,
-      type: ev.type,
-      priority: ev.priority,
-      tags: ev.tags,
-      visibility: ev.visibility,
-      state: ev.visibility === "hidden" ? "hidden" : "revealed",
-      wasHidden:
-        existing?.wasHidden === true ||
-        ev?.wasHidden === true ||
-        String(ev?.state || "").toLowerCase().trim() === "hidden" ||
-        String(ev?.visibility || "public").toLowerCase().trim() === "hidden" ||
-        String(ev?.visibility || "public").toLowerCase().trim() === "visible",
-      revealAtAbs: Number.isFinite(Number(ev.revealAtAbs))
-        ? Number(ev.revealAtAbs)
-        : getAbsoluteDay(ev.year, ev.month, ev.day, mem.calendar.months),
-      retainDays: ev.visibility === "hidden"
-        ? Math.max(7, normalizeNumber(ev.retainDays, 30))
-        : normalizeNumber(ev.retainDays, 0),
-      exposureEveryDays: ev.exposureEveryDays,
-      leadTimeDays: ev.leadTimeDays,
-      confidence: ev.confidence ?? null,
-      sourceMessageId: ev.sourceMessageId ?? null,
-      dateSource: ev.dateSource ?? "calendar",
-      parserMode: ev.parserMode ?? "manual",
-    };
-
-    if (existing) {
-      Object.assign(existing, payload);
-      updatedCount++;
-    } else {
-      mem.calendar.events.push(payload);
-      addedCount++;
-    }
-  }
-
-  const hasChanges = addedCount > 0 || updatedCount > 0;
-  if (hasChanges) {
-    refreshCalendarAfterDateChange(mem, mem.calendar, {
-      dateChanged: true,
-    });
-  }
+  const { addedCount, updatedCount } = commitCalendarEvents(editedEvents);
 
   $("#sm-events-preview-inline").hide();
   $("#sm-events-inline-panel").slideUp(150);
   pendingAiEvents = [];
 
-  toastr.success(`Saved ${addedCount} new, updated ${updatedCount} events.`);
+  toastr.success(
+    t("saved_events_new_updated_x_y")
+      .replace("{0}", String(addedCount))
+      .replace("{1}", String(updatedCount)),
+  );
 }
 
 function saveUIFieldsToSettings(showToast = true) {
@@ -8308,9 +9186,21 @@ function saveUIFieldsToSettings(showToast = true) {
     "#sm-custom-disable-glow",
     s.customDisableGlow === true,
   );
+  s.customHideEnableToggleMemories = getScopedCheckboxValue(
+    "#sm-custom-hide-enable-toggle-memories",
+    s.customHideEnableToggleMemories === true,
+  );
+  s.customHideEnableToggleQuests = getScopedCheckboxValue(
+    "#sm-custom-hide-enable-toggle-quests",
+    s.customHideEnableToggleQuests === true,
+  );
+  s.customHideEnableToggleAlbum = getScopedCheckboxValue(
+    "#sm-custom-hide-enable-toggle-album",
+    s.customHideEnableToggleAlbum === true,
+  );
   s.eventAutoParseEnabled = getScopedCheckboxValue(
     "#sm-event-auto-parse-enabled",
-    s.eventAutoParseEnabled !== false,
+    s.eventAutoParseEnabled === true,
   );
   s.eventAutoParseEvery = Math.max(
     1,
@@ -8417,6 +9307,21 @@ function saveUIFieldsToSettings(showToast = true) {
       "#sm-album-save-generation-meta",
       s.albumSaveGenerationMeta === true,
     );
+  }
+  if ($("#sm-album-diary-mode").length) {
+    s.albumDiaryMode = getScopedCheckboxValue(
+      "#sm-album-diary-mode",
+      s.albumDiaryMode === true,
+    );
+  }
+  if ($("#sm-album-diary-prompt").length) {
+    s.albumDiaryPrompt =
+      String(
+        getScopedFieldValue(
+          "#sm-album-diary-prompt",
+          s.albumDiaryPrompt || DEFAULT_ALBUM_DIARY_PROMPT,
+        ),
+      ).trim() || DEFAULT_ALBUM_DIARY_PROMPT;
   }
   ensureAlbumSettings(s);
 
@@ -8777,34 +9682,46 @@ function initAlbumImageQuickSave() {
     lastTapHandledAt = Date.now();
   }
 
-  $(document).on("pointerdown", "#chat .mes img", function (e) {
-    pointerDownAt = Date.now();
-    pointerDownX = Number(e.clientX || 0);
-    pointerDownY = Number(e.clientY || 0);
-  });
+  function bindAlbumQuickSaveHandlers() {
+    if (albumQuickSaveHandlersBound) return;
+    albumQuickSaveHandlersBound = true;
 
-  $(document).on("pointerup", "#chat .mes img", function (e) {
-    const elapsed = Date.now() - pointerDownAt;
-    const dx = Math.abs(Number(e.clientX || 0) - pointerDownX);
-    const dy = Math.abs(Number(e.clientY || 0) - pointerDownY);
-    const isShortTap = elapsed <= 400 && dx <= 12 && dy <= 12;
-    if (!isShortTap) return;
+    $(document).on("pointerdown", "#chat .mes img", function (e) {
+      pointerDownAt = Date.now();
+      pointerDownX = Number(e.clientX || 0);
+      pointerDownY = Number(e.clientY || 0);
+    });
 
-    handleAlbumQuickSaveTap(this, e);
-  });
+    $(document).on("pointerup", "#chat .mes img", function (e) {
+      const elapsed = Date.now() - pointerDownAt;
+      const dx = Math.abs(Number(e.clientX || 0) - pointerDownX);
+      const dy = Math.abs(Number(e.clientY || 0) - pointerDownY);
+      const isShortTap = elapsed <= 400 && dx <= 12 && dy <= 12;
+      if (!isShortTap) return;
 
-  $(document).on("click", "#chat .mes", function (e) {
-    if (Date.now() - lastTapHandledAt < 350) return;
+      handleAlbumQuickSaveTap(this, e);
+    });
 
-    const targetElement =
-      e?.target && typeof e.target.closest === "function" ? e.target : null;
-    const targetImage = targetElement ? targetElement.closest("img") : null;
-    if (!targetImage || !this.contains(targetImage)) return;
+    $(document).on("click", "#chat .mes", function (e) {
+      if (Date.now() - lastTapHandledAt < 350) return;
 
-    handleAlbumQuickSaveTap(targetImage, e);
-  });
+      const targetElement =
+        e?.target && typeof e.target.closest === "function" ? e.target : null;
+      const targetImage = targetElement ? targetElement.closest("img") : null;
+      if (!targetImage || !this.contains(targetImage)) return;
 
-  $(document).on("click", "#sm-image-save-quick", async function (e) {
+      handleAlbumQuickSaveTap(targetImage, e);
+    });
+  }
+
+  // quick-save handler unbinding is available at file scope via disableAlbumQuickSaveHandlers()
+
+  // Bind legacy quick-save handlers by default; they will be disabled automatically
+  // if an IIG lightbox is detected (beta UX) so taps won't conflict.
+  bindAlbumQuickSaveHandlers();
+
+  // Keep the click handler for the floating quick-save button (legacy UI).
+  $(document).off("click", "#sm-image-save-quick").on("click", "#sm-image-save-quick", async function (e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -8861,6 +9778,29 @@ function initAlbumImageQuickSave() {
       vv.addEventListener("scroll", syncAlbumQuickSaveButtonPosition);
     }
   }
+
+  // The lightbox integration will poll for `.iig-lightbox` presence and disable
+  // legacy tap handlers when a lightbox is detected, avoiding conflicts with beta.
+  if (!_sm_lightboxPollerId) {
+    let attempts = 0;
+    _sm_lightboxPollerId = setInterval(() => {
+      attempts += 1;
+      try {
+        const lb = document.querySelector(".iig-lightbox");
+        if (lb) {
+          disableAlbumQuickSaveHandlers();
+          clearInterval(_sm_lightboxPollerId);
+          _sm_lightboxPollerId = null;
+        } else if (attempts > 40) {
+          // stop polling after ~12 seconds
+          clearInterval(_sm_lightboxPollerId);
+          _sm_lightboxPollerId = null;
+        }
+      } catch (err) {
+        console.warn("SunnyMemories: lightbox poller error", err);
+      }
+    }, 300);
+  }
 }
 
 function initSunnyButtons() {
@@ -8903,6 +9843,12 @@ function initSunnyButtons() {
     if (s.enableTabQuests === undefined) s.enableTabQuests = true;
     if (s.enableTabCalendar === undefined) s.enableTabCalendar = true;
     if (s.enableTabQcSettings === undefined) s.enableTabQcSettings = true;
+    if (typeof s.lastMainTab !== "string") s.lastMainTab = "memories";
+    if (typeof s.lastMemoriesTab !== "string") s.lastMemoriesTab = "summary";
+    if (typeof s.lastCalendarTab !== "string") s.lastCalendarTab = "quests";
+    s.lastMainTab = normalizeMainTab(s.lastMainTab);
+    s.lastMemoriesTab = normalizeMemoriesTab(s.lastMemoriesTab);
+    s.lastCalendarTab = normalizeCalendarTab(s.lastCalendarTab);
     if (s.libraryView === undefined) s.libraryView = "summary";
     if (s.bypassFilter === undefined) s.bypassFilter = false;
     if (typeof s.customSidebarColor !== "string") {
@@ -8913,6 +9859,7 @@ function initSunnyButtons() {
     }
     if (s.customHideSidebar === undefined) s.customHideSidebar = false;
     if (s.customDisableGlow === undefined) s.customDisableGlow = false;
+    const migratedEnableToggleSettings = migrateLegacyEnableToggleSettings(s);
     s.customSidebarColor = normalizeHexColor(
       s.customSidebarColor,
       DEFAULT_CUSTOM_SIDEBAR_COLOR,
@@ -8923,6 +9870,9 @@ function initSunnyButtons() {
     );
     s.customHideSidebar = s.customHideSidebar === true;
     s.customDisableGlow = s.customDisableGlow === true;
+    if (migratedEnableToggleSettings) {
+      saveSettingsDebounced();
+    }
 
     if (typeof s.summaryPrompt !== "string") s.summaryPrompt = DEFAULT_SUMMARY_PROMPT;
 
@@ -9049,6 +9999,18 @@ Include only known and actively planned or imminent future events.
     $("#sm-custom-hide-sidebar").prop("checked", s.customHideSidebar === true);
     $("#sm-custom-button-color").val(s.customButtonColor);
     $("#sm-custom-disable-glow").prop("checked", s.customDisableGlow === true);
+    $("#sm-custom-hide-enable-toggle-memories").prop(
+      "checked",
+      s.customHideEnableToggleMemories === true,
+    );
+    $("#sm-custom-hide-enable-toggle-quests").prop(
+      "checked",
+      s.customHideEnableToggleQuests === true,
+    );
+    $("#sm-custom-hide-enable-toggle-album").prop(
+      "checked",
+      s.customHideEnableToggleAlbum === true,
+    );
     applyCustomizationSettings();
     applyTranslations();
 
@@ -9102,6 +10064,9 @@ Include only known and actively planned or imminent future events.
     $("#sm-ev-param-overwrite").prop("checked", s.eventGenOverwrite === true);
     $("#sm-ev-gen-wishes").val(s.eventGenWishes || "");
     $("#sm-album-save-generation-meta").prop("checked", s.albumSaveGenerationMeta === true);
+    $("#sm-album-diary-mode").prop("checked", s.albumDiaryMode === true);
+    $("#sm-album-diary-prompt").val(s.albumDiaryPrompt || DEFAULT_ALBUM_DIARY_PROMPT);
+    syncAlbumDiaryControls();
 
     $("#sm-ev-ctx-char").prop("checked", s.eventCtxChar !== false);
     $("#sm-ev-ctx-wi").prop("checked", s.eventCtxWi !== false);
@@ -9124,6 +10089,176 @@ Include only known and actively planned or imminent future events.
     if (albumImageViewer.length) {
       albumImageViewer.appendTo("body");
     }
+    // Integrate a `Save` button into IIG's lightbox toolbar (if present).
+    (function initIigLightboxSaveIntegration() {
+      function attachButtonToToolbar(toolbar, lightboxEl) {
+        try {
+          if (!toolbar || toolbar.querySelector('.sm-iig-save-btn')) return;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'iig-lightbox-btn sm-iig-save-btn';
+          btn.title = typeof t === 'function' ? t('album_save_button_title') || 'Save' : 'Save';
+          btn.innerText = 'Save';
+
+          async function gatherMetaAndSave() {
+            btn.disabled = true;
+            try {
+              let url = '';
+              const imgEl = lightboxEl ? lightboxEl.querySelector('.iig-lightbox-img, img') : document.querySelector('.iig-lightbox img');
+              if (imgEl) url = imgEl.currentSrc || imgEl.src || '';
+
+              // Fallback to global imageList/currentIndex if present
+              if (!url && window && window.imageList && typeof window.currentIndex === 'number') {
+                const current = window.imageList[window.currentIndex];
+                if (current) url = current.currentSrc || current.src || (typeof current === 'string' ? current : '');
+              }
+
+              if (!url) {
+                try { toastr.error(typeof t === 'function' ? t('album_save_image_invalid_url') : 'Invalid image URL'); } catch (_) {}
+                btn.disabled = false;
+                return;
+              }
+
+              // Try to find original image element in chat by matching src/currentSrc
+              let originalImg = null;
+              try {
+                const candidates = document.querySelectorAll('#chat img');
+                for (const c of candidates) {
+                  try {
+                    if ((c.currentSrc || c.src || '').toString() === url.toString()) {
+                      originalImg = c;
+                      break;
+                    }
+                  } catch (ignore) {}
+                }
+              } catch (ignore) {}
+
+              let saveOptions = {};
+              if (originalImg) {
+                try {
+                  saveOptions = resolveAlbumQuickSaveMetaFromImageElement(originalImg, url);
+                } catch (err) {
+                  console.warn('SunnyMemories: failed to resolve meta from original image', err);
+                }
+              } else if (window && window.imageList && typeof window.currentIndex === 'number') {
+                const current = window.imageList[window.currentIndex];
+                if (current && typeof current === 'object') {
+                  saveOptions = {
+                    sourceKey: current.sourceKey || current.src || `lightbox_image:${url}`,
+                    messageId: current.messageId ?? current.mesid ?? null,
+                    messageIndex: current.messageIndex ?? current.mesid ?? null,
+                    generationMetaRaw: current.generationMetaRaw || '',
+                    imageNameHint: current.imageNameHint || getImageNameFromUrl(url, 'image'),
+                  };
+                }
+              }
+
+              // Ensure minimal fields
+              saveOptions = saveOptions || {};
+              if (!saveOptions.sourceKey) saveOptions.sourceKey = `lightbox_image:${url}`;
+              if (!saveOptions.imageNameHint) saveOptions.imageNameHint = getImageNameFromUrl(url, 'image');
+
+              await saveRemoteImageToAlbumFromUrl(url, saveOptions);
+            } catch (err) {
+              console.error('SunnyMemories: failed to save image from lightbox', err);
+              try { toastr.error(err?.message || (typeof t === 'function' ? t('album_save_image_failed') : 'Failed to save image')); } catch (_) {}
+            } finally {
+              btn.disabled = false;
+            }
+          }
+
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            void gatherMetaAndSave();
+          });
+
+          toolbar.appendChild(btn);
+        } catch (err) {
+          console.warn('SunnyMemories: lightbox save integration error', err);
+        }
+      }
+
+      function attachToLightbox(lightboxEl) {
+        if (!lightboxEl) return;
+        const toolbar = lightboxEl.querySelector('.iig-lightbox-toolbar');
+        if (toolbar) {
+          attachButtonToToolbar(toolbar, lightboxEl);
+          try { disableAlbumQuickSaveHandlers(); } catch (_e) {}
+          return;
+        }
+
+        // If toolbar is created later inside the lightbox, observe the lightbox node only
+        try {
+          const lbObserver = new MutationObserver((mutations, obs) => {
+            const tb = lightboxEl.querySelector('.iig-lightbox-toolbar');
+            if (tb) {
+              attachButtonToToolbar(tb, lightboxEl);
+              try { disableAlbumQuickSaveHandlers(); } catch (_e) {}
+              obs.disconnect();
+            }
+          });
+          lbObserver.observe(lightboxEl, { childList: true, subtree: true });
+        } catch (err) {
+          // If observation fails, try a quick fallback
+          setTimeout(() => {
+            const tb = lightboxEl.querySelector('.iig-lightbox-toolbar');
+            if (tb) {
+              attachButtonToToolbar(tb, lightboxEl);
+              try { disableAlbumQuickSaveHandlers(); } catch (_e) {}
+            }
+          }, 300);
+        }
+      }
+
+      function startLightboxWatcher() {
+        // Immediate check for already existing lightboxes
+        const existing = document.querySelectorAll('.iig-lightbox');
+        if (existing && existing.length) {
+          for (const lb of existing) attachToLightbox(lb);
+        }
+
+        // Lightweight user-interaction driven detection: when the user interacts
+        // (likely opening the lightbox), check for presence and attach the button.
+        function checkAndAttach() {
+          try {
+            const lb = document.querySelector('.iig-lightbox');
+            if (lb) {
+              attachToLightbox(lb);
+              document.removeEventListener('pointerup', checkAndAttach, true);
+              document.removeEventListener('click', checkAndAttach, true);
+              document.removeEventListener('keydown', checkAndAttach, true);
+            }
+          } catch (err) {
+            /* ignore */
+          }
+        }
+
+        document.addEventListener('pointerup', checkAndAttach, true);
+        document.addEventListener('click', checkAndAttach, true);
+        document.addEventListener('keydown', checkAndAttach, true);
+
+        // Fallback: short poll to catch lightbox creation without user events
+        let attempts = 0;
+        const pollId = setInterval(() => {
+          attempts += 1;
+          try {
+            const lb = document.querySelector('.iig-lightbox');
+            if (lb) {
+              attachToLightbox(lb);
+              clearInterval(pollId);
+            } else if (attempts > 60) {
+              clearInterval(pollId);
+            }
+          } catch (_err) {
+            clearInterval(pollId);
+          }
+        }, 300);
+      }
+
+      // Start watcher
+      try { startLightboxWatcher(); } catch (err) { /* ignore */ }
+    })();
 
     const albumMetaViewer = $("#sm-album-meta-viewer");
     if (albumMetaViewer.length) {
@@ -9364,7 +10499,14 @@ $(document).on("click", "#sm-btn-open-parser", function (e) {
 $(document).on("click", "#sm-btn-parse-events-now", function (e) {
   e.preventDefault();
   e.stopPropagation();
-  toggleParserPanel(true);
+
+  requestParsedEvents({
+    rangeMode: getScopedFieldValue("#sm-event-range-mode", "last") || "last",
+    rangeAmount: Math.max(
+      1,
+      normalizeNumber(getScopedFieldValue("#sm-event-range-amount", 25), 25),
+    ),
+  });
 });
 
 $(document).on("click", "#sm-btn-parse-events-run", function (e) {
@@ -9583,6 +10725,23 @@ $(document).on("click", function (e) {
       renderAlbum();
     });
 
+    $(document).on("change", "#sm-album-diary-mode", function () {
+      const root = getActiveSettingsRoot();
+      syncAlbumDiaryControls(root);
+      saveUIFieldsToSettings(false);
+    });
+
+    $(document).on("click", "#sm-album-diary-edit-prompt", function (e) {
+      e.preventDefault();
+      const root = getActiveSettingsRoot();
+      const scopedRoot = root.length ? root : $("#sunny_memories_settings").last();
+      const editorWrap = scopedRoot.find("#sm-album-diary-prompt-editor");
+      const button = scopedRoot.find("#sm-album-diary-edit-prompt");
+      const nextExpanded = !editorWrap.is(":visible");
+      editorWrap.stop(true, true).slideToggle(120);
+      button.toggleClass("is-active", nextExpanded).attr("aria-expanded", nextExpanded ? "true" : "false");
+    });
+
     $(document).on("click", ".sm-album-meta-open", function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -9606,7 +10765,9 @@ $(document).on("click", function (e) {
         styleText = styleEncoded;
       }
 
-      const imageName = String(button.attr("data-image-name") || "image").trim() || "image";
+      const imageName =
+        String(button.attr("data-image-name") || t("album_image_fallback_name")).trim() ||
+        t("album_image_fallback_name");
 
       if (!String(promptText || "").trim() && !String(styleText || "").trim()) {
         toastr.info(t("album_prompt_not_found"));
@@ -9674,7 +10835,7 @@ $(document).on("click", function (e) {
       const imageName =
         String(card.find(".sm-album-caption").text() || "").trim() ||
         String(imageElement.attr("alt") || "").trim() ||
-        "image";
+        t("album_image_fallback_name");
 
       openAlbumImageViewer(imageUrl, imageName, itemId);
     });
@@ -9686,7 +10847,8 @@ $(document).on("click", function (e) {
       const button = $(this);
       if (button.prop("disabled")) return;
       const imageUrl = String(button.attr("data-image-url") || "").trim();
-      const imageName = String(button.attr("data-image-name") || "").trim() || "image";
+      const imageName =
+        String(button.attr("data-image-name") || "").trim() || t("album_image_fallback_name");
       if (!imageUrl) {
         toastr.error(t("album_download_image_failed"));
         return;
@@ -9726,7 +10888,8 @@ $(document).on("click", function (e) {
       const button = $(this);
       if (button.prop("disabled")) return;
       const imageUrl = String(button.attr("data-image-url") || "").trim();
-      const imageName = String(button.attr("data-image-name") || "").trim() || "image";
+      const imageName =
+        String(button.attr("data-image-name") || "").trim() || t("album_image_fallback_name");
       if (!imageUrl) {
         toastr.error(t("album_download_image_failed"));
         return;
@@ -9782,8 +10945,16 @@ $(document).on("click", function (e) {
     });
 
     $(document).on(
-      "input",
+      "input change",
       "#sm-custom-sidebar-color, #sm-custom-button-color",
+      function () {
+        saveUIFieldsToSettings(false);
+      },
+    );
+
+    $(document).on(
+      "change",
+      "#sm-custom-hide-sidebar, #sm-custom-disable-glow, #sm-custom-hide-enable-toggle-memories, #sm-custom-hide-enable-toggle-quests, #sm-custom-hide-enable-toggle-album",
       function () {
         saveUIFieldsToSettings(false);
       },
@@ -9797,6 +10968,9 @@ $(document).on("click", function (e) {
       scopedRoot.find("#sm-custom-hide-sidebar").prop("checked", false);
       scopedRoot.find("#sm-custom-button-color").val(DEFAULT_CUSTOM_BUTTON_COLOR);
       scopedRoot.find("#sm-custom-disable-glow").prop("checked", false);
+      scopedRoot.find("#sm-custom-hide-enable-toggle-memories").prop("checked", false);
+      scopedRoot.find("#sm-custom-hide-enable-toggle-quests").prop("checked", false);
+      scopedRoot.find("#sm-custom-hide-enable-toggle-album").prop("checked", false);
       saveUIFieldsToSettings(false);
     });
 
@@ -9808,6 +10982,182 @@ $(document).on("click", function (e) {
         .attr("aria-pressed", nextState ? "true" : "false");
       saveUIFieldsToSettings(false);
     });
+
+    $(document).off("click", "#sm-mini-guide-toggle");
+    $(document).off("click", "#sm-mini-guide-panel .sm-mini-guide-main-btn");
+    $(document).off("click", "#sm-mini-guide-panel .sm-mini-guide-subtab-btn");
+    $(document).off("click", "#sm-mini-guide-panel [data-guide-back]");
+
+    const MINI_GUIDE_VIEWS = {
+      MAIN: "main",
+      TOPICS: "topics",
+      ARTICLE: "article",
+    };
+
+    function setMiniGuideView(panel, view) {
+      if (!panel || !panel.length) return;
+      const safeView =
+        view === MINI_GUIDE_VIEWS.TOPICS || view === MINI_GUIDE_VIEWS.ARTICLE
+          ? view
+          : MINI_GUIDE_VIEWS.MAIN;
+      panel.attr("data-guide-view", safeView);
+    }
+
+    function normalizeMiniGuideState(panel) {
+      if (!panel || !panel.length) return;
+
+      const allMain = panel.find(".sm-mini-guide-main-btn");
+      if (!allMain.length) return;
+
+      let activeMain = allMain.filter(".is-active").first();
+      if (!activeMain.length) {
+        activeMain = allMain.first().addClass("is-active");
+      }
+      allMain.not(activeMain).removeClass("is-active");
+
+      const requestedTab = String(activeMain.data("guide-tab") || "").trim();
+      const allPanes = panel.find(".sm-mini-guide-pane");
+      let targetPane = requestedTab
+        ? allPanes.filter(`[data-guide-pane=\"${requestedTab}\"]`).first()
+        : $();
+      if (!targetPane.length) {
+        targetPane = allPanes.first();
+      }
+
+      allPanes.removeClass("is-active").css("display", "none");
+      if (!targetPane.length) return;
+      targetPane.addClass("is-active").css("display", "block");
+
+      allPanes.not(targetPane).find(".sm-mini-guide-subtab-btn").removeClass("is-active");
+      allPanes.not(targetPane).find(".sm-mini-guide-subpane").removeClass("is-active");
+
+      const allSubtabs = targetPane.find(".sm-mini-guide-subtab-btn");
+      const allSubpanes = targetPane.find(".sm-mini-guide-subpane");
+      if (!allSubtabs.length || !allSubpanes.length) return;
+
+      let activeSubtab = allSubtabs.filter(".is-active").first();
+      if (!activeSubtab.length) {
+        activeSubtab = allSubtabs.first().addClass("is-active");
+      }
+      allSubtabs.not(activeSubtab).removeClass("is-active");
+
+      const subtabKey = String(activeSubtab.data("guide-subtab") || "").trim();
+      let targetSubpane = subtabKey
+        ? allSubpanes.filter(`[data-guide-subpane=\"${subtabKey}\"]`).first()
+        : $();
+      if (!targetSubpane.length) {
+        targetSubpane = allSubpanes.first();
+      }
+
+      allSubpanes.removeClass("is-active").css("display", "none");
+      targetSubpane.addClass("is-active").css("display", "block");
+
+      const currentView = String(panel.attr("data-guide-view") || "").trim();
+      if (
+        currentView !== MINI_GUIDE_VIEWS.MAIN &&
+        currentView !== MINI_GUIDE_VIEWS.TOPICS &&
+        currentView !== MINI_GUIDE_VIEWS.ARTICLE
+      ) {
+        setMiniGuideView(panel, MINI_GUIDE_VIEWS.MAIN);
+      }
+    }
+
+    $(document).on("click", "#sm-mini-guide-toggle", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const panel = $("#sm-mini-guide-panel");
+      if (!panel.length) return;
+      const nextExpanded = !panel.is(":visible");
+      if (nextExpanded) {
+        normalizeMiniGuideState(panel);
+        setMiniGuideView(panel, MINI_GUIDE_VIEWS.MAIN);
+      }
+      panel.stop(true, true).slideToggle(140);
+      $(this).attr("aria-expanded", nextExpanded ? "true" : "false");
+    });
+
+    $(document).on("click", "#sm-mini-guide-panel .sm-mini-guide-main-btn", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const tab = String($(this).data("guide-tab") || "").trim();
+      if (!tab) return;
+
+      const panel = $("#sm-mini-guide-panel");
+      if (!panel.length) return;
+
+      panel.find(".sm-mini-guide-main-btn").removeClass("is-active");
+      $(this).addClass("is-active");
+
+      panel.find(".sm-mini-guide-pane").removeClass("is-active");
+      const targetPane = panel
+        .find(`.sm-mini-guide-pane[data-guide-pane=\"${tab}\"]`)
+        .first();
+      if (!targetPane.length) return;
+      targetPane.addClass("is-active");
+
+      targetPane.find(".sm-mini-guide-subtab-btn").removeClass("is-active");
+      targetPane.find(".sm-mini-guide-subpane").removeClass("is-active");
+
+      const firstSubtab = targetPane.find(".sm-mini-guide-subtab-btn").first();
+      const firstSubpane = targetPane.find(".sm-mini-guide-subpane").first();
+      if (firstSubtab.length) firstSubtab.addClass("is-active");
+      if (firstSubpane.length) firstSubpane.addClass("is-active");
+
+      normalizeMiniGuideState(panel);
+      setMiniGuideView(panel, MINI_GUIDE_VIEWS.TOPICS);
+    });
+
+    $(document).on("click", "#sm-mini-guide-panel .sm-mini-guide-subtab-btn", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const subtab = String($(this).data("guide-subtab") || "").trim();
+      if (!subtab) return;
+
+      const pane = $("#sm-mini-guide-panel .sm-mini-guide-pane.is-active").first();
+      if (!pane.length) return;
+
+      pane.find(".sm-mini-guide-subtab-btn").removeClass("is-active");
+      $(this).addClass("is-active");
+
+      pane.find(".sm-mini-guide-subpane").removeClass("is-active");
+      pane
+        .find(`.sm-mini-guide-subpane[data-guide-subpane=\"${subtab}\"]`)
+        .first()
+        .addClass("is-active");
+
+      const panel = $("#sm-mini-guide-panel");
+      normalizeMiniGuideState(panel);
+      setMiniGuideView(panel, MINI_GUIDE_VIEWS.ARTICLE);
+    });
+
+    $(document).on("click", "#sm-mini-guide-panel [data-guide-back]", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const panel = $("#sm-mini-guide-panel");
+      if (!panel.length) return;
+      const target = String($(this).data("guide-back") || "").trim();
+
+      normalizeMiniGuideState(panel);
+      if (target === "auto") {
+        const currentView = String(panel.attr("data-guide-view") || "").trim();
+        if (currentView === MINI_GUIDE_VIEWS.ARTICLE) {
+          setMiniGuideView(panel, MINI_GUIDE_VIEWS.TOPICS);
+          return;
+        }
+        setMiniGuideView(panel, MINI_GUIDE_VIEWS.MAIN);
+        return;
+      }
+      if (target === "topics") {
+        setMiniGuideView(panel, MINI_GUIDE_VIEWS.TOPICS);
+        return;
+      }
+      setMiniGuideView(panel, MINI_GUIDE_VIEWS.MAIN);
+    });
+
+    const miniGuidePanel = $("#sm-mini-guide-panel");
+    normalizeMiniGuideState(miniGuidePanel);
+    setMiniGuideView(miniGuidePanel, MINI_GUIDE_VIEWS.MAIN);
 
     $(document).on("click", "#sm-global-settings-btn", function () {
       $("#sm-global-settings-panel").slideToggle(200);
@@ -10044,7 +11394,7 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
           const selectedCount = $(
             `#sm-library-list-${type} .sm-bulk-checkbox.selected`,
           ).length;
-          if (selectedCount === 0) return toastr.warning("...");
+          if (selectedCount === 0) return toastr.warning(t("select_items_first"));
           popover.data("delete-type", type);
           popover.removeData("delete-id");
           $("#sm-delete-popover .sm-popover-text").html(
@@ -10423,7 +11773,14 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
         loadActiveMemory();
 
         toastr.success(t("moved_to_lib"));
-        $('.sm-tab-btn[data-tab="library"]').click();
+        {
+          const root = getActiveSettingsRoot();
+          if (root.length) {
+            root.find('.sm-tab-btn[data-tab="library"]').first().click();
+          } else {
+            $('.sm-tab-btn[data-tab="library"]').first().click();
+          }
+        }
       } catch (e) {
         console.error("Auto-Title Error:", e);
       } finally {
@@ -10500,7 +11857,14 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
         loadActiveMemory();
 
         toastr.success(t("split_into_x").replace("{0}", categories.length));
-        $('.sm-tab-btn[data-tab="library"]').click();
+        {
+          const root = getActiveSettingsRoot();
+          if (root.length) {
+            root.find('.sm-tab-btn[data-tab="library"]').first().click();
+          } else {
+            $('.sm-tab-btn[data-tab="library"]').first().click();
+          }
+        }
       } catch (e) {
         console.error("SunnyMemories Split Error:", e);
       } finally {
@@ -10509,7 +11873,8 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
     });
 
   $(document).on("click", ".sm-main-tab-btn", function () {
-  const $root = $("#sunny_memories_settings");
+  const $root = $(this).closest("#sunny_memories_settings");
+  if (!$root.length) return;
 
   $root.find(".sm-main-tab-btn").removeClass("active");
   $root.find(".sm-main-tab-pane").removeClass("active");
@@ -10522,6 +11887,12 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
   } else if ($(this).data("maintab") === "album") {
     renderAlbum();
   }
+
+  if (!extension_settings[extensionName]) {
+    extension_settings[extensionName] = {};
+  }
+  extension_settings[extensionName].lastMainTab = normalizeMainTab($(this).data("maintab"));
+  saveSettingsDebounced();
 });
 
  $(document).on("click", ".sm-tab-btn", function () {
@@ -10530,35 +11901,59 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
 
   if (!$root.length) return;
 
-  $header.find(".sm-tab-btn").removeClass("active");
-  $root.find(".sm-tab-pane").removeClass("active");
-
   $(this).addClass("active");
 
-  const paneId = "#sm-tab-" + $(this).data("tab");
-  $root.find(paneId).first().addClass("active");
+  const tabValue = String($(this).data("tab") || "");
+  activateSubTabPane($root, tabValue);
 
   if ($(this).data("tab") === "cal") {
     renderCalendar();
   }
+
+  if (!extension_settings[extensionName]) {
+    extension_settings[extensionName] = {};
+  }
+  if ($root.attr("id") === "sm-main-tab-memories") {
+    extension_settings[extensionName].lastMemoriesTab = normalizeMemoriesTab(tabValue);
+    updateMemoriesGenRangePanelPlacement($root, tabValue);
+    saveSettingsDebounced();
+  } else if ($root.attr("id") === "sm-main-tab-calendar") {
+    extension_settings[extensionName].lastCalendarTab = normalizeCalendarTab(tabValue);
+    saveSettingsDebounced();
+  }
 });
+
+function resetQuestFormState(options = {}) {
+  const hide = options?.hide === true;
+  const form = $("#sm-form-add-quest");
+
+  $("#sm-quest-edit-id").val("");
+  $("#sm-quest-form-title").val("");
+  $("#sm-quest-form-desc").val("");
+  $("#sm-quest-form-type").val("main");
+  $("#sm-quest-form-status").val("current");
+  $("#sm-quest-form-day").val("");
+  $("#sm-quest-form-year").val("");
+
+  if (!form.length) return;
+  if (hide) {
+    form.stop(true, true).slideUp(200);
+  } else {
+    form.stop(true, true).slideDown(200);
+  }
+}
 
     $(document).on("click", "#sm-btn-generate-quests", () =>
       runQuestGeneration(null),
     );
 
     $(document).on("click", "#sm-btn-add-quest", function () {
-      $("#sm-quest-edit-id").val("");
-      $("#sm-quest-form-title").val("");
-      $("#sm-quest-form-desc").val("");
-      $("#sm-quest-form-day").val("");
-      $("#sm-quest-form-year").val("");
-      $("#sm-form-add-quest").slideToggle(200);
-    });
-
-    $(document).on("click", "#sm-btn-clear-quest-date", function () {
-      $("#sm-quest-form-day").val("");
-      $("#sm-quest-form-year").val("");
+      const form = $("#sm-form-add-quest");
+      if (form.is(":visible")) {
+        resetQuestFormState({ hide: true });
+      } else {
+        resetQuestFormState({ hide: false });
+      }
     });
 
     $(document).on("click", "#sm-btn-cancel-quest", function () {
@@ -11017,6 +12412,11 @@ $("#sm-qc-enable-cal-events").prop("checked", s.qcEnableCalEvents ?? s.qcEnableC
     renderQuests();
     renderCalendar();
     applyCharacterAlbumSaveBinding(s);
+    syncAlbumViewToCharacterBoundFolder(s, {
+      openFolderPanel: true,
+      animate: false,
+      render: false,
+    });
     renderAlbum();
 
     setTimeout(updateProfilesList, 2000);
@@ -11033,6 +12433,11 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
   renderQuests();
   renderCalendar();
   applyCharacterAlbumSaveBinding();
+  syncAlbumViewToCharacterBoundFolder(null, {
+    openFolderPanel: true,
+    animate: false,
+    render: false,
+  });
   renderAlbum();
   addButtonsToExistingMessages();
 
@@ -11040,9 +12445,9 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
   hideAlbumQuickSaveButton();
 });
 
-      eventSource.on(event_types.MESSAGE_RECEIVED, handleMessageReceived);
-      eventSource.on(event_types.USER_MESSAGE_SENT, runExpiryCleanup);
-      eventSource.on(event_types.APP_READY, initSunnyButtons);
+    eventSource.on(event_types.MESSAGE_RECEIVED, handleMessageReceived);
+    eventSource.on(event_types.USER_MESSAGE_SENT, runExpiryCleanup);
+    eventSource.on(event_types.APP_READY, initSunnyButtons);
     }
 
     initAlbumImageQuickSave();
@@ -11069,7 +12474,7 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
         return "";
       },
       [],
-      "Generate Sunny Memories summary",
+      t("slash_sunny_summary_desc"),
     );
 
     registerSlashCommand(
@@ -11079,7 +12484,7 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
         return "";
       },
       [],
-      "Generate Sunny Memories facts",
+      t("slash_sunny_facts_desc"),
     );
 
     registerSlashCommand(
@@ -11089,7 +12494,7 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
         return "";
       },
       [],
-      "Generate Sunny Memories quests",
+      t("slash_sunny_quests_desc"),
     );
 
     registerSlashCommand(
@@ -11099,18 +12504,18 @@ eventSource.on(event_types.CHAT_CHANGED, () => {
         return "";
       },
       [],
-      "Generate Sunny Memories events",
+      t("slash_sunny_events_desc"),
     );
 
- registerSlashCommand(
-  "cancelmem",
-  () => {
-    globalThis.cancelMemoryGeneration();
-    return "";
-  },
-  [],
-  "Cancel memory generation",
-);
+    registerSlashCommand(
+      "cancelmem",
+      () => {
+        globalThis.cancelMemoryGeneration();
+        return "";
+      },
+      [],
+      t("slash_cancel_memory_generation_desc"),
+    );
   } catch (error) {
     console.error("SunnyMemories Initialization Error:", error);
   }
