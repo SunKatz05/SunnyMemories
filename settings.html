@@ -1519,6 +1519,8 @@
             flex-direction: column;
             gap: 10px;
             align-items: center;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .sm-album-image-viewer-close {
             position: absolute;
@@ -1565,6 +1567,11 @@
             justify-content: center;
             gap: 8px;
             flex-wrap: wrap;
+            position: sticky;
+            bottom: 8px;
+            z-index: 3;
+            padding-top: 6px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.05));
         }
         .sm-album-image-viewer-actions .sm-album-action-btn {
             font-size: 0.82em;
@@ -1611,6 +1618,7 @@
                 border-radius: 8px;
             }
             .sm-album-image-viewer-close {
+                position: fixed;
                 top: 8px;
                 right: 8px;
                 width: 44px;
