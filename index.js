@@ -10118,6 +10118,7 @@ Include only known and actively planned or imminent future events.
     const albumImageViewer = $("#sm-album-image-viewer");
     if (albumImageViewer.length) {
       albumImageViewer.appendTo("body");
+      bindAlbumImageViewerHandlers();
     }
     // Integrate a `Save` button into IIG's lightbox toolbar (if present).
     (function initIigLightboxSaveIntegration() {
@@ -10964,50 +10965,39 @@ $(document).on("click", function (e) {
       }
     });
 
-    let albumImageViewerClosing = false;
+    function bindAlbumImageViewerHandlers() {
+      const viewer = $("#sm-album-image-viewer");
+      const content = $("#sm-album-image-viewer-content");
+      const closeBtn = $("#sm-album-image-viewer-close");
 
-    function safeCloseAlbumImageViewer(e) {
-      if (e) {
+      if (!viewer.length || !content.length || !closeBtn.length) return;
+
+      closeBtn.off(".smAlbumViewer").on("click.smAlbumViewer", function (e) {
         e.preventDefault();
         e.stopPropagation();
         if (typeof e.stopImmediatePropagation === "function") {
           e.stopImmediatePropagation();
         }
-      }
-
-      if (albumImageViewerClosing) return;
-      albumImageViewerClosing = true;
-
-      requestAnimationFrame(() => {
-        try {
-          closeAlbumImageViewer();
-        } finally {
-          albumImageViewerClosing = false;
-        }
-      });
-    }
-
-    $(document).on(
-      "pointerdown touchstart click",
-      "#sm-album-image-viewer-close",
-      function (e) {
-        safeCloseAlbumImageViewer(e);
+        closeAlbumImageViewer();
         return false;
-      },
-    );
+      });
 
-    $(document).on(
-      "pointerdown touchstart click",
-      "#sm-album-image-viewer-content",
-      function (e) {
+      viewer.off(".smAlbumViewer").on("click.smAlbumViewer", function (e) {
+        if (e.target !== this) return;
+        e.preventDefault();
         e.stopPropagation();
-      },
-    );
+        closeAlbumImageViewer();
+      });
 
-    $(document).on("click", "#sm-album-image-viewer", function (e) {
-      if (e.target !== this) return;
-      safeCloseAlbumImageViewer(e);
-    });
+      content
+        .off(".smAlbumViewer")
+        .on(
+          "pointerdown.smAlbumViewer mousedown.smAlbumViewer click.smAlbumViewer touchstart.smAlbumViewer",
+          function (e) {
+            e.stopPropagation();
+          },
+        );
+    }
 
     $(document).on("keydown", function (e) {
       if (e.key === "Escape") {
