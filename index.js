@@ -314,7 +314,7 @@ function normalizeAlbumStoredPath(path) {
   return value.startsWith("/") ? value : `/${value}`;
 }
 
-async function uploadBlobToAlbumStorage(blob, sourceUrl, imageNameHint = "") {
+async function uploadBlobToAlbumStorage(blob, sourceUrl, imageNameHint = "", fileNameOverride = "") {
   if (!blob || blob.size <= 0) {
     throw new Error(t("album_save_image_failed"));
   }
@@ -326,7 +326,12 @@ async function uploadBlobToAlbumStorage(blob, sourceUrl, imageNameHint = "") {
     preferredName.replace(/\.[a-zA-Z0-9]{2,6}$/g, ""),
     "image",
   ).slice(0, 64);
-  const fileName = `${sanitizedBaseName}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+  let fileName = "";
+  if (String(fileNameOverride || "").trim()) {
+    fileName = sanitizeAlbumFileNamePart(String(fileNameOverride).replace(/\.[a-zA-Z0-9]{2,6}$/g, ""), "image");
+  } else {
+    fileName = `${sanitizedBaseName}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+  }
 
   const payload = {
     image: base64Data,
@@ -990,7 +995,26 @@ async function saveRemoteImageToAlbumFromUrl(url, saveOptions = "") {
     }
   }
 
-  const savedUrl = await uploadBlobToAlbumStorage(imageBlob, normalizedUrl, imageNameHint);
+  // Predict a filename and check target folder for duplicates before uploading
+  const extensionForCheck = getImageExtensionForBlob(imageBlob, normalizedUrl) || getExtensionFromUrl(normalizedUrl, "jpg");
+  const preferredNameLocal = String(imageNameHint || getImageNameFromUrl(normalizedUrl, "image")).trim();
+  const sanitizedBaseNameLocal = sanitizeAlbumFileNamePart(
+    preferredNameLocal.replace(/\.[a-zA-Z0-9]{2,6}$/g, ""),
+    "image",
+  ).slice(0, 64);
+  const candidateFileName = `${sanitizedBaseNameLocal}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+  const expectedSavedUrl = normalizeAlbumStoredPath(`/user/images/${candidateFileName}.${extensionForCheck}`);
+  const alreadyExistsByExpectedPath = s.albumItems.some(
+    (item) =>
+      String(item?.url || "") === expectedSavedUrl &&
+      String(item?.folderId || "") === String(folderIdToSave || ""),
+  );
+  if (alreadyExistsByExpectedPath) {
+    toastr.info(t("album_save_image_already_saved"));
+    return;
+  }
+
+  const savedUrl = await uploadBlobToAlbumStorage(imageBlob, normalizedUrl, imageNameHint, candidateFileName);
   const parsedGenerationMeta = parseAlbumGenerationMeta(normalizedOptions.generationMetaRaw);
   const generationMeta =
     s.albumSaveGenerationMeta === true
@@ -2368,10 +2392,11 @@ async function getChatHistoryTextRange(fromMessageId = 0, toMessageId = null) {
 
 function normalizeMonthTokenForMatch(token) {
   return String(token || "")
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/[.,:;!?]/g, "")
     .replace(/["'`]/g, "")
-    .replace(/С‘/g, "Рµ")
+    .replace(/ё/g, "е")
     .replace(/(?:st|nd|rd|th)$/i, "")
     .trim();
 }
@@ -2403,9 +2428,7 @@ function isLikelyDateText(text) {
 
   if (/\d{1,4}\s*[./-]\s*\d{1,2}/u.test(normalized)) return true;
 
-  return /\b(?:date|РґР°С‚Р°|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|СЏРЅРІ|С„РµРІ|РјР°СЂ|Р°РїСЂ|РјР°Р№|РёСЋРЅ|РёСЋР»|Р°РІРі|СЃРµРЅ|СЃРµРЅС‚|РѕРєС‚|РЅРѕСЏ|РґРµРє|january|february|march|april|june|july|august|september|october|november|december|СЏРЅРІР°СЂ|С„РµРІСЂР°Р»|РјР°СЂС‚|Р°РїСЂРµР»|РёСЋРЅ|РёСЋР»|Р°РІРіСѓСЃС‚|СЃРµРЅС‚СЏР±СЂ|РѕРєС‚СЏР±СЂ|РЅРѕСЏР±СЂ|РґРµРєР°Р±СЂ)\b/u.test(
-    normalized,
-  );
+  return /\b(?:date|дата|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|январь|января|янв|февраль|февраля|фев|март|марта|мар|апрель|апреля|апр|май|мая|июнь|июня|июн|июль|июля|июл|август|августа|авг|сентябрь|сентября|сен|сент|октябрь|октября|окт|ноябрь|ноября|ноя|декабрь|декабря|дек|january|february|march|april|june|july|august|september|october|november|december)\b/u.test(normalized);
 }
 
 function buildDateCandidate({
@@ -2474,42 +2497,49 @@ function monthNameFromToken(token, calData) {
     november: "november",
     dec: "december",
     december: "december",
-    "СЏРЅРІР°СЂСЊ": "january",
-    "СЏРЅРІР°СЂСЏ": "january",
-    "С„РµРІСЂР°Р»СЊ": "february",
-    "С„РµРІСЂР°Р»СЏ": "february",
-    "РјР°СЂС‚": "march",
-    "РјР°СЂС‚Р°": "march",
-    "Р°РїСЂРµР»СЊ": "april",
-    "Р°РїСЂРµР»СЏ": "april",
-    "РјР°Р№": "may",
-    "РјР°СЏ": "may",
-    "РёСЋРЅСЊ": "june",
-    "РёСЋРЅСЏ": "june",
-    "РёСЋР»СЊ": "july",
-    "РёСЋР»СЏ": "july",
-    "Р°РІРіСѓСЃС‚": "august",
-    "Р°РІРіСѓСЃС‚Р°": "august",
-    "СЃРµРЅС‚СЏР±СЂСЊ": "september",
-    "СЃРµРЅС‚СЏР±СЂСЏ": "september",
-    "СЃРµРЅ": "september",
-    "СЃРµРЅС‚": "september",
-    "РѕРєС‚СЏР±СЂСЊ": "october",
-    "РѕРєС‚СЏР±СЂСЏ": "october",
-    "РѕРєС‚": "october",
-    "РЅРѕСЏР±СЂСЊ": "november",
-    "РЅРѕСЏР±СЂСЏ": "november",
-    "РЅРѕСЏ": "november",
-    "РґРµРєР°Р±СЂСЊ": "december",
-    "РґРµРєР°Р±СЂСЏ": "december",
-    "РґРµРє": "december",
-    "СЏРЅРІ": "january",
-    "С„РµРІ": "february",
-    "РјР°СЂ": "march",
-    "Р°РїСЂ": "april",
-    "РёСЋРЅ": "june",
-    "РёСЋР»": "july",
-    "Р°РІРі": "august",
+    "январь": "january",
+    "января": "january",
+    "янв": "january",
+    "февраль": "february",
+    "февраля": "february",
+    "фев": "february",
+    "март": "march",
+    "марта": "march",
+    "мар": "march",
+    "апрель": "april",
+    "апреля": "april",
+    "апр": "april",
+    "май": "may",
+    "мая": "may",
+    "июнь": "june",
+    "июня": "june",
+    "июн": "june",
+    "июль": "july",
+    "июля": "july",
+    "июл": "july",
+    "август": "august",
+    "августа": "august",
+    "авг": "august",
+    "сентябрь": "september",
+    "сентября": "september",
+    "сен": "september",
+    "сент": "september",
+    "октябрь": "october",
+    "октября": "october",
+    "окт": "october",
+    "ноябрь": "november",
+    "ноября": "november",
+    "ноя": "november",
+    "декабрь": "december",
+    "декабря": "december",
+    "дек": "december",
+    "янв": "january",
+    "фев": "february",
+    "мар": "march",
+    "апр": "april",
+    "июн": "june",
+    "июл": "july",
+    "авг": "august",
   };
 
   for (const m of months) {
@@ -2541,17 +2571,17 @@ function extractDateFromText(text, calData) {
   const parsers = [
     {
       regex:
-        /\b(?:date|РґР°С‚Р°)\b\s*[:=\-]?\s*(\d{1,2})(?:st|nd|rd|th)?\s+([\p{L}]{3,})\.?\s*,?\s*(\d{2,4})\b/giu,
+        /\b(?:date|дата)\b\s*[:=\-]?\s*(\d{1,2})(?:st|nd|rd|th)?\s+([\p{L}]{3,})\.?\s*,?\s*(\d{2,4})\b/giu,
       pick: (m) => ({ dayToken: m[1], monthToken: m[2], yearToken: m[3] }),
     },
     {
       regex:
-        /\b(?:date|РґР°С‚Р°)\b\s*[:=\-]?\s*(\d{4})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\b/giu,
+        /\b(?:date|дата)\b\s*[:=\-]?\s*(\d{4})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\b/giu,
       pick: (m) => ({ dayToken: m[3], monthToken: m[2], yearToken: m[1] }),
     },
     {
       regex:
-        /\b(?:date|РґР°С‚Р°)\b\s*[:=\-]?\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{2,4})\b/giu,
+        /\b(?:date|дата)\b\s*[:=\-]?\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{2,4})\b/giu,
       pick: (m) => ({ dayToken: m[1], monthToken: m[2], yearToken: m[3] }),
     },
     {
@@ -11332,7 +11362,7 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
 
         library.unshift({
           id: Date.now() + Math.floor(Math.random() * 10000),
-          title: "рџЊџ " + genTitle,
+          title: "🌟 " + genTitle,
           type: type,
           content: result.trim(),
           pinned: false,
