@@ -10564,7 +10564,15 @@ $(document).on("click", "#sm-btn-clean-date-signals", function (e) {
   requestCleanDateSignals();
 });
 
+function isInsideAlbumImageViewer(target) {
+  return !!$(target).closest(
+    "#sm-album-image-viewer, #sm-album-image-viewer-content, #sm-album-image-viewer-close",
+  ).length;
+}
+
 $(document).on("click", function (e) {
+  if (isInsideAlbumImageViewer(e.target)) return;
+
   if (
     !$(e.target).closest("#sm-events-inline-panel, #sm-btn-open-ai-events, #sm-btn-open-parser").length
   ) {
@@ -10725,6 +10733,8 @@ $(document).on("click", function (e) {
     });
 
     $(document).on("click", function (e) {
+      if (isInsideAlbumImageViewer(e.target)) return;
+
       if (
         !$(e.target).closest(
           "#sm-album-folders-panel, #sm-album-folder-library-btn, #sm-album-folder-search, #sm-album-create-folder",
@@ -11496,6 +11506,8 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
     );
 
     $(document).on("click", function (e) {
+      if (isInsideAlbumImageViewer(e.target)) return;
+
       if (
         !$(e.target).closest(
           "#sm-delete-popover, .sm-lib-delete, .sm-bulk-delete, .sm-album-delete, #sm-album-image-viewer-delete",
