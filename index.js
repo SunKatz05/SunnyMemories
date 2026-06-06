@@ -10954,32 +10954,49 @@ $(document).on("click", function (e) {
       }
     });
 
+    let albumImageViewerClosing = false;
+
+    function safeCloseAlbumImageViewer(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === "function") {
+          e.stopImmediatePropagation();
+        }
+      }
+
+      if (albumImageViewerClosing) return;
+      albumImageViewerClosing = true;
+
+      requestAnimationFrame(() => {
+        try {
+          closeAlbumImageViewer();
+        } finally {
+          albumImageViewerClosing = false;
+        }
+      });
+    }
+
+    $(document).on(
+      "pointerdown touchstart click",
+      "#sm-album-image-viewer-close",
+      function (e) {
+        safeCloseAlbumImageViewer(e);
+        return false;
+      },
+    );
+
+    $(document).on(
+      "pointerdown touchstart click",
+      "#sm-album-image-viewer-content",
+      function (e) {
+        e.stopPropagation();
+      },
+    );
+
     $(document).on("click", "#sm-album-image-viewer", function (e) {
       if (e.target !== this) return;
-      closeAlbumImageViewer();
-    });
-
-    $(document).on("pointerdown mousedown touchstart", "#sm-album-image-viewer-close", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-    });
-
-    $(document).on("pointerdown mousedown touchstart", "#sm-album-image-viewer-content", function (e) {
-      e.stopPropagation();
-    });
-
-    $(document).on("click", "#sm-album-image-viewer-close", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      // Prevent other click handlers from running and ensure viewer only closes overlay
-      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-      closeAlbumImageViewer();
-      return false;
-    });
-
-    $(document).on("click", "#sm-album-image-viewer-content", function (e) {
-      e.stopPropagation();
+      safeCloseAlbumImageViewer(e);
     });
 
     $(document).on("keydown", function (e) {
