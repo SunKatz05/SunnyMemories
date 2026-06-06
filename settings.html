@@ -1521,6 +1521,32 @@
             align-items: center;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            /* Allow native touch scrolling on mobile and contain overscroll */
+            touch-action: auto;
+            -ms-touch-action: auto;
+            overscroll-behavior: contain;
+        }
+        /* Thinner, subtler scrollbars for the image viewer */
+        .sm-album-image-viewer-content::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+        .sm-album-image-viewer-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+        }
+        .sm-album-image-viewer-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sm-album-image-viewer-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.12) transparent;
+        }
+
+        /* Ensure the image itself doesn't block touch panning */
+        .sm-album-image-viewer-img {
+            touch-action: auto;
+            -ms-touch-action: auto;
         }
         .sm-album-image-viewer-close {
             position: absolute;
