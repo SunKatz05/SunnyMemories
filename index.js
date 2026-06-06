@@ -10929,6 +10929,16 @@ $(document).on("click", function (e) {
       closeAlbumImageViewer();
     });
 
+    $(document).on("pointerdown mousedown touchstart", "#sm-album-image-viewer-close", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    });
+
+    $(document).on("pointerdown mousedown touchstart", "#sm-album-image-viewer-content", function (e) {
+      e.stopPropagation();
+    });
+
     $(document).on("click", "#sm-album-image-viewer-close", function (e) {
       e.preventDefault();
       e.stopPropagation();
