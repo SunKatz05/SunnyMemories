@@ -2691,9 +2691,44 @@
         -webkit-user-drag: none;
     }
 
-    </style>
+        @media (max-width: 700px) {
+            #sm-album-image-viewer {
+                padding: 8px;
+                align-items: flex-start;
+                justify-content: flex-start;
+                overflow: hidden;
+                height: 100dvh;
+            }
 
-    <div class="inline-drawer">
+            .sm-album-image-viewer-content {
+                width: 100%;
+                max-width: 100%;
+                max-height: calc(100dvh - 16px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .sm-album-image-viewer-img {
+                max-width: 100%;
+                max-height: none !important;
+                height: auto;
+                object-fit: contain;
+                display: block;
+                flex: 0 0 auto;
+            }
+
+            .sm-album-image-viewer-actions {
+                flex: 0 0 auto;
+            }
+        }
+
+        </style>
+
+        <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
             <b><i class="fa-solid fa-sun" style="color: #feca57; margin-right: 6px;"></i>SunnyMemories</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
