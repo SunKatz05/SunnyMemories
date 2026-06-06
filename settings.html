@@ -1506,6 +1506,7 @@
             backdrop-filter: blur(2px);
             padding: 24px;
             box-sizing: border-box;
+            touch-action: none;
         }
         #sm-album-image-viewer.sm-open {
             display: flex;
@@ -1519,44 +1520,21 @@
             flex-direction: column;
             gap: 10px;
             align-items: center;
+            min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            /* Allow native touch scrolling on mobile and contain overscroll */
-            touch-action: auto;
-            -ms-touch-action: auto;
+            touch-action: pan-y;
             overscroll-behavior: contain;
-        }
-        /* Thinner, subtler scrollbars for the image viewer */
-        .sm-album-image-viewer-content::-webkit-scrollbar {
-            width: 10px;
-            height: 8px;
-        }
-        .sm-album-image-viewer-content::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.12);
-            border-radius: 8px;
-        }
-        .sm-album-image-viewer-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sm-album-image-viewer-content {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.12) transparent;
-        }
-
-        /* Ensure the image itself doesn't block touch panning */
-        .sm-album-image-viewer-img {
-            touch-action: auto;
-            -ms-touch-action: auto;
         }
         .sm-album-image-viewer-close {
             position: absolute;
             top: -8px;
             right: -8px;
-            width: 34px;
-            height: 34px;
-            border: 1px solid rgba(255,255,255,0.45);
-            border-radius: 50%;
-            background: rgba(0,0,0,0.72);
+            padding: 6px 8px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
             color: #fff;
             font-size: 1.05em;
             display: inline-flex;
@@ -1565,7 +1543,7 @@
             cursor: pointer;
         }
         .sm-album-image-viewer-close:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.06);
         }
         .sm-album-image-viewer-img {
             max-width: min(96vw, 1500px);
@@ -1576,6 +1554,9 @@
             box-shadow: 0 18px 45px rgba(0,0,0,0.55);
             display: block;
             object-fit: contain;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         /* Image display remains fit-to-screen; scrolling handled by container */
@@ -2662,6 +2643,53 @@
     max-height: calc(100vh - 210px);
   }
 }
+
+    /* Thin semi-transparent scrollbars for image/meta viewers */
+    #sm-album-image-viewer .sm-album-image-viewer-content,
+    #sm-album-meta-viewer .sm-album-meta-viewer-content {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.14) transparent;
+        overflow-x: hidden;
+    }
+    #sm-album-image-viewer .sm-album-image-viewer-content::-webkit-scrollbar,
+    #sm-album-meta-viewer .sm-album-meta-viewer-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    #sm-album-image-viewer .sm-album-image-viewer-content::-webkit-scrollbar-track,
+    #sm-album-meta-viewer .sm-album-meta-viewer-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #sm-album-image-viewer .sm-album-image-viewer-content::-webkit-scrollbar-thumb,
+    #sm-album-meta-viewer .sm-album-meta-viewer-content::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+    #sm-album-image-viewer .sm-album-image-viewer-content::-webkit-scrollbar-thumb:hover,
+    #sm-album-meta-viewer .sm-album-meta-viewer-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.18);
+    }
+
+    /* Touch/scroll behaviour tweaks for mobile image viewer */
+    #sm-album-image-viewer {
+        touch-action: none;
+    }
+
+    .sm-album-image-viewer-content {
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        overscroll-behavior: contain;
+    }
+
+    .sm-album-image-viewer-img {
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
 
     </style>
 
