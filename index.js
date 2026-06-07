@@ -10992,7 +10992,7 @@ $(document).on("click", function (e) {
       content
         .off(".smAlbumViewer")
         .on(
-          "pointerdown.smAlbumViewer mousedown.smAlbumViewer click.smAlbumViewer touchstart.smAlbumViewer",
+          "pointerdown.smAlbumViewer mousedown.smAlbumViewer touchstart.smAlbumViewer",
           function (e) {
             e.stopPropagation();
           },
