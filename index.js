@@ -4141,7 +4141,7 @@ const sm_translations = {
     generate: "Сгенерировать",
     quests: " Квесты",
     events: " События",
-    parse_events_now: "Отпарсить события сейчас",
+    parse_events_now: "Отпарсить",
     generate_ai_events: "Сгенерировать AI события",
     parser_settings: "Настройки парсера",
     ai_event_generator: "Генератор AI событий",
