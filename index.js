@@ -8030,7 +8030,8 @@ async function runEventGeneration(upToMessageId = null) {
 
       let exists = cal.events.some(
         (e) =>
-          e.description.toLowerCase() === normalizedDescription.toLowerCase() &&
+          String(e.description || e.title || "").trim().toLowerCase() ===
+            normalizedDescription.toLowerCase() &&
           e.day === (newE.day || cal.currentDate.day) &&
           e.month === (newE.month || cal.currentDate.month) &&
           e.year === (newE.year || cal.currentDate.year),
