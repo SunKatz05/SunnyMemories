@@ -83,6 +83,15 @@ function sanitizeAlbumFileNamePart(raw, fallback = "image") {
   return normalized || fallback;
 }
 
+function filterUndefinedFields(obj) {
+  if (!obj || typeof obj !== "object") return {};
+  const out = {};
+  for (const k of Object.keys(obj)) {
+    if (obj[k] !== undefined) out[k] = obj[k];
+  }
+  return out;
+}
+
 function getExtensionFromUrl(url, fallback = "jpg") {
   try {
     const parsed = new URL(String(url || ""), window.location.origin);
@@ -12070,7 +12079,7 @@ $(document).on("click", "#sm-btn-save-quest", function () {
 
   if (id) {
     const idx = mem.quests.findIndex((q) => q.id === id);
-    if (idx > -1) mem.quests[idx] = { ...mem.quests[idx], ...newQuest };
+    if (idx > -1) mem.quests[idx] = { ...mem.quests[idx], ...filterUndefinedFields(newQuest) };
   } else {
     mem.quests.push(newQuest);
   }
