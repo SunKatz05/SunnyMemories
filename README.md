@@ -1,5 +1,5 @@
 # SunnyMemories - SillyTavern
-![Version](https://img.shields.io/badge/version-1.0.0-yellow)
+![Version](https://img.shields.io/badge/version-1.0.9-yellow)
 ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-green)
 
 Advanced extension for summarization and memory management.
