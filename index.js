@@ -2245,6 +2245,13 @@ let generationButtonUiSnapshot = [];
 
 const SUMMARY_MODE_DYNAMIC = "dynamic";
 const SUMMARY_MODE_STATIC = "static";
+const INTERNAL_SUMMARY_PROMPTS = {
+  [SUMMARY_MODE_DYNAMIC]:
+    "You are an AI story editor. Maintain a single evolving summary. Compress older details over time while preserving continuity and important lore. Output only the summary text.",
+  [SUMMARY_MODE_STATIC]:
+    "You are an AI story editor. Create an append-only summary entry for this generation. Do not rewrite previous entries; keep history intact. Output only the summary text.",
+};
+
 const DEFAULT_SUMMARY_PROMPT =
   "Write a short dry summary of all events so far. Maintain a detailed chronological flow. Each new update start with [Date]. Describe events in no longer than 150 words.";
 const DEFAULT_QUEST_PROMPT = `Analyze the roleplay chat and extract quests or narrative goals. Rules: Do not invent quests. Update existing quests if they appear again. Types: main, side, short. Carefully analyze any system messages, infoblocks, or dates mentioned in the chat to assign a 'plannedDate' if applicable. Return ONLY valid JSON.\nFormat: { "quests":[ { "title":"", "description":"", "type":"main|side|short", "status":"past|current|future", "notes":"", "plannedDate": {"day": 1, "month": "January", "year": 1000} } ] }`;
@@ -5636,9 +5643,14 @@ function persistSummaryPromptFieldValue(mode = null, useSharedPrompt = null) {
 }
 
 function getSummaryModePrompt(mode) {
+  const normalized = normalizeSummaryMode(mode);
+  if (typeof INTERNAL_SUMMARY_PROMPTS === "undefined") {
+    return DEFAULT_SUMMARY_PROMPT;
+  }
   return (
-    INTERNAL_SUMMARY_PROMPTS[normalizeSummaryMode(mode)] ||
-    INTERNAL_SUMMARY_PROMPTS[SUMMARY_MODE_DYNAMIC]
+    INTERNAL_SUMMARY_PROMPTS[normalized] ||
+    INTERNAL_SUMMARY_PROMPTS[SUMMARY_MODE_DYNAMIC] ||
+    DEFAULT_SUMMARY_PROMPT
   );
 }
 
