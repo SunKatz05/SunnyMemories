@@ -5688,7 +5688,9 @@ function normalizeStaticSummaryEntrySource(source) {
   return String(source || "").toLowerCase() === "manual" ? "manual" : "auto";
 }
 
-function buildStaticSummaryEntrySignature(entry = {}) {
+function buildStaticSummaryEntrySignature(entry = null) {
+  if (!entry || typeof entry !== "object") return "";
+
   return buildContextInjectionSignature([
     canonicalizeSignatureText(entry.text),
     normInt(entry.messageIndex, 0),
@@ -5853,10 +5855,13 @@ function appendStaticSummaryEntry(
   entry.signature = buildStaticSummaryEntrySignature(entry);
 
   const lastEntry = entries.length ? entries[entries.length - 1] : null;
-  const lastSignature =
-    typeof lastEntry?.signature === "string" && lastEntry.signature
-      ? lastEntry.signature
-      : buildStaticSummaryEntrySignature(lastEntry);
+  let lastSignature = "";
+  if (lastEntry) {
+    lastSignature =
+      typeof lastEntry.signature === "string" && lastEntry.signature
+        ? lastEntry.signature
+        : buildStaticSummaryEntrySignature(lastEntry);
+  }
 
   if (lastEntry && lastSignature === entry.signature) {
     setChatMemory({ summary: normalizedText, summaryEntries: entries });
