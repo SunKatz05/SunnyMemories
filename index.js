@@ -51,7 +51,6 @@ let albumMetaViewerState = {
 let albumQuickSaveViewportEventsBound = false;
 let albumQuickSaveHandlersBound = false;
 
-// Internal handle for lightbox poller so we don't create multiple timers
 let _sm_lightboxPollerId = null;
 
 function disableAlbumQuickSaveHandlers() {
@@ -2256,7 +2255,7 @@ const SUMMARY_MODE_DYNAMIC = "dynamic";
 const SUMMARY_MODE_STATIC = "static";
 const INTERNAL_SUMMARY_PROMPTS = {
   [SUMMARY_MODE_DYNAMIC]:
-    "You are an AI story editor. Maintain a single evolving summary. Compress older details over time while preserving continuity and important lore. Output only the summary text.",
+    "You are an AI story editor. Maintain a single evolving summary. Rewrite the summary as a compact canonical version. Keep only important stable facts. Compress repeated or obsolete details. Do not preserve old wording if a shorter wording can represent the same fact. Preserve continuity and important lore. Output only the summary text.",
   [SUMMARY_MODE_STATIC]:
     "You are an AI story editor. Create an append-only summary entry for this generation. Do not rewrite previous entries; keep history intact. Output only the summary text.",
 };
@@ -5895,29 +5894,6 @@ function saveSummary(text, sourceCount = 0, upToMessageId = null) {
   }
 }
 
-function mergeMemoryText(baseText, additionText) {
-  const base = String(baseText || "")
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const add = String(additionText || "")
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const seen = new Set(base.map((x) => x.toLowerCase()));
-  const merged = [...base];
-
-  for (const line of add) {
-    const key = line.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      merged.push(line);
-    }
-  }
-
-  return merged.join("\n");
-}
 
 function cleanupExpiredLibrary() {
   const mem = getChatMemory();
@@ -7789,7 +7765,7 @@ ${isSummary
       if (isSummary && summaryMode === SUMMARY_MODE_STATIC) {
         finalSummary = String(result || "").trim();
       } else {
-        finalSummary = mergeMemoryText(finalSummary, result);
+        finalSummary = String(result || "").trim();
       }
 
       start += CHUNK_SIZE;
@@ -9771,13 +9747,8 @@ function initAlbumImageQuickSave() {
     });
   }
 
-  // quick-save handler unbinding is available at file scope via disableAlbumQuickSaveHandlers()
-
-  // Bind legacy quick-save handlers by default; they will be disabled automatically
-  // if an IIG lightbox is detected (beta UX) so taps won't conflict.
   bindAlbumQuickSaveHandlers();
 
-  // Keep the click handler for the floating quick-save button (legacy UI).
   $(document).off("click", "#sm-image-save-quick").on("click", "#sm-image-save-quick", async function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -9836,8 +9807,6 @@ function initAlbumImageQuickSave() {
     }
   }
 
-  // The lightbox integration will poll for `.iig-lightbox` presence and disable
-  // legacy tap handlers when a lightbox is detected, avoiding conflicts with beta.
   if (!_sm_lightboxPollerId) {
     let attempts = 0;
     _sm_lightboxPollerId = setInterval(() => {
@@ -10147,7 +10116,6 @@ Include only known and actively planned or imminent future events.
       albumImageViewer.appendTo("body");
       bindAlbumImageViewerHandlers();
     }
-    // Integrate a `Save` button into IIG's lightbox toolbar (if present).
     (function initIigLightboxSaveIntegration() {
       function attachButtonToToolbar(toolbar, lightboxEl) {
         try {
@@ -10211,7 +10179,6 @@ Include only known and actively planned or imminent future events.
                 }
               }
 
-              // Ensure minimal fields
               saveOptions = saveOptions || {};
               if (!saveOptions.sourceKey) saveOptions.sourceKey = `lightbox_image:${url}`;
               if (!saveOptions.imageNameHint) saveOptions.imageNameHint = getImageNameFromUrl(url, 'image');
@@ -10246,7 +10213,6 @@ Include only known and actively planned or imminent future events.
           return;
         }
 
-        // If toolbar is created later inside the lightbox, observe the lightbox node only
         try {
           const lbObserver = new MutationObserver((mutations, obs) => {
             const tb = lightboxEl.querySelector('.iig-lightbox-toolbar');
@@ -10258,7 +10224,6 @@ Include only known and actively planned or imminent future events.
           });
           lbObserver.observe(lightboxEl, { childList: true, subtree: true });
         } catch (err) {
-          // If observation fails, try a quick fallback
           setTimeout(() => {
             const tb = lightboxEl.querySelector('.iig-lightbox-toolbar');
             if (tb) {
@@ -10270,14 +10235,12 @@ Include only known and actively planned or imminent future events.
       }
 
       function startLightboxWatcher() {
-        // Immediate check for already existing lightboxes
         const existing = document.querySelectorAll('.iig-lightbox');
         if (existing && existing.length) {
           for (const lb of existing) attachToLightbox(lb);
         }
 
-        // Lightweight user-interaction driven detection: when the user interacts
-        // (likely opening the lightbox), check for presence and attach the button.
+     
         function checkAndAttach() {
           try {
             const lb = document.querySelector('.iig-lightbox');
@@ -10296,7 +10259,6 @@ Include only known and actively planned or imminent future events.
         document.addEventListener('click', checkAndAttach, true);
         document.addEventListener('keydown', checkAndAttach, true);
 
-        // Fallback: short poll to catch lightbox creation without user events
         let attempts = 0;
         const pollId = setInterval(() => {
           attempts += 1;
@@ -10314,7 +10276,6 @@ Include only known and actively planned or imminent future events.
         }, 300);
       }
 
-      // Start watcher
       try { startLightboxWatcher(); } catch (err) { /* ignore */ }
     })();
 
