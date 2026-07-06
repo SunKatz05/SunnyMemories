@@ -1,1236 +1,1106 @@
-export function createAlbumModule({
+export function createAlbumViewerUi({
   $,
-  window,
   document,
-  extension_settings,
-  extensionName,
-  DEFAULT_ALBUM_DIARY_PROMPT,
-  makeAlbumId,
-  normalizeAlbumSort,
-  normalizeAlbumFolderSort,
-  getImageNameFromUrl,
-  getAlbumPromptTextFromGenerationMeta,
-  getAlbumStyleTextFromGenerationMeta,
-  escapeAttr,
-  escapeHtml,
+  window,
   getContext,
   getMessageId,
-  t,
+  getImageNameFromUrl,
+  saveRemoteImageToAlbumFromUrl,
   toastr,
-  getActiveSettingsRoot,
-  forceSaveSettingsImmediate,
-  saveUIFieldsToSettings,
-  renderAlbumFolderLockState,
-  persistActiveCharacterImageSaveBinding,
-  applyCharacterAlbumSaveBinding,
-  toggleAlbumFolderBindingForActiveCharacter,
-  isInsideAlbumImageViewer,
-  hideAlbumQuickSaveButton,
-  openAlbumMetaViewer,
-  closeAlbumMetaViewer,
-  setAlbumMetaViewerMode,
-  getAlbumMetaViewerActiveText,
-  copyTextToClipboard,
-  openAlbumImageViewer,
-  closeAlbumImageViewer,
-  downloadAlbumImageToDevice,
-  showAlbumDeleteConfirmPopover,
-  deleteAlbumItemPermanently,
+  t,
 } = {}) {
-  escapeAttr = typeof escapeAttr === "function"
-    ? escapeAttr
-    : (typeof escapeHtml === "function" ? escapeHtml : (value) => String(value ?? ""));
-function ensureAlbumSettings(settings = null) {
-  const s = settings || extension_settings[extensionName] || (extension_settings[extensionName] = {});
-
-  if (!Array.isArray(s.albumFolders)) s.albumFolders = [];
-  if (!Array.isArray(s.albumItems)) s.albumItems = [];
-  if (typeof s.albumSaveGenerationMeta !== "boolean") s.albumSaveGenerationMeta = false;
-  if (typeof s.albumDiaryMode !== "boolean") s.albumDiaryMode = false;
-  if (typeof s.albumDiaryPrompt !== "string") s.albumDiaryPrompt = DEFAULT_ALBUM_DIARY_PROMPT;
-  s.albumDiaryPrompt = String(s.albumDiaryPrompt || "").trim() || DEFAULT_ALBUM_DIARY_PROMPT;
-
-  const normalizedFolders = [];
-  const folderIds = new Set();
-  for (const folder of s.albumFolders) {
-    const name = String(folder?.name || "").trim();
-    if (!name) continue;
-
-    const id = String(folder?.id || makeAlbumId("alb_folder")).trim();
-    if (!id || folderIds.has(id)) continue;
-
-    folderIds.add(id);
-    normalizedFolders.push({
-      id,
-      name,
-      createdAt: Number.isFinite(Number(folder?.createdAt))
-        ? Number(folder.createdAt)
-        : Date.now(),
-    });
-  }
-  s.albumFolders = normalizedFolders;
-
-  const normalizedItems = [];
-  const itemIds = new Set();
-  for (const item of s.albumItems) {
-    const url = String(item?.url || "").trim();
-    if (!url) continue;
-
-    const id = String(item?.id || makeAlbumId("alb_item")).trim();
-    if (!id || itemIds.has(id)) continue;
-
-    const folderId = String(item?.folderId || "").trim();
-    itemIds.add(id);
-    normalizedItems.push({
-      id,
-      url,
-      name: String(item?.name || getImageNameFromUrl(url, "image")).trim() || "image",
-      folderId: folderIds.has(folderId) ? folderId : "",
-      createdAt: Number.isFinite(Number(item?.createdAt))
-        ? Number(item.createdAt)
-        : Date.now(),
-      sourceKey: String(item?.sourceKey || "").trim(),
-      sourceUrl: String(item?.sourceUrl || "").trim(),
-      contentHash: String(item?.contentHash || "").trim().toLowerCase(),
-      messageIndex: Number.isFinite(Number(item?.messageIndex))
-        ? Number(item.messageIndex)
-        : null,
-      messageId: item?.messageId ?? null,
-      generationMeta: item?.generationMeta ?? null,
-      diaryEntry: String(item?.diaryEntry || item?.diaryCaption || "").trim(),
-    });
-  }
-  s.albumItems = normalizedItems;
-
-  s.albumSort = normalizeAlbumSort(s.albumSort);
-  s.albumFolderSort = normalizeAlbumFolderSort(s.albumFolderSort);
-  if (typeof s.albumDefaultSaveFolderId !== "string") {
-    s.albumDefaultSaveFolderId = "";
-  }
-  if (s.albumDefaultSaveFolderId && !s.albumFolders.some((folder) => folder.id === s.albumDefaultSaveFolderId)) {
-    s.albumDefaultSaveFolderId = "";
-  }
-
-  if (typeof s.albumActiveSaveFolderId !== "string") {
-    s.albumActiveSaveFolderId = s.albumDefaultSaveFolderId || "";
-  }
-  if (s.albumActiveSaveFolderId && !s.albumFolders.some((folder) => folder.id === s.albumActiveSaveFolderId)) {
-    s.albumActiveSaveFolderId = s.albumDefaultSaveFolderId || "";
-  }
-
-  if (typeof s.albumActiveFolderId !== "string") s.albumActiveFolderId = "all";
-  if (
-    s.albumActiveFolderId !== "all" &&
-    s.albumActiveFolderId !== "lobby" &&
-    !s.albumFolders.some((folder) => folder.id === s.albumActiveFolderId)
-  ) {
-    s.albumActiveFolderId = "all";
-  }
-
-  return s;
-}
-
-function filterAlbumItemsByActiveFolder(items, activeFolderId) {
-  const list = Array.isArray(items) ? items : [];
-  if (activeFolderId === "all") return list.slice();
-  if (activeFolderId === "lobby") {
-    return list.filter((item) => !item || !item.folderId);
-  }
-  return list.filter((item) => item && item.folderId === activeFolderId);
-}
-
-function getAlbumFolderLabel(activeFolderId, settings = null) {
-  const s = settings || ensureAlbumSettings();
-  if (activeFolderId === "lobby") return t("album_lobby");
-  if (activeFolderId === "all") return t("album_all_folders");
-  const folder = s.albumFolders.find((f) => f.id === activeFolderId);
-  return folder ? folder.name : t("album_all_folders");
-}
-
-function syncAlbumDiaryControls(root = null) {
-  const activeRoot = root && root.length ? root : getActiveSettingsRoot();
-  const scopedRoot = activeRoot.length ? activeRoot : $("#sunny_memories_settings").last();
-  if (!scopedRoot.length) return;
-
-  const diaryEnabled = scopedRoot.find("#sm-album-diary-mode").is(":checked");
-  const editBtn = scopedRoot.find("#sm-album-diary-edit-prompt");
-  const editorWrap = scopedRoot.find("#sm-album-diary-prompt-editor");
-  editBtn.toggle(diaryEnabled);
-
-  if (!diaryEnabled) {
-    editorWrap.hide();
-    editBtn.removeClass("is-active").attr("aria-expanded", "false");
-  }
-}
-
-function collectChatImagesForAlbum() {
-  const ctx = getContext();
-  if (!Array.isArray(ctx?.chat) || ctx.chat.length === 0) return [];
-
-  const entries = [];
-  const seen = new Set();
-  const now = Date.now();
-  const total = ctx.chat.length;
-
-  ctx.chat.forEach((message, messageIndex) => {
-    const media = Array.isArray(message?.extra?.media) ? message.extra.media : [];
-    media.forEach((attachment, mediaIndex) => {
-      if (String(attachment?.type || "").toLowerCase() !== "image") return;
-
-      const url = String(attachment?.url || "").trim();
-      if (!url) return;
-
-      const messageId = getMessageId(message);
-      const sourceKey = `${messageId ?? messageIndex}:${mediaIndex}:${url}`;
-      if (seen.has(sourceKey)) return;
-      seen.add(sourceKey);
-
-      let createdAt = Number(message?.send_date);
-      if (!Number.isFinite(createdAt)) {
-        const parsed = Date.parse(String(message?.send_date || ""));
-        if (Number.isFinite(parsed)) createdAt = parsed;
-      }
-      if (!Number.isFinite(createdAt)) {
-        createdAt = now - Math.max(0, total - messageIndex) * 1000 - mediaIndex;
-      }
-
-      entries.push({
-        url,
-        name: String(attachment?.title || getImageNameFromUrl(url, "image")).trim() || "image",
-        createdAt,
-        sourceKey,
-        messageId,
-        messageIndex,
-      });
-    });
-  });
-
-  return entries;
-}
-
-function renderAlbum() {
-  const s = ensureAlbumSettings();
-  const sortSelect = $("#sm-album-sort");
-  const folderSortSelect = $("#sm-album-folder-sort");
-  const grid = $("#sm-album-grid");
-  const count = $("#sm-album-count");
-  const label = $("#sm-album-current-folder-label");
-
-  if (!sortSelect.length || !grid.length) return;
-
-  const activeFolderId =
-    s.albumActiveFolderId === "all" ||
-    s.albumActiveFolderId === "lobby" ||
-    s.albumFolders.some((f) => f.id === s.albumActiveFolderId)
-      ? s.albumActiveFolderId
-      : "all";
-  s.albumActiveFolderId = activeFolderId;
-
-  const sortMode = normalizeAlbumSort(s.albumSort);
-  s.albumSort = sortMode;
-  sortSelect.val(sortMode);
-
-  const folderSortMode = normalizeAlbumFolderSort(s.albumFolderSort);
-  s.albumFolderSort = folderSortMode;
-  if (folderSortSelect.length) {
-    folderSortSelect.val(folderSortMode);
-  }
-
-  if (label.length) {
-    const activeFolderLabel = getAlbumFolderLabel(activeFolderId, s);
-    label.text(activeFolderLabel);
-    const folderBtn = $("#sm-album-folder-btn");
-    if (folderBtn.length) {
-      folderBtn.attr("title", activeFolderLabel);
-    }
-  }
-
-  const items = filterAlbumItemsByActiveFolder(s.albumItems, activeFolderId);
-
-  items.sort((a, b) => {
-    if (sortMode === "date_asc") {
-      return Number(a.createdAt || 0) - Number(b.createdAt || 0);
-    }
-    return Number(b.createdAt || 0) - Number(a.createdAt || 0);
-  });
-
-  const folderNameById = new Map(s.albumFolders.map((folder) => [folder.id, folder.name]));
-
-  grid.empty();
-  if (!items.length) {
-    grid.append(
-      `<div style="opacity:0.6; text-align:center; grid-column: 1 / -1; padding: 14px;">${t("album_no_images")}</div>`,
-    );
-  } else {
-    items.forEach((item) => {
-      const folderName = item.folderId
-        ? folderNameById.get(item.folderId) || ""
-        : t("album_lobby");
-      const dateLabel = new Date(Number(item.createdAt || Date.now())).toLocaleString();
-      const meta = folderName
-        ? `${escapeHtml(folderName)} вЂў ${escapeHtml(dateLabel)}`
-        : escapeHtml(dateLabel);
-      const promptText = getAlbumPromptTextFromGenerationMeta(item?.generationMeta);
-      const styleText = getAlbumStyleTextFromGenerationMeta(item?.generationMeta);
-      const diaryEntry = String(item?.diaryEntry || "").trim();
-      const cardCaptionText = diaryEntry || String(item?.name || "").trim() || t("album_image_fallback_name");
-      const hasPromptText = Boolean(promptText);
-      const hasStyleText = Boolean(styleText);
-      const hasPromptPanel = hasPromptText || hasStyleText;
-      const encodedPromptText = encodeURIComponent(promptText);
-      const encodedStyleText = encodeURIComponent(styleText);
-
-      const promptControlsHtml = hasPromptPanel
-        ? `
-            <button
-              type="button"
-              class="sm-album-action-btn sm-album-meta-open"
-              data-prompt-encoded="${escapeAttr(encodedPromptText)}"
-              data-style-encoded="${escapeAttr(encodedStyleText)}"
-              data-image-name="${escapeAttr(item.name || t("album_image_fallback_name"))}"
-              title="${escapeAttr(t("album_view_meta"))}">
-              <span>${escapeHtml(t("album_view_meta"))}</span>
-            </button>
-          `
-        : `<span class="sm-album-meta-placeholder" aria-hidden="true"></span>`;
-
-      const cardControlsHtml = `
-        <div class="sm-album-prompt-controls">
-          <button
-            type="button"
-            class="sm-album-action-btn sm-album-download"
-            data-image-url="${escapeAttr(item.url)}"
-            data-image-name="${escapeAttr(item.name || t("album_image_fallback_name"))}"
-            title="${escapeAttr(t("album_download_image"))}">
-            <span>${escapeHtml(t("album_download_image"))}</span>
-          </button>
-          <button
-            type="button"
-            class="sm-album-action-btn sm-album-delete is-danger"
-            data-item-id="${escapeAttr(item.id)}"
-            title="${escapeAttr(t("album_delete_image"))}">
-            <span>${escapeHtml(t("album_delete_image"))}</span>
-          </button>
-          <div class="sm-album-meta-row">
-            ${promptControlsHtml}
-          </div>
-        </div>
-      `;
-
-      grid.append(`
-        <div class="sm-album-card" data-id="${escapeAttr(item.id)}">
-          <a class="sm-album-thumb-wrap" href="${escapeAttr(item.url)}">
-            <img class="sm-album-thumb" src="${escapeAttr(item.url)}" alt="${escapeAttr(cardCaptionText)}">
-          </a>
-          <div class="sm-album-caption" title="${escapeAttr(cardCaptionText)}">${escapeHtml(cardCaptionText)}</div>
-          <div class="sm-album-meta">${meta}</div>
-          ${cardControlsHtml}
-        </div>
-      `);
-    });
-  }
-
-  if (count.length) {
-    count.text(String(items.length));
-  }
-
-  updateAlbumCreateFolderButtonState();
-  renderAlbumRecentFolderHints(s);
-  if ($("#sm-album-folder-list").is(":visible")) {
-    renderAlbumFolderList(s);
-  }
-  renderAlbumFolderGrid(s);
-  syncAlbumFolderLibraryButtonState();
-  syncAlbumFolderDropdownButtonState();
-  renderAlbumFolderLockState(s);
-}
-
-function getAlbumSortedFolders(settings = null, sortMode = null) {
-  const s = ensureAlbumSettings(settings);
-  const mode = sortMode || normalizeAlbumFolderSort(s.albumFolderSort);
-
-  return s.albumFolders.slice().sort((a, b) => {
-    if (mode === "date_desc") {
-      return Number(b.createdAt || 0) - Number(a.createdAt || 0);
-    }
-    if (mode === "date_asc") {
-      return Number(a.createdAt || 0) - Number(b.createdAt || 0);
-    }
-    return String(a.name || "").localeCompare(String(b.name || ""), undefined, {
-      sensitivity: "base",
-    });
-  });
-}
-
-function getAlbumRecentFolders(settings = null, limit = 5) {
-  const s = ensureAlbumSettings(settings);
-  const latestItemTsByFolderId = new Map();
-
-  for (const item of s.albumItems) {
-    const folderId = String(item?.folderId || "").trim();
-    if (!folderId) continue;
-    const itemTs = Number(item?.createdAt || 0);
-    const prevTs = Number(latestItemTsByFolderId.get(folderId) || 0);
-    if (itemTs > prevTs) {
-      latestItemTsByFolderId.set(folderId, itemTs);
-    }
-  }
-
-  const normalizedLimit = Math.max(1, Number(limit) || 5);
-  return s.albumFolders
-    .slice()
-    .sort((a, b) => {
-      const aTs = Math.max(
-        Number(a?.createdAt || 0),
-        Number(latestItemTsByFolderId.get(String(a?.id || "")) || 0),
-      );
-      const bTs = Math.max(
-        Number(b?.createdAt || 0),
-        Number(latestItemTsByFolderId.get(String(b?.id || "")) || 0),
-      );
-      return bTs - aTs;
-    })
-    .slice(0, normalizedLimit);
-}
-
-function renderAlbumRecentFolderHints(settings = null) {
-  const row = $("#sm-album-folder-recent");
-  if (!row.length) return;
-
-  const s = ensureAlbumSettings(settings);
-  const query = String($("#sm-album-folder-search").val() || "")
-    .trim()
-    .toLowerCase();
-
-  const recentFolders = getAlbumRecentFolders(s, 5).filter(
-    (folder) => !query || String(folder?.name || "").toLowerCase().includes(query),
-  );
-
-  if (!recentFolders.length) {
-    row.empty().hide();
-    return;
-  }
-
-  const activeFolderId = String(s.albumActiveFolderId || "all");
-  const chips = recentFolders.map((folder) => {
-    const folderId = String(folder?.id || "").trim();
-    const folderName = String(folder?.name || "").trim();
-    return `
-      <button
-        type="button"
-        class="sm-album-recent-folder-btn ${activeFolderId === folderId ? "active" : ""}"
-        data-folder-id="${escapeAttr(folderId)}"
-        title="${escapeAttr(folderName)}">${escapeHtml(folderName)}</button>
-    `;
-  });
-
-  row.html(chips.join("")).show();
-}
-
-function renderAlbumFolderList(settings = null) {
-  const list = $("#sm-album-folder-list");
-  if (!list.length) return;
-
-  const s = ensureAlbumSettings(settings);
-  const query = String($("#sm-album-folder-search").val() || "")
-    .trim()
-    .toLowerCase();
-
-  const rows = [];
-  const activeId = s.albumActiveFolderId;
-
-  const allMatches = !query || t("album_all_folders").toLowerCase().includes(query);
-  if (allMatches) {
-    rows.push(`
-      <div class="sm-album-folder-item ${activeId === "all" ? "active" : ""}" data-folder-id="all">
-        <span class="sm-album-folder-name">${escapeHtml(t("album_all_folders"))}</span>
-      </div>
-    `);
-  }
-
-  const lobbyMatches = !query || t("album_lobby").toLowerCase().includes(query);
-  if (lobbyMatches) {
-    rows.push(`
-      <div class="sm-album-folder-item ${activeId === "lobby" ? "active" : ""}" data-folder-id="lobby">
-        <span class="sm-album-folder-name">${escapeHtml(t("album_lobby"))}</span>
-      </div>
-    `);
-  }
-
-  const matchingFolders = getAlbumSortedFolders(s, "name_asc").filter(
-    (folder) => !query || String(folder.name || "").toLowerCase().includes(query),
-  );
-
-  for (const folder of matchingFolders) {
-    rows.push(`
-      <div class="sm-album-folder-item ${activeId === folder.id ? "active" : ""}" data-folder-id="${escapeAttr(folder.id)}">
-        <span class="sm-album-folder-name">${escapeHtml(folder.name)}</span>
-      </div>
-    `);
-  }
-
-  if (!rows.length) {
-    list.html(`<div class="sm-album-folder-empty">${escapeHtml(t("album_no_folders_match"))}</div>`);
-  } else {
-    list.html(rows.join(""));
-  }
-}
-
-function syncAlbumFolderDropdownButtonState() {
-  const button = $("#sm-album-folder-btn");
-  if (!button.length) return;
-  const expanded = $("#sm-album-folder-list").is(":visible");
-  button.attr("aria-expanded", expanded ? "true" : "false");
-}
-
-function openAlbumFolderList() {
-  const list = $("#sm-album-folder-list");
-  if (!list.length) {
-    syncAlbumFolderDropdownButtonState();
-    return;
-  }
-  renderAlbumFolderList();
-  list.show();
-  syncAlbumFolderDropdownButtonState();
-}
-
-function closeAlbumFolderList() {
-  $("#sm-album-folder-list").hide();
-  syncAlbumFolderDropdownButtonState();
-}
-
-function syncAlbumFolderLibraryButtonState() {
-  const button = $("#sm-album-folder-library-btn");
-  if (!button.length) return;
-  const expanded = $("#sm-album-folders-panel").is(":visible");
-  button.attr("aria-expanded", expanded ? "true" : "false");
-}
-
-function isAlbumFolderLibraryOpen() {
-  return $("#sm-album-folders-panel").is(":visible");
-}
-
-function setAlbumFolderLibraryOpen(shouldOpen, options = {}) {
-  const panel = $("#sm-album-folders-panel");
-  if (!panel.length) {
-    syncAlbumFolderLibraryButtonState();
-    return;
-  }
-
-  const open = shouldOpen === true;
-  const animate = options?.animate !== false;
-  const shouldRender = options?.render !== false;
-
-  if (open && shouldRender) {
-    renderAlbumFolderGrid();
-  }
-
-  if (animate) {
-    panel.stop(true, true);
-    if (open) {
-      panel.slideDown(140);
-    } else {
-      panel.slideUp(140);
-    }
-  } else {
-    panel.toggle(open);
-  }
-
-  syncAlbumFolderLibraryButtonState();
-}
-
-function renderAlbumFolderGrid(settings = null) {
-  const grid = $("#sm-album-folder-grid");
-  if (!grid.length) return;
-
-  const s = ensureAlbumSettings(settings);
-  const query = String($("#sm-album-folder-search").val() || "")
-    .trim()
-    .toLowerCase();
-  const folderSortMode = normalizeAlbumFolderSort(s.albumFolderSort);
-  s.albumFolderSort = folderSortMode;
-
-  const totalCount = s.albumItems.length;
-  const lobbyCount = s.albumItems.filter((item) => !item.folderId).length;
-  const folderCounts = new Map();
-  const folderPreviewById = new Map();
-  let allPreviewItem = null;
-  let lobbyPreviewItem = null;
-
-  for (const item of s.albumItems) {
-    const itemCreatedAt = Number(item?.createdAt || 0);
-    if (!allPreviewItem || itemCreatedAt > Number(allPreviewItem?.createdAt || 0)) {
-      allPreviewItem = item;
-    }
-
-    if (!item.folderId) {
-      if (!lobbyPreviewItem || itemCreatedAt > Number(lobbyPreviewItem?.createdAt || 0)) {
-        lobbyPreviewItem = item;
-      }
-      continue;
-    }
-
-    folderCounts.set(item.folderId, (folderCounts.get(item.folderId) || 0) + 1);
-    const currentPreview = folderPreviewById.get(item.folderId);
-    if (!currentPreview || itemCreatedAt > Number(currentPreview?.createdAt || 0)) {
-      folderPreviewById.set(item.folderId, item);
-    }
-  }
-
-  const matchingFolders = getAlbumSortedFolders(s, folderSortMode)
-    .filter((folder) => !query || String(folder.name || "").toLowerCase().includes(query));
-
-  const renderFolderCardThumb = (item, emptyIconClass) => {
-    const previewUrl = String(item?.url || "").trim();
-    if (previewUrl) {
-      return `<img class="sm-album-folder-card-thumb" src="${escapeAttr(previewUrl)}" alt="${escapeAttr(t("album_folder_preview_alt"))}">`;
-    }
-    return `<div class="sm-album-folder-card-thumb-empty"><i class="${escapeAttr(emptyIconClass)}"></i></div>`;
+  let albumQuickSaveState = {
+    imageUrl: "",
+    sourceKey: "",
+    messageId: null,
+    messageIndex: null,
+    generationMetaRaw: "",
+    imageNameHint: "",
+    anchorElement: null,
   };
 
-  const cards = [];
-  const allMatches = !query || t("album_all_folders").toLowerCase().includes(query);
-  if (allMatches) {
-    cards.push(`
-      <div class="sm-album-folder-card ${s.albumActiveFolderId === "all" ? "active" : ""}" data-folder-id="all">
-        <div class="sm-album-folder-card-thumb-wrap">
-          ${renderFolderCardThumb(allPreviewItem, "fa-solid fa-images")}
-        </div>
-        <div class="sm-album-folder-card-body">
-          <div class="sm-album-folder-card-title" title="${escapeAttr(t("album_all_folders"))}">${escapeHtml(t("album_all_folders"))}</div>
-          <div class="sm-album-folder-card-meta">${escapeHtml(String(totalCount))}</div>
-        </div>
-      </div>
-    `);
-  }
-
-  const lobbyMatches = !query || t("album_lobby").toLowerCase().includes(query);
-  if (lobbyMatches) {
-    cards.push(`
-      <div class="sm-album-folder-card ${s.albumActiveFolderId === "lobby" ? "active" : ""}" data-folder-id="lobby">
-        <div class="sm-album-folder-card-thumb-wrap">
-          ${renderFolderCardThumb(lobbyPreviewItem, "fa-solid fa-inbox")}
-        </div>
-        <div class="sm-album-folder-card-body">
-          <div class="sm-album-folder-card-title" title="${escapeAttr(t("album_lobby"))}">${escapeHtml(t("album_lobby"))}</div>
-          <div class="sm-album-folder-card-meta">${escapeHtml(String(lobbyCount))}</div>
-        </div>
-      </div>
-    `);
-  }
-
-  for (const folder of matchingFolders) {
-    const count = folderCounts.get(folder.id) || 0;
-    const previewItem = folderPreviewById.get(folder.id);
-    cards.push(`
-      <div class="sm-album-folder-card ${s.albumActiveFolderId === folder.id ? "active" : ""}" data-folder-id="${escapeAttr(folder.id)}">
-        <div class="sm-album-folder-card-thumb-wrap">
-          ${renderFolderCardThumb(previewItem, "fa-solid fa-folder")}
-        </div>
-        <div class="sm-album-folder-card-body">
-          <div class="sm-album-folder-card-title" title="${escapeAttr(folder.name)}">${escapeHtml(folder.name)}</div>
-          <div class="sm-album-folder-card-meta">${escapeHtml(String(count))}</div>
-        </div>
-      </div>
-    `);
-  }
-
-  if (!cards.length) {
-    grid.html(`<div class="sm-album-folder-empty">${escapeHtml(t("album_no_folders_match"))}</div>`);
-  } else {
-    grid.html(cards.join(""));
-  }
-}
-
-function setAlbumCreateInputVisible(visible) {
-  const input = $("#sm-album-new-folder-name");
-  if (!input.length) return;
-  if (visible) {
-    input.show();
-    input.trigger("focus");
-  } else {
-    input.val("");
-    input.hide();
-  }
-  updateAlbumCreateFolderButtonState();
-}
-
-function updateAlbumCreateFolderButtonState() {
-  const btn = $("#sm-album-create-folder");
-  if (!btn.length) return;
-
-  const input = $("#sm-album-new-folder-name");
-  const isVisible = input.length ? input.is(":visible") : false;
-  const hasValue = input.length ? String(input.val() || "").trim().length > 0 : false;
-
-  let iconClass = "fa-plus";
-  if (isVisible) {
-    iconClass = hasValue ? "fa-check" : "fa-xmark";
-  }
-
-  btn.html(`<i class="fa-solid ${iconClass}"></i>`);
-}
-
-function createAlbumFolder() {
-  const s = ensureAlbumSettings();
-  const input = $("#sm-album-new-folder-name");
-  const raw = input.length ? String(input.val() || "").trim() : "";
-
-  if (!raw) {
-    toastr.info(t("album_enter_folder_name"));
-    if (input.length) input.trigger("focus");
-    return;
-  }
-
-  const name = raw.slice(0, 80);
-  const duplicate = s.albumFolders.some(
-    (folder) => String(folder.name || "").toLowerCase() === name.toLowerCase(),
-  );
-  if (duplicate) {
-    toastr.info(t("album_folder_exists"));
-    return;
-  }
-
-  const folder = {
-    id: makeAlbumId("alb_folder"),
-    name,
-    createdAt: Date.now(),
+  let albumMetaViewerState = {
+    promptText: "",
+    styleText: "",
+    activeMode: "prompt",
   };
 
-  s.albumFolders.push(folder);
-  s.albumActiveFolderId = folder.id;
-  void persistActiveCharacterImageSaveBinding(folder.id, s);
-  applyCharacterAlbumSaveBinding(s);
-  if (input.length) input.val("");
-  setAlbumCreateInputVisible(false);
+  let albumQuickSaveViewportEventsBound = false;
+  let albumQuickSaveHandlersBound = false;
+  let lightboxPollerId = null;
+  let albumImageZoomHandlersBound = false;
+  let albumImageCleanModeHandlersBound = false;
+  let albumImageViewerCloseGuardTimer = null;
+  let albumImageViewerCloseGuardCleanup = null;
+  let albumImageZoomState = {
+    scale: 1,
+    x: 0,
+    y: 0,
+    pointers: new Map(),
+    panStart: null,
+    pinchStart: null,
+  };
 
-  forceSaveSettingsImmediate();
-  renderAlbum();
-  toastr.success(t("album_folder_created"));
-}
-
-function createAlbumTouchSafeTapHandler(action) {
-  let lastHandledAt = 0;
-  return function albumTouchSafeTapHandler(e) {
-    const eventType = String(e?.type || "");
-    const now = Date.now();
-
-    const isActivationEvent =
-      eventType === "pointerup" ||
-      eventType === "mouseup" ||
-      eventType === "touchend" ||
-      eventType === "click";
-
-    if (isActivationEvent && now - lastHandledAt < 450) {
-      e.preventDefault?.();
-      e.stopPropagation?.();
-      if (typeof e.stopImmediatePropagation === "function") {
-        e.stopImmediatePropagation();
-      }
-      return false;
+  function ensureAlbumViewerInBody(viewer) {
+    const element = viewer?.get?.(0);
+    if (!element || !document?.body || element.parentElement === document.body) return;
+    try {
+      document.body.appendChild(element);
+    } catch (error) {
+      console.warn("SunnyMemories: failed to move album viewer to body", error);
     }
+  }
 
-    if (eventType === "pointerdown" || eventType === "mousedown" || eventType === "touchstart") {
+  function clampNumber(value, min, max) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return min;
+    return Math.min(Math.max(num, min), max);
+  }
+
+
+  function createViewerTouchSafeTapHandler(action) {
+    let lastHandledAt = 0;
+    return function viewerTouchSafeTapHandler(e) {
+      const eventType = String(e?.type || "");
+      const now = Date.now();
+
+      const isActivationEvent =
+        eventType === "pointerup" ||
+        eventType === "mouseup" ||
+        eventType === "touchend" ||
+        eventType === "click";
+
+      if (isActivationEvent && now - lastHandledAt < 450) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        if (typeof e.stopImmediatePropagation === "function") {
+          e.stopImmediatePropagation();
+        }
+        return false;
+      }
+
+      if (eventType === "pointerdown" || eventType === "mousedown" || eventType === "touchstart") {
+        e.stopPropagation?.();
+        return undefined;
+      }
+
+      if (eventType === "dblclick") {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        if (typeof e.stopImmediatePropagation === "function") {
+          e.stopImmediatePropagation();
+        }
+        return false;
+      }
+
+      if (isActivationEvent) {
+        lastHandledAt = now;
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        if (typeof e.stopImmediatePropagation === "function") {
+          e.stopImmediatePropagation();
+        }
+        if (typeof action === "function") {
+          action.call(this, e);
+        }
+        return false;
+      }
+
       e.stopPropagation?.();
       return undefined;
+    };
+  }
+
+  function getAlbumImageZoomNodes() {
+    const viewer = $("#sm-album-image-viewer");
+    const content = viewer.find("#sm-album-image-viewer-content");
+    const img = viewer.find(".sm-album-image-viewer-img");
+    return { viewer, content, img };
+  }
+
+  function isAlbumImageZoomControlTarget(target) {
+    return Boolean(
+      target?.closest?.(
+        ".sm-album-image-zoom-controls, .sm-album-image-viewer-close, .sm-album-image-viewer-actions, .sm-album-image-viewer-caption, button, a, input, textarea, select",
+      ),
+    );
+  }
+
+  function getAlbumImageZoomBounds(scale = albumImageZoomState.scale) {
+    const { content, img } = getAlbumImageZoomNodes();
+    const contentElement = content.get(0);
+    const imageElement = img.get(0);
+    if (!contentElement || !imageElement || scale <= 1.01) {
+      return { maxX: 0, maxY: 0 };
     }
 
-    if (eventType === "dblclick") {
-      e.preventDefault?.();
-      e.stopPropagation?.();
-      if (typeof e.stopImmediatePropagation === "function") {
-        e.stopImmediatePropagation();
-      }
-      return false;
+    const contentRect = contentElement.getBoundingClientRect();
+    const imageRect = imageElement.getBoundingClientRect();
+    const renderedWidth = imageRect.width ? imageRect.width / Math.max(scale, 0.001) : 0;
+    const renderedHeight = imageRect.height ? imageRect.height / Math.max(scale, 0.001) : 0;
+    const baseWidth = renderedWidth || imageElement.offsetWidth || imageElement.clientWidth || contentRect.width || 0;
+    const baseHeight = renderedHeight || imageElement.offsetHeight || imageElement.clientHeight || contentRect.height || 0;
+    const zoomedWidth = baseWidth * scale;
+    const zoomedHeight = baseHeight * scale;
+    const overflowX = Math.max(0, (zoomedWidth - contentRect.width) / 2);
+    const overflowY = Math.max(0, (zoomedHeight - contentRect.height) / 2);
+    const freeX = Math.min(contentRect.width * 0.48, Math.max(120, zoomedWidth * 0.32));
+    const freeY = Math.min(contentRect.height * 0.48, Math.max(120, zoomedHeight * 0.32));
+    const maxX = overflowX + freeX + 24;
+    const maxY = overflowY + freeY + 24;
+    return { maxX, maxY };
+  }
+
+  function clampAlbumImageZoomPosition(x = albumImageZoomState.x, y = albumImageZoomState.y, scale = albumImageZoomState.scale) {
+    const { maxX, maxY } = getAlbumImageZoomBounds(scale);
+    return {
+      x: clampNumber(x, -maxX, maxX),
+      y: clampNumber(y, -maxY, maxY),
+    };
+  }
+
+  function applyAlbumImageZoomState(options = {}) {
+    const { viewer, img } = getAlbumImageZoomNodes();
+    if (!viewer.length || !img.length) return;
+
+    const scale = clampNumber(albumImageZoomState.scale, 1, 5);
+    const clamped = clampAlbumImageZoomPosition(albumImageZoomState.x, albumImageZoomState.y, scale);
+    albumImageZoomState.scale = scale;
+    albumImageZoomState.x = clamped.x;
+    albumImageZoomState.y = clamped.y;
+
+    const shouldAnimate = options.animate !== false;
+    img.toggleClass("sm-zoom-animating", shouldAnimate);
+    img.css("transform", `translate3d(${clamped.x}px, ${clamped.y}px, 0) scale(${scale})`);
+    viewer.toggleClass("sm-zoomed", scale > 1.01);
+    updateAlbumImageZoomControls();
+    if (shouldAnimate) {
+      window.setTimeout(() => img.removeClass("sm-zoom-animating"), 160);
     }
+  }
 
-    if (isActivationEvent) {
-      lastHandledAt = now;
-      e.preventDefault?.();
-      e.stopPropagation?.();
-      if (typeof e.stopImmediatePropagation === "function") {
-        e.stopImmediatePropagation();
-      }
-      if (typeof action === "function") {
-        action.call(this, e);
-      }
-      return false;
-    }
+  function updateAlbumImageZoomControls() {
+    const { viewer } = getAlbumImageZoomNodes();
+    if (!viewer.length) return;
 
-    e.stopPropagation?.();
-    return undefined;
-  };
-}
+    const scale = clampNumber(albumImageZoomState.scale, 1, 5);
+    const percent = Math.round(scale * 100);
+    viewer.find(".sm-album-image-zoom-value").text(`${percent}%`);
+    viewer.find("#sm-album-image-zoom-out").prop("disabled", scale <= 1.01);
+    viewer.find("#sm-album-image-zoom-reset").prop("disabled", scale <= 1.01);
+    viewer.find("#sm-album-image-zoom-in").prop("disabled", scale >= 4.99);
+  }
 
-    function bindAlbumImageViewerHandlers() {
+  function setAlbumImageViewerCleanMode(enabled = false) {
+    const viewer = $("#sm-album-image-viewer");
+    if (!viewer.length) return;
+
+    const isCleanMode = enabled === true;
+    viewer.toggleClass("sm-clean-view", isCleanMode);
+
+    const toggle = viewer.find("#sm-album-image-viewer-clean-toggle");
+    if (!toggle.length) return;
+
+    const label = isCleanMode
+      ? t("album_image_viewer_show_controls")
+      : t("album_image_viewer_hide_controls");
+    toggle
+      .attr("title", label)
+      .attr("aria-label", label)
+      .attr("aria-pressed", isCleanMode ? "true" : "false");
+    toggle.find("i").attr("class", isCleanMode ? "fa-solid fa-eye" : "fa-solid fa-eye-slash");
+  }
+
+  function bindAlbumImageCleanModeHandlers() {
+    if (albumImageCleanModeHandlersBound) return;
+    albumImageCleanModeHandlersBound = true;
+
+    const handleCleanModeTap = createViewerTouchSafeTapHandler(function () {
       const viewer = $("#sm-album-image-viewer");
-      const content = $("#sm-album-image-viewer-content");
-      const closeBtn = $("#sm-album-image-viewer-close");
+      setAlbumImageViewerCleanMode(!viewer.hasClass("sm-clean-view"));
+    });
 
-      if (!viewer.length || !content.length || !closeBtn.length) return;
+    $(document)
+      .off("pointerdown.smAlbumImageCleanMode mousedown.smAlbumImageCleanMode touchstart.smAlbumImageCleanMode dblclick.smAlbumImageCleanMode pointerup.smAlbumImageCleanMode mouseup.smAlbumImageCleanMode touchend.smAlbumImageCleanMode click.smAlbumImageCleanMode", "#sm-album-image-viewer-clean-toggle")
+      .on("pointerdown.smAlbumImageCleanMode mousedown.smAlbumImageCleanMode touchstart.smAlbumImageCleanMode dblclick.smAlbumImageCleanMode", "#sm-album-image-viewer-clean-toggle", handleCleanModeTap)
+      .on("pointerup.smAlbumImageCleanMode mouseup.smAlbumImageCleanMode touchend.smAlbumImageCleanMode click.smAlbumImageCleanMode", "#sm-album-image-viewer-clean-toggle", handleCleanModeTap);
+  }
 
-      const closeImageViewerTap = createAlbumTouchSafeTapHandler(() => {
-        closeAlbumImageViewer();
-      });
+  function getAlbumImageViewerCenterPoint() {
+    const { content } = getAlbumImageZoomNodes();
+    const rect = content.get(0)?.getBoundingClientRect?.();
+    if (!rect) return { x: null, y: null };
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+  }
 
-      closeBtn
-        .off(".smAlbumViewer")
-        .on("pointerdown.smAlbumViewer mousedown.smAlbumViewer touchstart.smAlbumViewer dblclick.smAlbumViewer", closeImageViewerTap)
-        .on("pointerup.smAlbumViewer mouseup.smAlbumViewer touchend.smAlbumViewer click.smAlbumViewer", closeImageViewerTap);
+  function resetAlbumImageZoom(options = {}) {
+    albumImageZoomState.scale = 1;
+    albumImageZoomState.x = 0;
+    albumImageZoomState.y = 0;
+    albumImageZoomState.pointers = new Map();
+    albumImageZoomState.panStart = null;
+    albumImageZoomState.pinchStart = null;
+    applyAlbumImageZoomState({ animate: options.animate !== false });
+  }
 
-      viewer
-        .off(".smAlbumViewer")
-        .on("click.smAlbumViewer", function (e) {
-          if (e.target !== this) return;
-          e.preventDefault();
-          e.stopPropagation();
-          closeAlbumImageViewer();
-        })
-        .on("dblclick.smAlbumViewer", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === "function") {
-            e.stopImmediatePropagation();
-          }
-          return false;
-        });
+  function zoomAlbumImageAt(nextScale, clientX = null, clientY = null, options = {}) {
+    const { content } = getAlbumImageZoomNodes();
+    const contentElement = content.get(0);
+    const oldScale = clampNumber(albumImageZoomState.scale, 1, 5);
+    const scale = clampNumber(nextScale, 1, 5);
 
-      content
-        .off(".smAlbumViewer")
-        .on(
-          "pointerdown.smAlbumViewer mousedown.smAlbumViewer touchstart.smAlbumViewer",
-          function (e) {
-            e.stopPropagation();
-          },
-        );
+    let nextX = albumImageZoomState.x;
+    let nextY = albumImageZoomState.y;
+
+    if (contentElement && Number.isFinite(Number(clientX)) && Number.isFinite(Number(clientY))) {
+      const rect = contentElement.getBoundingClientRect();
+      const focalX = Number(clientX) - (rect.left + rect.width / 2);
+      const focalY = Number(clientY) - (rect.top + rect.height / 2);
+      const ratio = scale / Math.max(oldScale, 0.001);
+      nextX = focalX - (focalX - albumImageZoomState.x) * ratio;
+      nextY = focalY - (focalY - albumImageZoomState.y) * ratio;
+    } else if (scale <= 1.01) {
+      nextX = 0;
+      nextY = 0;
     }
 
-    function bindAlbumMetaViewerHandlers() {
-      const viewer = $("#sm-album-meta-viewer");
-      const content = $("#sm-album-meta-viewer-content");
-      const closeBtn = $("#sm-album-meta-viewer-close");
+    const clamped = scale <= 1.01 ? { x: 0, y: 0 } : clampAlbumImageZoomPosition(nextX, nextY, scale);
+    albumImageZoomState.scale = scale;
+    albumImageZoomState.x = clamped.x;
+    albumImageZoomState.y = clamped.y;
+    applyAlbumImageZoomState({ animate: options.animate !== false });
+  }
 
-      if (!viewer.length || !content.length || !closeBtn.length) return;
+  function getPointerPairMetrics() {
+    const points = Array.from(albumImageZoomState.pointers.values());
+    if (points.length < 2) return null;
+    const [a, b] = points;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    return {
+      distance: Math.max(1, Math.hypot(dx, dy)),
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+    };
+  }
 
-      function stopMetaViewerEvent(e) {
-        e.stopPropagation();
-      }
-
-
-      const closeMetaViewerTap = createAlbumTouchSafeTapHandler(() => {
-        closeAlbumMetaViewer();
-      });
-
-      closeBtn
-        .off(".smAlbumMetaViewer")
-        .on("pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer dblclick.smAlbumMetaViewer", closeMetaViewerTap)
-        .on("pointerup.smAlbumMetaViewer mouseup.smAlbumMetaViewer touchend.smAlbumMetaViewer click.smAlbumMetaViewer", closeMetaViewerTap);
-
-      viewer
-        .off(".smAlbumMetaViewer")
-        .on("click.smAlbumMetaViewer", function (e) {
-          if (e.target !== this) return;
-          e.preventDefault();
-          e.stopPropagation();
-          closeAlbumMetaViewer();
-        })
-        .on("dblclick.smAlbumMetaViewer", function (e) {
-          if (e.target !== this) return;
-          e.preventDefault();
-          e.stopPropagation();
-        });
-
-      content
-        .off(".smAlbumMetaViewer")
-        .on(
-          "dblclick.smAlbumMetaViewer pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer",
-          stopMetaViewerEvent,
-        );
+  function getAlbumImagePointerClientPoint(event) {
+    const originalEvent = event?.originalEvent || event || {};
+    const touch = originalEvent.touches?.[0] || originalEvent.changedTouches?.[0];
+    if (touch) {
+      return { x: Number(touch.clientX || 0), y: Number(touch.clientY || 0) };
     }
+    return { x: Number(originalEvent.clientX || 0), y: Number(originalEvent.clientY || 0) };
+  }
 
-function bindAlbumHandlers() {
-    $(document).on("click", "#sm-album-create-folder", function (e) {
-      e.preventDefault();
-      const input = $("#sm-album-new-folder-name");
-      if (!input.length) {
-        createAlbumFolder();
-        return;
-      }
+  function beginAlbumImagePanFromEvent(event, pointerId = "mouse") {
+    if (!$("#sm-album-image-viewer").hasClass("sm-open")) return false;
+    if (isAlbumImageZoomControlTarget(event?.target)) return false;
+    if (albumImageZoomState.scale <= 1.01) return false;
 
-      if (!input.is(":visible")) {
-        setAlbumCreateInputVisible(true);
-        return;
-      }
+    const point = getAlbumImagePointerClientPoint(event);
+    albumImageZoomState.panStart = {
+      pointerId,
+      x: point.x,
+      y: point.y,
+      startX: albumImageZoomState.x,
+      startY: albumImageZoomState.y,
+      moved: false,
+    };
+    $("#sm-album-image-viewer").addClass("sm-panning");
+    return true;
+  }
 
-      const raw = String(input.val() || "").trim();
-      if (!raw) {
-        setAlbumCreateInputVisible(false);
-        return;
-      }
+  function moveAlbumImagePanFromEvent(event, pointerId = null) {
+    const pan = albumImageZoomState.panStart;
+    if (!pan || albumImageZoomState.scale <= 1.01) return false;
+    if (pointerId !== null && pan.pointerId !== pointerId) return false;
 
-      createAlbumFolder();
-    });
+    const point = getAlbumImagePointerClientPoint(event);
+    const dx = point.x - pan.x;
+    const dy = point.y - pan.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      pan.moved = true;
+    }
+    const clamped = clampAlbumImageZoomPosition(pan.startX + dx, pan.startY + dy, albumImageZoomState.scale);
+    albumImageZoomState.x = clamped.x;
+    albumImageZoomState.y = clamped.y;
+    applyAlbumImageZoomState({ animate: false });
+    return true;
+  }
 
-    $(document).on("input", "#sm-album-folder-search", function () {
-      const hasQuery = String($(this).val() || "").trim().length > 0;
-      if (hasQuery && !isAlbumFolderLibraryOpen()) {
-        setAlbumFolderLibraryOpen(true, { animate: false, render: false });
-      }
-      renderAlbumRecentFolderHints();
-      if ($("#sm-album-folder-list").is(":visible")) {
-        renderAlbumFolderList();
-      }
-      renderAlbumFolderGrid();
-    });
+  function endAlbumImagePan(pointerId = null) {
+    const pan = albumImageZoomState.panStart;
+    if (pan && (pointerId === null || pan.pointerId === pointerId)) {
+      albumImageZoomState.panStart = null;
+      $("#sm-album-image-viewer").removeClass("sm-panning");
+      return true;
+    }
+    return false;
+  }
 
-    $(document).on("input", "#sm-album-new-folder-name", function () {
-      updateAlbumCreateFolderButtonState();
-    });
+  function bindAlbumImageZoomHandlers() {
+    if (albumImageZoomHandlersBound) return;
+    albumImageZoomHandlersBound = true;
 
-    $(document).on("change", "#sm-album-folder-sort", function () {
-      const s = ensureAlbumSettings();
-      s.albumFolderSort = normalizeAlbumFolderSort($(this).val());
-      saveUIFieldsToSettings(false);
-      renderAlbum();
-    });
+    const pointerSelector = "#sm-album-image-viewer .sm-album-image-viewer-img";
+    const dragSurfaceSelector = "#sm-album-image-viewer .sm-album-image-viewer-img";
 
-    $(document).on("click", "#sm-album-folder-btn", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const list = $("#sm-album-folder-list");
-      if (list.is(":visible")) {
-        closeAlbumFolderList();
-      } else {
-        openAlbumFolderList();
-      }
-    });
-
-    $(document).on("click", "#sm-album-folder-library-btn", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      setAlbumFolderLibraryOpen(!isAlbumFolderLibraryOpen());
-    });
-
-    $(document).on("focus", "#sm-album-folder-search", function () {
-      if (!isAlbumFolderLibraryOpen()) {
-        setAlbumFolderLibraryOpen(true, { animate: false });
-      }
-    });
-
-    $(document).on("keydown", "#sm-album-folder-search", function (e) {
-      if (e.key === "Escape") {
-        closeAlbumFolderList();
-        setAlbumFolderLibraryOpen(false);
-      }
-    });
-
-    $(document).on("keydown", "#sm-album-new-folder-name", function (e) {
-      if (e.key === "Enter") {
+    $(document)
+      .off("wheel.smAlbumImageZoom", pointerSelector)
+      .on("wheel.smAlbumImageZoom", pointerSelector, function (e) {
+        const originalEvent = e.originalEvent || e;
+        if (isAlbumImageZoomControlTarget(e.target)) return;
+        if (!originalEvent.ctrlKey && !originalEvent.metaKey && !originalEvent.altKey) return;
         e.preventDefault();
-        const raw = String($(this).val() || "").trim();
-        if (!raw) {
-          setAlbumCreateInputVisible(false);
+        e.stopPropagation();
+        const direction = Number(originalEvent.deltaY || 0) > 0 ? -1 : 1;
+        const factor = direction > 0 ? 1.14 : 0.88;
+        zoomAlbumImageAt(albumImageZoomState.scale * factor, originalEvent.clientX, originalEvent.clientY, { animate: false });
+      });
+
+    const handleZoomButtonTap = createViewerTouchSafeTapHandler(function () {
+      const btn = $(this);
+      if (btn.prop("disabled")) return;
+
+      const action = String(btn.attr("data-zoom-action") || "").trim();
+      const center = getAlbumImageViewerCenterPoint();
+      const currentScale = clampNumber(albumImageZoomState.scale, 1, 5);
+      if (action === "in") {
+        const nextScale = currentScale < 1.01 ? 1.35 : currentScale + (currentScale < 3 ? 0.35 : 0.5);
+        zoomAlbumImageAt(nextScale, center.x, center.y, { animate: true });
+      } else if (action === "out") {
+        const nextScale = currentScale <= 1.35 ? 1 : currentScale - (currentScale <= 3 ? 0.35 : 0.5);
+        zoomAlbumImageAt(nextScale, center.x, center.y, { animate: true });
+      } else if (action === "reset") {
+        zoomAlbumImageAt(1, center.x, center.y, { animate: true });
+      }
+    });
+
+    $(document)
+      .off("pointerdown.smAlbumImageZoomButtonTap mousedown.smAlbumImageZoomButtonTap touchstart.smAlbumImageZoomButtonTap dblclick.smAlbumImageZoomButtonTap pointerup.smAlbumImageZoomButtonTap mouseup.smAlbumImageZoomButtonTap touchend.smAlbumImageZoomButtonTap click.smAlbumImageZoomButtonTap", "#sm-album-image-viewer .sm-album-image-zoom-btn")
+      .on("pointerdown.smAlbumImageZoomButtonTap mousedown.smAlbumImageZoomButtonTap touchstart.smAlbumImageZoomButtonTap dblclick.smAlbumImageZoomButtonTap", "#sm-album-image-viewer .sm-album-image-zoom-btn", handleZoomButtonTap)
+      .on("pointerup.smAlbumImageZoomButtonTap mouseup.smAlbumImageZoomButtonTap touchend.smAlbumImageZoomButtonTap click.smAlbumImageZoomButtonTap", "#sm-album-image-viewer .sm-album-image-zoom-btn", handleZoomButtonTap);
+
+    $(document)
+      .off(
+        "pointerdown.smAlbumImageZoomControls mousedown.smAlbumImageZoomControls touchstart.smAlbumImageZoomControls dblclick.smAlbumImageZoomControls",
+        "#sm-album-image-viewer .sm-album-image-zoom-controls, #sm-album-image-viewer .sm-album-image-zoom-btn, #sm-album-image-viewer .sm-album-image-viewer-close",
+      )
+      .on(
+        "pointerdown.smAlbumImageZoomControls mousedown.smAlbumImageZoomControls touchstart.smAlbumImageZoomControls dblclick.smAlbumImageZoomControls",
+        "#sm-album-image-viewer .sm-album-image-zoom-controls, #sm-album-image-viewer .sm-album-image-zoom-btn, #sm-album-image-viewer .sm-album-image-viewer-close",
+        function (e) {
+          e.stopPropagation();
+          if (e.type === "dblclick") {
+            e.preventDefault();
+            if (typeof e.stopImmediatePropagation === "function") {
+              e.stopImmediatePropagation();
+            }
+            return false;
+          }
+          return undefined;
+        },
+      );
+
+    $(document)
+      .off("dblclick.smAlbumImageZoom", "#sm-album-image-viewer")
+      .on("dblclick.smAlbumImageZoom", "#sm-album-image-viewer", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === "function") {
+          e.stopImmediatePropagation();
+        }
+        return false;
+      });
+
+    $(dragSurfaceSelector)
+      .off("pointerdown.smAlbumImageZoom")
+      .on("pointerdown.smAlbumImageZoom", function (e) {
+        if (!$("#sm-album-image-viewer").hasClass("sm-open")) return;
+        if (isAlbumImageZoomControlTarget(e.target)) return;
+
+        const originalEvent = e.originalEvent || e;
+        const pointerId = originalEvent.pointerId;
+        if (pointerId === undefined || pointerId === null) return;
+
+        albumImageZoomState.pointers.set(pointerId, {
+          x: Number(originalEvent.clientX || 0),
+          y: Number(originalEvent.clientY || 0),
+        });
+
+        try {
+          this.setPointerCapture?.(pointerId);
+        } catch (_error) {}
+
+        if (albumImageZoomState.pointers.size >= 2) {
+          const metrics = getPointerPairMetrics();
+          if (metrics) {
+            const { content } = getAlbumImageZoomNodes();
+            const rect = content.get(0)?.getBoundingClientRect?.();
+            albumImageZoomState.pinchStart = {
+              distance: metrics.distance,
+              scale: albumImageZoomState.scale,
+              x: albumImageZoomState.x,
+              y: albumImageZoomState.y,
+              midX: metrics.midX,
+              midY: metrics.midY,
+              focalX: rect ? metrics.midX - (rect.left + rect.width / 2) : 0,
+              focalY: rect ? metrics.midY - (rect.top + rect.height / 2) : 0,
+            };
+          }
+          e.preventDefault();
+          e.stopPropagation();
           return;
         }
-        createAlbumFolder();
-        return;
-      }
-      if (e.key === "Escape") {
+
+        if (beginAlbumImagePanFromEvent(e, pointerId)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+
+    $(document)
+      .off("pointermove.smAlbumImageZoom")
+      .on("pointermove.smAlbumImageZoom", function (e) {
+        const originalEvent = e.originalEvent || e;
+        const pointerId = originalEvent.pointerId;
+        if (pointerId === undefined || pointerId === null) return;
+        if (!albumImageZoomState.pointers.has(pointerId) && (!albumImageZoomState.panStart || albumImageZoomState.panStart.pointerId !== pointerId)) return;
+
+        const x = Number(originalEvent.clientX || 0);
+        const y = Number(originalEvent.clientY || 0);
+        if (albumImageZoomState.pointers.has(pointerId)) {
+          albumImageZoomState.pointers.set(pointerId, { x, y });
+        }
+
+        if (albumImageZoomState.pointers.size >= 2 && albumImageZoomState.pinchStart) {
+          const metrics = getPointerPairMetrics();
+          const start = albumImageZoomState.pinchStart;
+          if (!metrics) return;
+          const nextScale = clampNumber(start.scale * (metrics.distance / Math.max(start.distance, 1)), 1, 5);
+          const ratio = nextScale / Math.max(start.scale, 0.001);
+          const midDx = metrics.midX - start.midX;
+          const midDy = metrics.midY - start.midY;
+          const nextX = start.focalX - (start.focalX - start.x) * ratio + midDx;
+          const nextY = start.focalY - (start.focalY - start.y) * ratio + midDy;
+          const clamped = nextScale <= 1.01 ? { x: 0, y: 0 } : clampAlbumImageZoomPosition(nextX, nextY, nextScale);
+          albumImageZoomState.scale = nextScale;
+          albumImageZoomState.x = clamped.x;
+          albumImageZoomState.y = clamped.y;
+          applyAlbumImageZoomState({ animate: false });
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        if (moveAlbumImagePanFromEvent(e, pointerId)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+
+    $(document)
+      .off("pointerup.smAlbumImageZoom pointercancel.smAlbumImageZoom")
+      .on("pointerup.smAlbumImageZoom pointercancel.smAlbumImageZoom", function (e) {
+        const originalEvent = e.originalEvent || e;
+        const pointerId = originalEvent.pointerId;
+        if (pointerId === undefined || pointerId === null) return;
+
+        albumImageZoomState.pointers.delete(pointerId);
+        if (albumImageZoomState.pointers.size < 2) {
+          albumImageZoomState.pinchStart = null;
+        }
+        endAlbumImagePan(pointerId);
+      });
+
+    $(dragSurfaceSelector)
+      .off("mousedown.smAlbumImageZoomFallback")
+      .on("mousedown.smAlbumImageZoomFallback", function (e) {
+        if (e.which && e.which !== 1) return;
+        if (!beginAlbumImagePanFromEvent(e, "mouse")) return;
         e.preventDefault();
-        setAlbumCreateInputVisible(false);
-      }
-    });
-
-    $(document).on("click", "#sm-album-folder-grid .sm-album-folder-card", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const folderId = String($(this).data("folder-id") || "all");
-      const s = ensureAlbumSettings();
-      s.albumActiveFolderId = folderId;
-      forceSaveSettingsImmediate();
-      renderAlbum();
-    });
-
-    $(document).on("click", "#sm-album-folder-list .sm-album-folder-item", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const folderId = String($(this).data("folder-id") || "all");
-      const s = ensureAlbumSettings();
-      s.albumActiveFolderId = folderId;
-      forceSaveSettingsImmediate();
-      closeAlbumFolderList();
-      renderAlbum();
-    });
-
-    $(document).on("click", "#sm-album-folder-recent .sm-album-recent-folder-btn", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const folderId = String($(this).data("folder-id") || "all");
-      const s = ensureAlbumSettings();
-      s.albumActiveFolderId = folderId;
-      forceSaveSettingsImmediate();
-      closeAlbumFolderList();
-      renderAlbum();
-    });
-
-    $(document).on("click", "#sm-album-folder-lock", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      void toggleAlbumFolderBindingForActiveCharacter();
-      renderAlbum();
-    });
-
-    $(document).on("click", function (e) {
-      if (isInsideAlbumImageViewer(e.target)) return;
-
-      if (
-        !$(e.target).closest(
-          "#sm-album-folders-panel, #sm-album-folder-library-btn, #sm-album-folder-search, #sm-album-create-folder",
-        ).length
-      ) {
-        setAlbumFolderLibraryOpen(false);
-      }
-
-      if (!$(e.target).closest("#sm-album-folder-list, #sm-album-folder-btn").length) {
-        closeAlbumFolderList();
-      }
-
-      if (
-        !$(e.target).closest("#sm-album-new-folder-name, #sm-album-create-folder").length
-      ) {
-        setAlbumCreateInputVisible(false);
-      }
-
-      if (!$(e.target).closest("#sm-image-save-quick, #chat .mes img").length) {
-        hideAlbumQuickSaveButton();
-      }
-    });
-
-    $(document).on("change", "#sm-album-sort", function () {
-      const s = ensureAlbumSettings();
-      s.albumSort = normalizeAlbumSort($(this).val());
-      saveUIFieldsToSettings(false);
-      renderAlbum();
-    });
-
-    $(document).on("change", "#sm-album-diary-mode", function () {
-      const root = getActiveSettingsRoot();
-      syncAlbumDiaryControls(root);
-      saveUIFieldsToSettings(false);
-    });
-
-    $(document).on("click", "#sm-album-diary-edit-prompt", function (e) {
-      e.preventDefault();
-      const root = getActiveSettingsRoot();
-      const scopedRoot = root.length ? root : $("#sunny_memories_settings").last();
-      const editorWrap = scopedRoot.find("#sm-album-diary-prompt-editor");
-      const button = scopedRoot.find("#sm-album-diary-edit-prompt");
-      const nextExpanded = !editorWrap.is(":visible");
-      editorWrap.stop(true, true).slideToggle(120);
-      button.toggleClass("is-active", nextExpanded).attr("aria-expanded", nextExpanded ? "true" : "false");
-    });
-
-    $(document).on("click", ".sm-album-meta-open", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const button = $(this);
-      const promptEncoded = String(button.attr("data-prompt-encoded") || "");
-      const styleEncoded = String(button.attr("data-style-encoded") || "");
-
-      let promptText = "";
-      let styleText = "";
-
-      try {
-        promptText = decodeURIComponent(promptEncoded);
-      } catch (_error) {
-        promptText = promptEncoded;
-      }
-
-      try {
-        styleText = decodeURIComponent(styleEncoded);
-      } catch (_error) {
-        styleText = styleEncoded;
-      }
-
-      const imageName =
-        String(button.attr("data-image-name") || t("album_image_fallback_name")).trim() ||
-        t("album_image_fallback_name");
-
-      if (!String(promptText || "").trim() && !String(styleText || "").trim()) {
-        toastr.info(t("album_prompt_not_found"));
-        return;
-      }
-
-      openAlbumMetaViewer(promptText, styleText, imageName);
-    });
-
-    bindAlbumMetaViewerHandlers();
-
-    const handleAlbumMetaModeTap = createAlbumTouchSafeTapHandler(function () {
-      const mode = String($(this).data("mode") || "prompt");
-      setAlbumMetaViewerMode(mode);
-    });
+        e.stopPropagation();
+      });
 
     $(document)
-      .off("pointerdown.smAlbumMetaMode mousedown.smAlbumMetaMode touchstart.smAlbumMetaMode dblclick.smAlbumMetaMode pointerup.smAlbumMetaMode mouseup.smAlbumMetaMode touchend.smAlbumMetaMode click.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn")
-      .on("pointerdown.smAlbumMetaMode mousedown.smAlbumMetaMode touchstart.smAlbumMetaMode dblclick.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", handleAlbumMetaModeTap)
-      .on("pointerup.smAlbumMetaMode mouseup.smAlbumMetaMode touchend.smAlbumMetaMode click.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", handleAlbumMetaModeTap);
+      .off("mousemove.smAlbumImageZoomFallback")
+      .on("mousemove.smAlbumImageZoomFallback", function (e) {
+        if (!moveAlbumImagePanFromEvent(e, "mouse")) return;
+        e.preventDefault();
+        e.stopPropagation();
+      });
 
-    const handleAlbumMetaCopyTap = createAlbumTouchSafeTapHandler(async function () {
-      const textToCopy = String(getAlbumMetaViewerActiveText() || "").trim();
-      if (!textToCopy) {
-        toastr.info(t("album_prompt_not_found"));
+    $(document)
+      .off("mouseup.smAlbumImageZoomFallback mouseleave.smAlbumImageZoomFallback")
+      .on("mouseup.smAlbumImageZoomFallback mouseleave.smAlbumImageZoomFallback", function () {
+        endAlbumImagePan("mouse");
+      });
+
+    $(dragSurfaceSelector)
+      .off("touchstart.smAlbumImageZoomFallback")
+      .on("touchstart.smAlbumImageZoomFallback", function (e) {
+        const originalEvent = e.originalEvent || e;
+        if (!originalEvent.touches || originalEvent.touches.length !== 1) return;
+        if (!beginAlbumImagePanFromEvent(e, "touch")) return;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+    $(document)
+      .off("touchmove.smAlbumImageZoomFallback")
+      .on("touchmove.smAlbumImageZoomFallback", function (e) {
+        if (!moveAlbumImagePanFromEvent(e, "touch")) return;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+    $(document)
+      .off("touchend.smAlbumImageZoomFallback touchcancel.smAlbumImageZoomFallback")
+      .on("touchend.smAlbumImageZoomFallback touchcancel.smAlbumImageZoomFallback", function () {
+        endAlbumImagePan("touch");
+      });
+
+    $(window)
+      .off("resize.smAlbumImageZoom orientationchange.smAlbumImageZoom")
+      .on("resize.smAlbumImageZoom orientationchange.smAlbumImageZoom", function () {
+        if (!$("#sm-album-image-viewer").hasClass("sm-open")) return;
+        applyAlbumImageZoomState({ animate: false });
+      });
+  }
+
+  function hideAlbumQuickSaveButton() {
+    const quickBtn = $("#sm-image-save-quick");
+    if (quickBtn.length) {
+      quickBtn.hide().prop("disabled", false);
+    }
+
+    albumQuickSaveState = {
+      imageUrl: "",
+      sourceKey: "",
+      messageId: null,
+      messageIndex: null,
+      generationMetaRaw: "",
+      imageNameHint: "",
+      anchorElement: null,
+    };
+  }
+
+  function disableAlbumQuickSaveHandlers() {
+    if (!albumQuickSaveHandlersBound) return;
+    albumQuickSaveHandlersBound = false;
+    try {
+      $(document).off("pointerdown", "#chat .mes img");
+      $(document).off("pointerup", "#chat .mes img");
+      $(document).off("click", "#chat .mes");
+    } catch (err) {
+      console.warn("SunnyMemories: failed to unbind quick-save handlers", err);
+    }
+    try {
+      hideAlbumQuickSaveButton();
+    } catch (_e) {}
+  }
+
+  function openAlbumImageViewer(imageUrl, imageName = "", itemId = "") {
+    const viewer = $("#sm-album-image-viewer");
+    if (!viewer.length) return;
+    ensureAlbumViewerInBody(viewer);
+    bindAlbumImageZoomHandlers();
+    bindAlbumImageCleanModeHandlers();
+
+    const src = String(imageUrl || "").trim();
+    if (!src) return;
+
+    const name = String(imageName || "").trim();
+    const fallbackImageName = t("album_image_fallback_name");
+    const normalizedItemId = String(itemId || "").trim();
+    viewer
+      .find(".sm-album-image-viewer-img")
+      .attr("src", src)
+      .attr("alt", name || fallbackImageName);
+    viewer.find(".sm-album-image-viewer-caption").text(name);
+    viewer.attr("data-item-id", normalizedItemId);
+    const downloadLabel = t("album_download_image");
+    const deleteLabel = t("album_delete_image");
+    viewer
+      .find("#sm-album-image-viewer-download")
+      .attr("data-image-url", src)
+      .attr("data-image-name", name || fallbackImageName)
+      .attr("title", downloadLabel)
+      .find("span")
+      .text(downloadLabel);
+    viewer
+      .find("#sm-album-image-viewer-delete")
+      .attr("data-item-id", normalizedItemId)
+      .attr("title", deleteLabel)
+      .prop("disabled", !normalizedItemId)
+      .find("span")
+      .text(deleteLabel);
+
+    resetAlbumImageZoom({ animate: false });
+    setAlbumImageViewerCleanMode(false);
+    viewer.find("#sm-album-image-viewer-content").scrollTop(0);
+    viewer.addClass("sm-open").attr("aria-hidden", "false");
+    $("body").addClass("sm-album-viewer-open");
+  }
+
+  function armAlbumImageViewerCloseClickGuard(durationMs = 360) {
+    if (!document?.addEventListener || !window?.setTimeout) return;
+
+    if (albumImageViewerCloseGuardCleanup) {
+      albumImageViewerCloseGuardCleanup();
+    }
+
+    const guardedEvents = [
+      "click",
+      "dblclick",
+      "mousedown",
+      "mouseup",
+      "pointerdown",
+      "pointerup",
+      "touchstart",
+      "touchend",
+    ];
+    const until = Date.now() + durationMs;
+    const swallow = (event) => {
+      if (Date.now() > until) {
+        if (albumImageViewerCloseGuardCleanup) albumImageViewerCloseGuardCleanup();
         return;
       }
+      event.preventDefault?.();
+      event.stopPropagation?.();
+      event.stopImmediatePropagation?.();
+      return false;
+    };
+
+    albumImageViewerCloseGuardCleanup = () => {
+      for (const eventName of guardedEvents) {
+        document.removeEventListener(eventName, swallow, true);
+      }
+      if (albumImageViewerCloseGuardTimer) {
+        window.clearTimeout(albumImageViewerCloseGuardTimer);
+        albumImageViewerCloseGuardTimer = null;
+      }
+      albumImageViewerCloseGuardCleanup = null;
+    };
+
+    for (const eventName of guardedEvents) {
+      document.addEventListener(eventName, swallow, true);
+    }
+    albumImageViewerCloseGuardTimer = window.setTimeout(() => {
+      if (albumImageViewerCloseGuardCleanup) albumImageViewerCloseGuardCleanup();
+    }, durationMs);
+  }
+
+  function closeAlbumImageViewer() {
+    const viewer = $("#sm-album-image-viewer");
+    if (!viewer.length || !viewer.hasClass("sm-open")) return;
+
+    armAlbumImageViewerCloseClickGuard();
+    endAlbumImagePan();
+
+    viewer.removeAttr("data-item-id");
+    viewer
+      .find("#sm-album-image-viewer-download")
+      .removeAttr("data-image-url")
+      .removeAttr("data-image-name");
+    viewer
+      .find("#sm-album-image-viewer-delete")
+      .removeAttr("data-item-id")
+      .prop("disabled", true);
+
+    resetAlbumImageZoom({ animate: false });
+    viewer.find(".sm-album-image-viewer-img").attr("src", "").removeClass("sm-zoom-animating");
+    viewer.removeClass("sm-open sm-zoomed sm-panning sm-clean-view").attr("aria-hidden", "true");
+    $("body").removeClass("sm-album-viewer-open");
+  }
+
+  function getAlbumMetaViewerResolvedMode(mode = "prompt") {
+    const preferred = String(mode || "prompt").toLowerCase();
+    if (preferred === "style" && albumMetaViewerState.styleText) return "style";
+    if (preferred === "prompt" && albumMetaViewerState.promptText) return "prompt";
+    if (albumMetaViewerState.promptText) return "prompt";
+    if (albumMetaViewerState.styleText) return "style";
+    return "prompt";
+  }
+
+  function getAlbumMetaViewerActiveText() {
+    const mode = getAlbumMetaViewerResolvedMode(albumMetaViewerState.activeMode);
+    return mode === "style" ? albumMetaViewerState.styleText : albumMetaViewerState.promptText;
+  }
+
+  function setAlbumMetaViewerMode(mode = "prompt") {
+    const viewer = $("#sm-album-meta-viewer");
+    if (!viewer.length) return;
+
+    const resolvedMode = getAlbumMetaViewerResolvedMode(mode);
+    albumMetaViewerState.activeMode = resolvedMode;
+
+    viewer.find(".sm-album-prompt-mode-btn").removeClass("is-active");
+    viewer.find(`.sm-album-prompt-mode-btn[data-mode="${resolvedMode}"]`).addClass("is-active");
+
+    const activeText = getAlbumMetaViewerActiveText();
+    viewer.find("#sm-album-meta-viewer-text").val(activeText || t("album_prompt_not_found"));
+    viewer.find("#sm-album-meta-viewer-copy").prop("disabled", !activeText);
+  }
+
+  function openAlbumMetaViewer(promptText = "", styleText = "", imageName = "") {
+    const viewer = $("#sm-album-meta-viewer");
+    if (!viewer.length) return;
+    ensureAlbumViewerInBody(viewer);
+
+    albumMetaViewerState = {
+      promptText: String(promptText || "").trim(),
+      styleText: String(styleText || "").trim(),
+      activeMode: "prompt",
+    };
+
+    viewer.find(".sm-album-meta-viewer-caption").text(String(imageName || "").trim());
+    setAlbumMetaViewerMode("prompt");
+    viewer.find("#sm-album-meta-viewer-content").scrollTop(0);
+    viewer.find("#sm-album-meta-viewer-text").scrollTop(0);
+
+    viewer.addClass("sm-open").attr("aria-hidden", "false");
+    $("body").addClass("sm-album-viewer-open");
+  }
+
+  function closeAlbumMetaViewer() {
+    const viewer = $("#sm-album-meta-viewer");
+    if (!viewer.length || !viewer.hasClass("sm-open")) return;
+
+    viewer.removeClass("sm-open").attr("aria-hidden", "true");
+    $("body").removeClass("sm-album-viewer-open");
+  }
+
+  function getAlbumQuickSaveViewportRect() {
+    const docEl = document.documentElement;
+    return {
+      left: 0,
+      top: 0,
+      width: Math.max(Number(window.innerWidth) || 0, Number(docEl?.clientWidth) || 0),
+      height: Math.max(Number(window.innerHeight) || 0, Number(docEl?.clientHeight) || 0),
+    };
+  }
+
+  function getAlbumQuickSaveButtonSize(quickBtn) {
+    const buttonElement = quickBtn?.get?.(0);
+    if (!buttonElement) {
+      return { width: 180, height: 36 };
+    }
+
+    const wasVisible = quickBtn.is(":visible");
+    const previousStyle = {
+      display: buttonElement.style.display,
+      visibility: buttonElement.style.visibility,
+      left: buttonElement.style.left,
+      top: buttonElement.style.top,
+    };
+
+    if (!wasVisible) {
+      quickBtn.css({
+        display: "inline-flex",
+        visibility: "hidden",
+        left: "-10000px",
+        top: "-10000px",
+      });
+    }
+
+    const rect = buttonElement.getBoundingClientRect();
+    const width = Math.ceil(rect.width || quickBtn.outerWidth() || 180);
+    const height = Math.ceil(rect.height || quickBtn.outerHeight() || 36);
+
+    if (!wasVisible) {
+      quickBtn.css(previousStyle);
+    }
+
+    return {
+      width: Math.max(120, width),
+      height: Math.max(30, height),
+    };
+  }
+
+  function positionAlbumQuickSaveButton(quickBtn, anchorElement = null) {
+    const viewport = getAlbumQuickSaveViewportRect();
+    const { width: buttonWidth, height: buttonHeight } = getAlbumQuickSaveButtonSize(quickBtn);
+    const minGap = 10;
+
+    let left = viewport.left + (viewport.width - buttonWidth) / 2;
+    let top = viewport.top + viewport.height - buttonHeight - minGap;
+
+    if (anchorElement && typeof anchorElement.getBoundingClientRect === "function") {
+      const rect = anchorElement.getBoundingClientRect();
+      const hasValidRect =
+        Number.isFinite(rect?.left) &&
+        Number.isFinite(rect?.top) &&
+        Number.isFinite(rect?.bottom) &&
+        Number.isFinite(rect?.width);
+
+      if (hasValidRect) {
+        left = rect.left + rect.width / 2 - buttonWidth / 2;
+
+        const aboveTop = rect.top - buttonHeight - minGap;
+        const belowTop = rect.bottom + minGap;
+        top = aboveTop;
+        if (top < viewport.top + minGap) {
+          top = belowTop;
+        }
+      }
+    }
+
+    const minLeft = viewport.left + minGap;
+    const maxLeft = viewport.left + viewport.width - buttonWidth - minGap;
+    const minTop = viewport.top + minGap;
+    const maxTop = viewport.top + viewport.height - buttonHeight - minGap;
+
+    left = maxLeft >= minLeft ? Math.min(Math.max(left, minLeft), maxLeft) : viewport.left;
+    top = maxTop >= minTop ? Math.min(Math.max(top, minTop), maxTop) : viewport.top;
+
+    quickBtn.css({
+      display: "inline-flex",
+      top: `${Math.round(top)}px`,
+      left: `${Math.round(left)}px`,
+    });
+  }
+
+  function showAlbumQuickSaveButton(anchorElement, imageUrl, sourceMeta = {}) {
+    const quickBtn = $("#sm-image-save-quick");
+    if (!quickBtn.length) return;
+
+    const normalizedMeta =
+      typeof sourceMeta === "string" ? { sourceKey: sourceMeta } : sourceMeta || {};
+    const safeAnchorElement =
+      anchorElement && document.body.contains(anchorElement) ? anchorElement : null;
+
+    albumQuickSaveState = {
+      imageUrl,
+      sourceKey: String(normalizedMeta.sourceKey || "").trim(),
+      messageId: normalizedMeta.messageId ?? null,
+      messageIndex: Number.isFinite(Number(normalizedMeta.messageIndex))
+        ? Number(normalizedMeta.messageIndex)
+        : null,
+      generationMetaRaw: String(normalizedMeta.generationMetaRaw || "").trim(),
+      imageNameHint: String(normalizedMeta.imageNameHint || "").trim(),
+      anchorElement: safeAnchorElement,
+    };
+
+    positionAlbumQuickSaveButton(quickBtn, safeAnchorElement);
+  }
+
+  function resolveAlbumQuickSaveMetaFromImageElement(imageElement, imageUrl) {
+    const messageElement = imageElement?.closest?.(".mes") || null;
+    let messageIndex = null;
+    let messageId = null;
+
+    if (messageElement) {
+      const parsedMesId = Number.parseInt(String(messageElement.getAttribute("mesid") || ""), 10);
+      if (Number.isInteger(parsedMesId) && parsedMesId >= 0) {
+        messageIndex = parsedMesId;
+      }
+    }
+
+    const ctx = getContext();
+    if (
+      messageIndex !== null &&
+      Array.isArray(ctx?.chat) &&
+      messageIndex >= 0 &&
+      messageIndex < ctx.chat.length
+    ) {
+      messageId = getMessageId(ctx.chat[messageIndex]);
+    }
+
+    let imageSlot = 0;
+    if (messageElement) {
+      const imageNodes = Array.from(messageElement.querySelectorAll("img"));
+      const imageNodeIndex = imageNodes.indexOf(imageElement);
+      imageSlot = imageNodeIndex >= 0 ? imageNodeIndex : 0;
+    }
+
+    const generationMetaRaw = String(
+      imageElement?.getAttribute?.("data-iig-instruction") || "",
+    ).trim();
+    const imageNameHint =
+      String(imageElement?.getAttribute?.("alt") || "").trim() ||
+      getImageNameFromUrl(imageUrl, "image");
+
+    return {
+      sourceKey: `chat_image:${messageId ?? messageIndex ?? "na"}:${imageSlot}:${imageUrl}`,
+      messageId: messageId ?? null,
+      messageIndex,
+      generationMetaRaw,
+      imageNameHint,
+    };
+  }
+
+  function initAlbumImageQuickSave() {
+    let pointerDownAt = 0;
+    let pointerDownX = 0;
+    let pointerDownY = 0;
+    let lastTapHandledAt = 0;
+
+    function handleAlbumQuickSaveTap(imageElement, eventObject = null) {
+      const img = /** @type {HTMLImageElement | null} */ (imageElement || null);
+      if (!img) return;
+
+      const url = String(img.currentSrc || img.src || "").trim();
+      if (!url) return;
+
+      void eventObject;
+
+      let sourceMeta = {
+        sourceKey: `chat_image:${url}`,
+        messageId: null,
+        messageIndex: null,
+        generationMetaRaw: "",
+        imageNameHint: getImageNameFromUrl(url, "image"),
+      };
 
       try {
-        await copyTextToClipboard(textToCopy);
-        toastr.success(t("copied_text"));
+        sourceMeta = resolveAlbumQuickSaveMetaFromImageElement(img, url);
       } catch (error) {
-        console.warn("SunnyMemories: failed to copy album metadata text", error);
-        toastr.error(t("failed_copy_text"));
+        console.warn("SunnyMemories: image quick-save meta extraction failed", error);
       }
-    });
 
-    $(document)
-      .off("pointerdown.smAlbumMetaCopy mousedown.smAlbumMetaCopy touchstart.smAlbumMetaCopy dblclick.smAlbumMetaCopy pointerup.smAlbumMetaCopy mouseup.smAlbumMetaCopy touchend.smAlbumMetaCopy click.smAlbumMetaCopy", "#sm-album-meta-viewer-copy")
-      .on("pointerdown.smAlbumMetaCopy mousedown.smAlbumMetaCopy touchstart.smAlbumMetaCopy dblclick.smAlbumMetaCopy", "#sm-album-meta-viewer-copy", handleAlbumMetaCopyTap)
-      .on("pointerup.smAlbumMetaCopy mouseup.smAlbumMetaCopy touchend.smAlbumMetaCopy click.smAlbumMetaCopy", "#sm-album-meta-viewer-copy", handleAlbumMetaCopyTap);
+      showAlbumQuickSaveButton(img, url, sourceMeta);
+      lastTapHandledAt = Date.now();
+    }
 
-    $(document).on("click", ".sm-album-thumb-wrap", function (e) {
+    function bindAlbumQuickSaveHandlers() {
+      if (albumQuickSaveHandlersBound) return;
+      albumQuickSaveHandlersBound = true;
+
+      $(document).on("pointerdown", "#chat .mes img", function (e) {
+        pointerDownAt = Date.now();
+        pointerDownX = Number(e.clientX || 0);
+        pointerDownY = Number(e.clientY || 0);
+      });
+
+      $(document).on("pointerup", "#chat .mes img", function (e) {
+        const elapsed = Date.now() - pointerDownAt;
+        const dx = Math.abs(Number(e.clientX || 0) - pointerDownX);
+        const dy = Math.abs(Number(e.clientY || 0) - pointerDownY);
+        const isShortTap = elapsed <= 400 && dx <= 12 && dy <= 12;
+        if (!isShortTap) return;
+
+        handleAlbumQuickSaveTap(this, e);
+      });
+
+      $(document).on("click", "#chat .mes", function (e) {
+        if (Date.now() - lastTapHandledAt < 350) return;
+
+        const targetElement =
+          e?.target && typeof e.target.closest === "function" ? e.target : null;
+        const targetImage = targetElement ? targetElement.closest("img") : null;
+        if (!targetImage || !this.contains(targetImage)) return;
+
+        handleAlbumQuickSaveTap(targetImage, e);
+      });
+    }
+
+    bindAlbumQuickSaveHandlers();
+
+    $(document).off("click", "#sm-image-save-quick").on("click", "#sm-image-save-quick", async function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      const wrap = $(this);
-      const card = wrap.closest(".sm-album-card");
-      const itemId = String(card.data("id") || "").trim();
-      const imageElement = card.find(".sm-album-thumb").first();
-      const imageUrl = String(
-        wrap.attr("href") || imageElement.attr("src") || imageElement.prop("src") || "",
-      ).trim();
-      if (!imageUrl) return;
-
-      const imageName =
-        String(card.find(".sm-album-caption").text() || "").trim() ||
-        String(imageElement.attr("alt") || "").trim() ||
-        t("album_image_fallback_name");
-
-      openAlbumImageViewer(imageUrl, imageName, itemId);
-    });
-
-    $(document).on("click", ".sm-album-download", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const button = $(this);
-      if (button.prop("disabled")) return;
-      const imageUrl = String(button.attr("data-image-url") || "").trim();
-      const imageName =
-        String(button.attr("data-image-name") || "").trim() || t("album_image_fallback_name");
+      const btn = $(this);
+      const imageUrl = String(albumQuickSaveState.imageUrl || "").trim();
       if (!imageUrl) {
-        toastr.error(t("album_download_image_failed"));
+        hideAlbumQuickSaveButton();
         return;
       }
 
-      button.prop("disabled", true);
+      btn.prop("disabled", true);
       try {
-        await downloadAlbumImageToDevice(imageUrl, imageName);
-      } finally {
-        button.prop("disabled", false);
+        await saveRemoteImageToAlbumFromUrl(imageUrl, {
+          sourceKey: albumQuickSaveState.sourceKey,
+          messageId: albumQuickSaveState.messageId,
+          messageIndex: albumQuickSaveState.messageIndex,
+          generationMetaRaw: albumQuickSaveState.generationMetaRaw,
+          imageNameHint: albumQuickSaveState.imageNameHint,
+        });
+        hideAlbumQuickSaveButton();
+      } catch (error) {
+        console.error("SunnyMemories: failed to save image", error);
+        toastr.error(error?.message || t("album_save_image_failed"));
+        btn.prop("disabled", false);
       }
     });
 
-    $(document).on("click", ".sm-album-delete", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    const syncAlbumQuickSaveButtonPosition = () => {
+      const quickBtn = $("#sm-image-save-quick");
+      if (!quickBtn.length || !quickBtn.is(":visible")) return;
 
-      const button = $(this);
-      if (button.prop("disabled")) return;
-      const itemId = String(button.attr("data-item-id") || "").trim();
-      if (!itemId) return;
-      const confirmed = await showAlbumDeleteConfirmPopover(this, itemId);
-      if (!confirmed) return;
-
-      button.prop("disabled", true);
-      try {
-        await deleteAlbumItemPermanently(itemId);
-      } finally {
-        button.prop("disabled", false);
-      }
-    });
-
-    $(document).on("click", "#sm-album-image-viewer-download", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const button = $(this);
-      if (button.prop("disabled")) return;
-      const imageUrl = String(button.attr("data-image-url") || "").trim();
-      const imageName =
-        String(button.attr("data-image-name") || "").trim() || t("album_image_fallback_name");
-      if (!imageUrl) {
-        toastr.error(t("album_download_image_failed"));
+      const currentImageUrl = String(albumQuickSaveState.imageUrl || "").trim();
+      if (!currentImageUrl) {
+        hideAlbumQuickSaveButton();
         return;
       }
 
-      button.prop("disabled", true);
-      try {
-        await downloadAlbumImageToDevice(imageUrl, imageName);
-      } finally {
-        button.prop("disabled", false);
+      const safeAnchorElement =
+        albumQuickSaveState.anchorElement && document.body.contains(albumQuickSaveState.anchorElement)
+          ? albumQuickSaveState.anchorElement
+          : null;
+      albumQuickSaveState.anchorElement = safeAnchorElement;
+
+      positionAlbumQuickSaveButton(quickBtn, safeAnchorElement);
+    };
+
+    if (!albumQuickSaveViewportEventsBound) {
+      albumQuickSaveViewportEventsBound = true;
+      $(window).on("resize orientationchange scroll", syncAlbumQuickSaveButtonPosition);
+
+      const vv = window.visualViewport;
+      if (vv && typeof vv.addEventListener === "function") {
+        vv.addEventListener("resize", syncAlbumQuickSaveButtonPosition);
+        vv.addEventListener("scroll", syncAlbumQuickSaveButtonPosition);
       }
-    });
+    }
 
-    $(document).on("click", "#sm-album-image-viewer-delete", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (!lightboxPollerId) {
+      let attempts = 0;
+      lightboxPollerId = setInterval(() => {
+        attempts += 1;
+        try {
+          const lb = document.querySelector(".iig-lightbox");
+          if (lb) {
+            disableAlbumQuickSaveHandlers();
+            clearInterval(lightboxPollerId);
+            lightboxPollerId = null;
+          } else if (attempts > 40) {
+            clearInterval(lightboxPollerId);
+            lightboxPollerId = null;
+          }
+        } catch (err) {
+          console.warn("SunnyMemories: lightbox poller error", err);
+        }
+      }, 300);
+    }
+  }
 
-      const button = $(this);
-      if (button.prop("disabled")) return;
-      const itemId = String(button.attr("data-item-id") || "").trim();
-      if (!itemId) return;
-      const confirmed = await showAlbumDeleteConfirmPopover(this, itemId);
-      if (!confirmed) return;
+  function isInsideAlbumImageViewer(target) {
+    return Boolean(
+      target &&
+        typeof target.closest === "function" &&
+        target.closest("#sm-album-image-viewer, #sm-album-meta-viewer"),
+    );
+  }
 
-      button.prop("disabled", true);
-      try {
-        await deleteAlbumItemPermanently(itemId);
-      } finally {
-        button.prop("disabled", false);
-      }
-    });
-
-    $(document).on("keydown", function (e) {
-      if (e.key === "Escape") {
-        closeAlbumMetaViewer();
-        closeAlbumImageViewer();
-      }
-    });
-}
-
-return {
-  ensureAlbumSettings,
-  filterAlbumItemsByActiveFolder,
-  getAlbumFolderLabel,
-  syncAlbumDiaryControls,
-  collectChatImagesForAlbum,
-  renderAlbum,
-  getAlbumSortedFolders,
-  getAlbumRecentFolders,
-  renderAlbumRecentFolderHints,
-  renderAlbumFolderList,
-  syncAlbumFolderDropdownButtonState,
-  openAlbumFolderList,
-  closeAlbumFolderList,
-  syncAlbumFolderLibraryButtonState,
-  isAlbumFolderLibraryOpen,
-  setAlbumFolderLibraryOpen,
-  renderAlbumFolderGrid,
-  setAlbumCreateInputVisible,
-  updateAlbumCreateFolderButtonState,
-  createAlbumFolder,
-  bindAlbumImageViewerHandlers,
-  bindAlbumHandlers,
-};
+  return {
+    hideAlbumQuickSaveButton,
+    disableAlbumQuickSaveHandlers,
+    openAlbumImageViewer,
+    closeAlbumImageViewer,
+    getAlbumMetaViewerActiveText,
+    setAlbumMetaViewerMode,
+    openAlbumMetaViewer,
+    closeAlbumMetaViewer,
+    positionAlbumQuickSaveButton,
+    showAlbumQuickSaveButton,
+    resolveAlbumQuickSaveMetaFromImageElement,
+    initAlbumImageQuickSave,
+    isInsideAlbumImageViewer,
+  };
 }
