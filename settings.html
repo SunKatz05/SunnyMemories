@@ -238,18 +238,234 @@
             align-items: center;
             line-height: 1.2;
         }
-        .sm-mini-guide-toggle {
+        .sm-export-wrap {
             margin-left: auto;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            position: relative;
+            min-width: 0;
+        }
+        .sm-preset-bar {
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .sm-preset-field-wrap {
+            flex: 1 1 150px;
+            min-width: 150px;
+        }
+        .sm-preset-field-wrap #sm-preset-select,
+        .sm-preset-field-wrap #sm-preset-name {
+            width: 100%;
+        }
+        .sm-preset-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 0 0 auto;
+        }
+        .sm-preset-icon-button {
+            width: 34px;
+            min-width: 34px;
+            height: 34px;
+            min-height: 34px;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .sm-preset-icon-button i {
+            pointer-events: none;
+        }
+        .sm-export-toggle,
+        .sm-import-trigger,
+        .sm-mini-guide-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
             min-height: 34px;
             padding: 6px 10px;
             font-size: 0.82em;
+            line-height: 1.18;
             border-radius: 8px;
+            white-space: nowrap;
+            text-align: center;
         }
+        .sm-transfer-icon-button {
+            width: 36px;
+            min-width: 36px;
+            padding: 6px;
+        }
+        .sm-export-wrap + .sm-mini-guide-toggle {
+            margin-left: 0;
+        }
+        .sm-export-toggle i,
+        .sm-import-trigger i,
         .sm-mini-guide-toggle i {
-            opacity: 0.88;
+            opacity: 0.9;
+        }
+        .sm-hidden-file-input {
+            display: none !important;
+        }
+        .sm-sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        #sm-export-panel {
+            display: none;
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.16);
+            padding: 10px;
+        }
+        #sm-export-panel,
+        #sm-export-panel * {
+            box-sizing: border-box;
+        }
+        .sm-export-panel-title {
+            font-size: 0.92em;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--SmartThemeQuoteColor, #7dd3fc);
+        }
+        .sm-export-panel-note,
+        .sm-export-counts,
+        .sm-export-empty {
+            font-size: 0.78em;
+            line-height: 1.35;
+            opacity: 0.78;
+        }
+        .sm-export-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .sm-export-actions .menu_button,
+        .sm-export-section-download,
+        .sm-export-selected-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 32px;
+            padding: 6px 10px;
+            font-size: 0.78em;
+            line-height: 1.18;
+            border-radius: 8px;
+            white-space: normal;
+            text-align: center;
+        }
+        .sm-export-section-download {
+            flex: 0 0 auto;
+            min-width: 96px;
+        }
+        .sm-export-individual-wrap {
+            margin-top: 10px;
+            display: none;
+            border-top: 1px solid rgba(255,255,255,0.09);
+            padding-top: 8px;
+        }
+        .sm-export-section {
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 9px;
+            background: rgba(255,255,255,0.02);
+            padding: 7px;
+            margin-top: 7px;
+        }
+        .sm-export-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .sm-export-section-title {
+            font-size: 0.8em;
+            font-weight: 700;
+        }
+        .sm-export-items {
+            display: grid;
+            gap: 4px;
+            max-height: 185px;
+            overflow: auto;
+            padding-right: 2px;
+        }
+        .sm-export-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            padding: 5px 6px;
+            border-radius: 7px;
+            background: rgba(0,0,0,0.12);
+            cursor: pointer;
+            user-select: none;
+        }
+        .sm-export-item:hover {
+            background: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.08);
+        }
+        .sm-export-item input[type="checkbox"] {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .sm-export-item-label {
+            min-width: 0;
+            font-size: 0.78em;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+        .sm-export-bottom-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .sm-export-selected-count {
+            font-size: 0.76em;
+            opacity: 0.76;
+        }
+        @media (max-width: 620px) {
+            .sm-bypass-filter-row {
+                flex-wrap: wrap;
+            }
+            .sm-bypass-filter-row > span:not(.sm-export-wrap) {
+                flex: 1 1 calc(100% - 48px);
+            }
+            .sm-export-wrap {
+                margin-left: 42px;
+                flex: 0 0 auto;
+            }
+            .sm-export-toggle,
+            .sm-import-trigger {
+                flex: 0 0 auto;
+            }
+            .sm-mini-guide-toggle {
+                flex: 1 1 128px;
+                justify-content: center;
+                min-width: 0;
+            }
+            .sm-export-actions .menu_button,
+            .sm-export-selected-download {
+                flex: 1 1 140px;
+            }
+            .sm-export-section-head {
+                align-items: stretch;
+                flex-direction: column;
+            }
+            .sm-export-section-download {
+                width: 100%;
+            }
         }
         #sm-mini-guide-panel {
             border: 1px solid var(--SmartThemeBorderColor);
@@ -865,6 +1081,211 @@
             font-size: 0.88em;
             padding: 3px 10px;
         }
+        .sm-library-storage-switch {
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+        .sm-library-storage-title {
+            font-size: 0.76em;
+            opacity: 0.72;
+            line-height: 1.1;
+        }
+        .sm-library-storage-toggle {
+            max-width: 240px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .sm-library-storage-toggle label {
+            min-height: 22px;
+            font-size: 0.76em;
+            padding: 2px 7px;
+            gap: 4px;
+        }
+        .sm-library-storage-toggle label i {
+            font-size: 0.9em;
+        }
+        .sm-memory-storage-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 2px 0 8px;
+            padding: 5px 7px;
+            border-radius: 7px;
+            background: rgba(0, 0, 0, 0.12);
+        }
+        .sm-memory-storage-row .sm-library-storage-title {
+            margin-right: auto;
+        }
+        .sm-storage-copy-btn {
+            min-height: 24px !important;
+            height: 24px !important;
+            width: 30px;
+            padding: 2px 7px !important;
+            margin: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78em !important;
+        }
+        .sm-storage-transfer-settings {
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .sm-settings-section-title {
+            font-weight: bold;
+            color: var(--SmartThemeQuoteColor);
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        .sm-transfer-mode-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .sm-timeline-storage-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            margin-top: 12px;
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.22);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+        }
+        .sm-timeline-storage-head {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .sm-timeline-storage-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .sm-timeline-storage-title {
+            font-size: 0.92em;
+            font-weight: 700;
+            opacity: 0.94;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+        .sm-timeline-storage-subtitle {
+            font-size: 0.78em;
+            opacity: 0.68;
+            line-height: 1.35;
+        }
+        .sm-timeline-default-card,
+        .sm-timeline-manual-storage {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.075);
+        }
+        .sm-timeline-default-row {
+            display: flex;
+            width: 100%;
+            margin: 0;
+            align-items: flex-start;
+            font-weight: 700;
+        }
+        .sm-timeline-default-row > span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+        .sm-timeline-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 0.76em;
+            font-weight: 650;
+            color: var(--SmartThemeQuoteColor);
+            background: rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.11);
+            border: 1px solid rgba(var(--sm-button-accent-rgb, 125, 211, 252), 0.18);
+            white-space: nowrap;
+        }
+        .sm-timeline-default-card .sm-storage-transfer-help {
+            margin-top: 8px;
+            padding-left: 24px;
+        }
+        .sm-timeline-manual-storage {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 0;
+        }
+        .sm-timeline-manual-heading {
+            opacity: 0.82;
+            font-size: 0.82em;
+            font-weight: 650;
+            line-height: 1.25;
+        }
+        .sm-timeline-manual-storage .sm-library-storage-toggle {
+            max-width: none;
+            width: 100%;
+        }
+        .sm-timeline-manual-storage .sm-library-storage-toggle label {
+            min-height: 28px;
+            font-size: 0.82em;
+            padding: 4px 9px;
+        }
+        .sm-timeline-scope-badges {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+        }
+        .sm-scope-badge {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            min-width: 0;
+            padding: 7px 8px;
+            border-radius: 10px;
+            font-size: 0.76em;
+            line-height: 1.25;
+            opacity: 0.88;
+            background: rgba(255, 255, 255, 0.055);
+            border: 1px solid rgba(255, 255, 255, 0.075);
+        }
+        .sm-scope-badge i {
+            margin-top: 1px;
+            opacity: 0.78;
+        }
+        @media (max-width: 520px) {
+            .sm-timeline-storage-card {
+                padding: 12px;
+            }
+            .sm-timeline-scope-badges {
+                grid-template-columns: 1fr;
+            }
+            .sm-timeline-pill {
+                white-space: normal;
+            }
+        }
+        .sm-storage-transfer-settings .sm-transfer-copy-label {
+            margin: 0;
+            gap: 6px;
+        }
+        .sm-storage-transfer-help {
+            width: 100%;
+            opacity: 0.72;
+            font-size: 0.82em;
+            line-height: 1.3;
+        }
         .sm-library-pane {
             display: none;
             animation: smFade 0.22s ease;
@@ -932,9 +1353,10 @@
         .sm-library-list.grid-view .sm-sun-toggle { position: absolute; top: 10px; right: 10px; font-size: 1.4em; }
         .sm-library-list.grid-view .sm-lib-edit { display: flex; position: absolute; bottom: 10px; left: 10px; opacity: 0.4; }
         .sm-library-list.grid-view .sm-lib-copy { display: flex; position: absolute; bottom: 10px; left: 36px; opacity: 0.4; }
-        .sm-library-list.grid-view .sm-lib-pin { display: flex; position: absolute; bottom: 10px; left: 62px; opacity: 0.4; }
+        .sm-library-list.grid-view .sm-lib-storage-copy { display: flex; position: absolute; bottom: 10px; left: 62px; opacity: 0.4; }
+        .sm-library-list.grid-view .sm-lib-pin { display: flex; position: absolute; bottom: 10px; left: 88px; opacity: 0.4; }
         .sm-library-list.grid-view .sm-lib-delete { position: absolute; bottom: 10px; right: 10px; opacity: 0.4; }
-        .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-edit, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-pin, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-copy, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-delete { opacity: 0.9; }
+        .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-edit, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-pin, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-copy, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-storage-copy, .sm-library-list.grid-view .sm-lib-item:hover .sm-lib-delete { opacity: 0.9; }
         .sm-library-list.grid-view .sm-lib-title-container { margin-top: auto; margin-bottom: auto; text-align: center; width: 100%; justify-content: center; }
         .sm-library-list.grid-view .sm-lib-title-display { font-size: 1.1em; color: var(--SmartThemeQuoteColor); white-space: normal; display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         .sm-library-list.grid-view .sm-lib-title-input { text-align: center; }
@@ -2741,7 +3163,543 @@
                 user-select: none;
             }
 
-        </style>
+
+
+        /* SunnyMemories album viewer hardening: keep modal windows in the viewport even under aggressive themes. */
+        body > #sm-album-meta-viewer,
+        body > #sm-album-image-viewer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            margin: 0 !important;
+            transform: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        body > #sm-album-meta-viewer.sm-open,
+        body > #sm-album-image-viewer.sm-open {
+            display: flex !important;
+        }
+
+        body > #sm-album-meta-viewer {
+            padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
+            background: rgba(0, 0, 0, 0.86) !important;
+        }
+
+        body > #sm-album-meta-viewer .sm-album-meta-viewer-content {
+            width: min(920px, calc(100vw - 24px)) !important;
+            max-width: calc(100vw - 24px) !important;
+            max-height: min(92vh, calc(100dvh - 24px)) !important;
+            margin: auto !important;
+            transform: none !important;
+            box-sizing: border-box !important;
+            min-height: 0 !important;
+        }
+
+        body > #sm-album-meta-viewer #sm-album-meta-viewer-text {
+            flex: 1 1 auto;
+            min-height: 140px;
+            min-width: 0;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-content {
+            touch-action: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-img {
+            transform: translate3d(0, 0, 0) scale(1);
+            transform-origin: center center;
+            will-change: transform;
+            cursor: default;
+            touch-action: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-img.sm-zoom-animating {
+            transition: transform 140ms ease;
+        }
+
+        body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-content {
+            overflow: hidden !important;
+            touch-action: none !important;
+        }
+
+        body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-content,
+        body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-img {
+            cursor: grab;
+        }
+
+        body > #sm-album-image-viewer.sm-panning .sm-album-image-viewer-content,
+        body > #sm-album-image-viewer.sm-panning .sm-album-image-viewer-img {
+            cursor: grabbing;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-zoom-controls {
+            position: fixed !important;
+            top: max(12px, env(safe-area-inset-top)) !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 7 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            padding: 3px !important;
+            border: 1px solid rgba(255, 255, 255, 0.13) !important;
+            border-radius: 999px !important;
+            background: rgba(18, 18, 20, 0.58) !important;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: blur(12px) saturate(1.1) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(1.1) !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            touch-action: manipulation !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-zoom-btn {
+            min-width: 28px !important;
+            height: 28px !important;
+            padding: 0 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.11) !important;
+            border-radius: 999px !important;
+            background: rgba(255, 255, 255, 0.065) !important;
+            color: rgba(255, 255, 255, 0.92) !important;
+            font-size: 15px !important;
+            line-height: 1 !important;
+            font-weight: 650 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-zoom-btn:hover:not(:disabled),
+        body > #sm-album-image-viewer .sm-album-image-zoom-btn:focus-visible:not(:disabled) {
+            background: rgba(255, 255, 255, 0.16) !important;
+            outline: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-zoom-btn:disabled {
+            opacity: 0.42 !important;
+            cursor: default !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-zoom-value {
+            min-width: 48px !important;
+            font-size: 11px !important;
+            font-weight: 650 !important;
+            letter-spacing: 0.015em !important;
+        }
+
+        @media (max-width: 700px) {
+            body > #sm-album-meta-viewer {
+                padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+            }
+
+            body > #sm-album-meta-viewer .sm-album-meta-viewer-content {
+                width: calc(100vw - 16px) !important;
+                max-width: calc(100vw - 16px) !important;
+                max-height: calc(100dvh - 16px) !important;
+                padding: 11px !important;
+                border-radius: 10px !important;
+            }
+
+            body > #sm-album-meta-viewer .sm-album-meta-viewer-toolbar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            body > #sm-album-meta-viewer #sm-album-meta-viewer-copy {
+                width: 100% !important;
+                justify-content: center !important;
+                min-height: 38px !important;
+            }
+
+            body > #sm-album-meta-viewer #sm-album-meta-viewer-text {
+                resize: none !important;
+                min-height: 130px !important;
+                max-height: calc(100dvh - 235px) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-zoom-controls {
+                top: auto !important;
+                bottom: max(12px, env(safe-area-inset-bottom)) !important;
+                gap: 4px !important;
+                padding: 4px !important;
+                max-width: calc(100vw - 24px) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-zoom-btn {
+                min-width: 34px !important;
+                height: 34px !important;
+                font-size: 17px !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-zoom-value {
+                min-width: 56px !important;
+                font-size: 12px !important;
+            }
+
+            body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-caption,
+            body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-actions {
+                opacity: 0.58;
+            }
+        }
+
+
+        /* SunnyMemories album image viewer: reliable drag/close layout. */
+        body > #sm-album-image-viewer {
+            padding: max(58px, calc(env(safe-area-inset-top) + 48px)) max(12px, env(safe-area-inset-right)) max(72px, calc(env(safe-area-inset-bottom) + 58px)) max(12px, env(safe-area-inset-left)) !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-content {
+            width: auto !important;
+            max-width: calc(100vw - 24px) !important;
+            max-height: calc(100dvh - 138px) !important;
+            overflow: visible !important;
+            touch-action: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-img {
+            max-width: calc(100vw - 28px) !important;
+            max-height: calc(100dvh - 158px) !important;
+            pointer-events: auto !important;
+            touch-action: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+        }
+
+        body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-img {
+            cursor: grab !important;
+        }
+
+        body > #sm-album-image-viewer.sm-panning .sm-album-image-viewer-img {
+            cursor: grabbing !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close {
+            position: fixed !important;
+            top: max(12px, env(safe-area-inset-top)) !important;
+            right: max(12px, env(safe-area-inset-right)) !important;
+            left: auto !important;
+            bottom: auto !important;
+            width: 42px !important;
+            height: 42px !important;
+            min-width: 42px !important;
+            min-height: 42px !important;
+            padding: 0 !important;
+            z-index: 50 !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            background: rgba(12, 12, 14, 0.72) !important;
+            color: rgba(255, 255, 255, 0.96) !important;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34) !important;
+            backdrop-filter: blur(12px) saturate(1.1) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(1.1) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close:hover,
+        body > #sm-album-image-viewer .sm-album-image-viewer-close:focus-visible {
+            background: rgba(36, 36, 40, 0.84) !important;
+            outline: none !important;
+        }
+
+        @media (max-width: 700px) {
+            body > #sm-album-image-viewer {
+                padding: max(58px, calc(env(safe-area-inset-top) + 48px)) max(10px, env(safe-area-inset-right)) max(74px, calc(env(safe-area-inset-bottom) + 60px)) max(10px, env(safe-area-inset-left)) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-content {
+                max-width: calc(100vw - 20px) !important;
+                max-height: calc(100dvh - 148px) !important;
+                padding: 0 !important;
+                gap: 7px !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-img {
+                max-width: calc(100vw - 22px) !important;
+                max-height: calc(100dvh - 176px) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-close {
+                top: max(10px, env(safe-area-inset-top)) !important;
+                right: max(10px, env(safe-area-inset-right)) !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                font-size: 1.05em !important;
+            }
+        }
+
+
+        /* SunnyMemories album image viewer chrome: keep text/actions above the image without changing zoom. */
+        body > #sm-album-image-viewer .sm-album-image-viewer-caption {
+            position: fixed !important;
+            top: max(58px, calc(env(safe-area-inset-top) + 50px)) !important;
+            left: 50% !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: translateX(-50%) !important;
+            z-index: 49 !important;
+            width: fit-content !important;
+            max-width: min(860px, calc(100vw - 32px)) !important;
+            margin: 0 !important;
+            padding: 7px 12px !important;
+            border: none !important;
+            border-radius: 999px !important;
+            background: rgba(12, 12, 14, 0.64) !important;
+            color: rgba(255, 255, 255, 0.94) !important;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32) !important;
+            backdrop-filter: blur(12px) saturate(1.08) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+            pointer-events: none !important;
+            text-align: center !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-caption:empty {
+            display: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions {
+            position: fixed !important;
+            left: 50% !important;
+            right: auto !important;
+            bottom: max(18px, env(safe-area-inset-bottom)) !important;
+            transform: translateX(-50%) !important;
+            z-index: 49 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 7px !important;
+            margin: 0 !important;
+            padding: 6px !important;
+            border: none !important;
+            border-radius: 999px !important;
+            background: rgba(12, 12, 14, 0.58) !important;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32) !important;
+            backdrop-filter: blur(12px) saturate(1.08) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions .sm-album-action-btn {
+            border: none !important;
+            box-shadow: none !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions .sm-album-action-btn:hover:not(:disabled),
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions .sm-album-action-btn:focus-visible:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15) !important;
+            outline: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close,
+        body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle {
+            position: fixed !important;
+            top: max(12px, env(safe-area-inset-top)) !important;
+            bottom: auto !important;
+            left: auto !important;
+            width: 42px !important;
+            height: 42px !important;
+            min-width: 42px !important;
+            min-height: 42px !important;
+            padding: 0 !important;
+            z-index: 50 !important;
+            border: none !important;
+            border-radius: 999px !important;
+            background: rgba(12, 12, 14, 0.66) !important;
+            color: rgba(255, 255, 255, 0.96) !important;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: blur(12px) saturate(1.08) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+            transition: opacity 140ms ease, background 140ms ease !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close {
+            right: max(12px, env(safe-area-inset-right)) !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle {
+            right: max(62px, calc(env(safe-area-inset-right) + 62px)) !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close:hover,
+        body > #sm-album-image-viewer .sm-album-image-viewer-close:focus-visible,
+        body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle:hover,
+        body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle:focus-visible {
+            background: rgba(36, 36, 40, 0.82) !important;
+            outline: none !important;
+        }
+
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-zoom-controls,
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-caption,
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-actions,
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-close {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-clean-toggle {
+            opacity: 0.38 !important;
+        }
+
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-clean-toggle:hover,
+        body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-clean-toggle:focus-visible {
+            opacity: 1 !important;
+        }
+
+        @media (max-width: 700px) {
+            body > #sm-album-image-viewer .sm-album-image-viewer-caption {
+                top: max(62px, calc(env(safe-area-inset-top) + 56px)) !important;
+                max-width: calc(100vw - 24px) !important;
+                padding: 6px 10px !important;
+                font-size: 0.84em !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-actions {
+                bottom: max(66px, calc(env(safe-area-inset-bottom) + 58px)) !important;
+                max-width: calc(100vw - 24px) !important;
+                padding: 5px !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-close,
+            body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle {
+                top: max(10px, env(safe-area-inset-top)) !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-close {
+                right: max(10px, env(safe-area-inset-right)) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle {
+                right: max(60px, calc(env(safe-area-inset-right) + 60px)) !important;
+            }
+        }
+        
+
+        /* SunnyMemories repair: original bottom caption/actions + non-blocking zoom viewport. */
+        body > #sm-album-image-viewer .sm-album-image-viewer-content {
+            width: min(96vw, 1500px) !important;
+            max-width: calc(100vw - 24px) !important;
+            max-height: calc(100dvh - 138px) !important;
+            overflow-y: visible !important;
+            overflow-x: visible !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+        }
+
+        body > #sm-album-image-viewer.sm-zoomed .sm-album-image-viewer-content {
+            overflow: visible !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-img {
+            max-width: min(100%, calc(100vw - 28px)) !important;
+            max-height: calc(100dvh - 168px) !important;
+            flex: 0 1 auto !important;
+            object-fit: contain !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-caption {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            z-index: 3 !important;
+            width: auto !important;
+            max-width: min(72vw, 860px) !important;
+            margin: 0 auto !important;
+            padding: 0 10px !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            color: rgba(255,255,255,0.9) !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            text-align: center !important;
+            word-break: break-word !important;
+            pointer-events: none !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            z-index: 4 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+            margin: 0 !important;
+            padding: 6px 0 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            pointer-events: auto !important;
+        }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions .sm-album-action-btn {
+            pointer-events: auto !important;
+        }
+
+        @media (max-width: 700px) {
+            body > #sm-album-image-viewer .sm-album-image-viewer-content {
+                width: calc(100vw - 20px) !important;
+                max-width: calc(100vw - 20px) !important;
+                max-height: calc(100dvh - 148px) !important;
+                gap: 8px !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-img {
+                max-width: calc(100vw - 22px) !important;
+                max-height: calc(100dvh - 190px) !important;
+            }
+
+            body > #sm-album-image-viewer .sm-album-image-viewer-caption {
+                max-width: calc(100vw - 56px) !important;
+                padding: 0 4px !important;
+                font-size: 0.82em !important;
+            }
+        }
+</style>
 
         <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
@@ -2756,6 +3714,23 @@
                     <select id="sunny-memories-profile" class="text_pole flex1" style="min-width: 150px;"></select>
                 </div>
 
+                <div class="flex-container alignitemscenter margin-bottom-10 sm-preset-bar">
+                    <label for="sm-preset-select" style="white-space: nowrap; margin-bottom: 0;" data-i18n="settings_presets">Settings preset:</label>
+                    <div class="sm-preset-field-wrap">
+                        <select id="sm-preset-select" class="text_pole">
+                            <option value="" data-i18n="preset_select_empty">No presets saved</option>
+                        </select>
+                        <input type="text" id="sm-preset-name" class="text_pole" data-i18n-placeholder="preset_name_placeholder" placeholder="Preset name" maxlength="80" style="display:none;">
+                    </div>
+                    <div class="sm-preset-actions">
+                        <button type="button" id="sm-preset-save" class="menu_button sm-preset-icon-button" data-i18n-aria-label="preset_save" aria-label="Save preset"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i></button>
+                        <button type="button" id="sm-preset-export" class="menu_button sm-preset-icon-button" data-i18n-aria-label="preset_export" aria-label="Export" disabled><i class="fa-solid fa-file-export" aria-hidden="true"></i></button>
+                        <button type="button" id="sm-preset-import" class="menu_button sm-preset-icon-button" data-i18n-aria-label="preset_import" aria-label="Import"><i class="fa-solid fa-file-import" aria-hidden="true"></i></button>
+                        <button type="button" id="sm-preset-edit" class="menu_button sm-preset-icon-button" data-i18n-aria-label="preset_edit" aria-label="Rename preset" disabled><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+                        <button type="button" id="sm-preset-delete" class="menu_button sm-preset-icon-button" data-i18n-aria-label="preset_delete" aria-label="Delete" disabled><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                        <input type="file" id="sm-preset-import-file" class="sm-hidden-file-input" accept="application/json,.json">
+                    </div>
+                </div>
                 <div class="flex-container margin-bottom-10 sm-enable-toggles-wrap" style="gap: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; align-items: stretch; flex-wrap: wrap;">
                     <div class="flex-container flexFlowColumn" style="gap: 12px; flex: 1; justify-content: center; min-width: 200px;">
                         <label class="flex-container alignitemscenter sm-enable-toggle-memories" style="cursor:pointer; margin:0;">
@@ -2792,7 +3767,7 @@
                         </select>
                     </div>
 
-                    <div style="font-weight: bold; color: var(--SmartThemeQuoteColor); margin-top: 5px; margin-bottom: 10px;" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
+                    <div class="sm-settings-section-title" data-i18n="mod_tab_settings">Module &amp; Tab Settings</div>
                     <div class="sm-mod-tab-grid">
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-summary" checked><span style="word-break: break-word;" data-i18n="show_summary_tab">Show Summary Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-facts" checked><span style="word-break: break-word;" data-i18n="show_facts_tab">Show Facts Tab</span></label>
@@ -2800,6 +3775,49 @@
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-quests" checked><span style="word-break: break-word;" data-i18n="show_quests_tab">Show Quests Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-calendar" checked><span style="word-break: break-word;" data-i18n="show_cal_tab">Show Calendar Tab</span></label>
                         <label class="sm-check-row flex-container alignitemscenter" style="margin:0;"><input type="checkbox" id="sm-toggle-tab-qcsettings" checked><span style="word-break: break-word;" data-i18n="show_qc_settings_tab">Show Q&amp;C Settings Tab</span></label>
+                    </div>
+
+                    <div class="sm-storage-transfer-settings sm-transfer-mode-row">
+                        <div class="sm-settings-section-title" data-i18n="storage_transfer_settings">Transfer behavior</div>
+                        <label class="sm-check-row flex-container alignitemscenter sm-transfer-copy-label">
+                            <input type="checkbox" id="sm-storage-transfer-copy-mode" checked>
+                            <span data-i18n="storage_transfer_copy_mode">Copy instead of move</span>
+                        </label>
+                    </div>
+
+                    <div class="sm-storage-transfer-settings sm-timeline-storage-card">
+                        <div class="sm-timeline-storage-head">
+                            <div class="sm-timeline-storage-main">
+                                <div class="sm-library-storage-title sm-timeline-storage-title" data-i18n="timeline_storage_scope">Timeline, Quests &amp; Events storage</div>
+                                <div class="sm-timeline-storage-subtitle" data-i18n="timeline_storage_scope_help">Choose whether timeline events and quests live only in this chat/branch or are shared through this character card.</div>
+                            </div>
+                        </div>
+
+                        <div class="sm-timeline-default-card">
+                            <label class="sm-check-row flex-container alignitemscenter sm-timeline-default-row">
+                                <input type="checkbox" id="sm-timeline-character-default" checked aria-controls="sm-timeline-manual-storage" aria-expanded="false">
+                                <span>
+                                    <span data-i18n="timeline_character_default_checkbox">Default: character card</span>
+                                    <span class="sm-timeline-pill"><i class="fa-solid fa-id-card" aria-hidden="true"></i><span data-i18n="timeline_character_default_badge">All chats for this character</span></span>
+                                </span>
+                            </label>
+                            <div class="sm-storage-transfer-help" data-i18n="timeline_character_default_help">When enabled, timeline, quests and events are stored on this character card and are visible only for this character.</div>
+                        </div>
+
+                        <div id="sm-timeline-manual-storage" class="sm-timeline-manual-storage" style="display:none;">
+                            <div class="sm-timeline-manual-heading" data-i18n="timeline_manual_scope_title">If the default is off, choose manually</div>
+                            <div class="sm-summary-mode-toggle sm-library-type-toggle sm-library-storage-toggle" role="radiogroup" data-i18n-aria-label="timeline_storage_scope">
+                                <input type="radio" id="sm-timeline-storage-chat" name="sm_timeline_storage_mode" value="chat">
+                                <label for="sm-timeline-storage-chat"><i class="fa-solid fa-code-branch"></i><span data-i18n="timeline_scope_chat_label">Only this chat</span></label>
+
+                                <input type="radio" id="sm-timeline-storage-character" name="sm_timeline_storage_mode" value="character" checked>
+                                <label for="sm-timeline-storage-character"><i class="fa-solid fa-id-card"></i><span data-i18n="timeline_scope_character_label">All character chats</span></label>
+                            </div>
+                            <div class="sm-timeline-scope-badges">
+                                <span class="sm-scope-badge"><i class="fa-solid fa-code-branch" aria-hidden="true"></i><span data-i18n="timeline_scope_chat_hint">Only the current chat, branch, or checkpoint</span></span>
+                                <span class="sm-scope-badge"><i class="fa-solid fa-id-card" aria-hidden="true"></i><span data-i18n="timeline_scope_character_hint">All chats of this character, not other characters</span></span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="sm-customization-title" data-i18n="customization_title">Customization</div>
@@ -2848,10 +3866,47 @@
                         </svg>
                     </button>
                     <span data-i18n="bypass_filter">Anti-Filter Mode</span>
+                    <span class="sm-export-wrap">
+                        <button type="button" id="sm-export-toggle" class="menu_button sm-export-toggle sm-transfer-icon-button" aria-expanded="false" aria-controls="sm-export-panel" data-i18n-title="export_data_title" data-i18n-aria-label="export_data_title">
+                            <i class="fa-solid fa-file-export"></i>
+                            <span class="sm-sr-only" data-i18n="export_data_short">Backup</span>
+                        </button>
+                        <button type="button" id="sm-import-trigger" class="menu_button sm-import-trigger sm-transfer-icon-button" data-i18n-title="import_data_title" data-i18n-aria-label="import_data_title">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span class="sm-sr-only" data-i18n="import_data_short">Import</span>
+                        </button>
+                        <input type="file" id="sm-import-file-input" class="sm-hidden-file-input" accept="application/json,.json">
+                    </span>
                     <button type="button" id="sm-mini-guide-toggle" class="menu_button sm-mini-guide-toggle" aria-expanded="false">
                         <i class="fa-solid fa-book-open"></i>
                         <span data-i18n="mini_guide">Mini Guide</span>
                     </button>
+                </div>
+
+                <div id="sm-export-panel" class="sm-export-panel" style="display:none;">
+                    <div class="sm-export-panel-title" data-i18n="export_data_title">Backup SunnyMemories data</div>
+                    <div class="sm-export-panel-note" data-i18n="export_data_note">Backs up library summaries/facts, quests and events as valid SunnyMemories JSON.</div>
+                    <div id="sm-export-counts" class="sm-export-counts"></div>
+                    <div class="sm-export-actions">
+                        <button type="button" id="sm-export-download-all" class="menu_button">
+                            <i class="fa-solid fa-file-export"></i>
+                            <span data-i18n="export_download_all">Backup all</span>
+                        </button>
+                        <button type="button" id="sm-export-toggle-individual" class="menu_button" aria-expanded="false">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span data-i18n="export_download_separately">Backup separately</span>
+                        </button>
+                    </div>
+                    <div id="sm-export-individual-wrap" class="sm-export-individual-wrap" style="display:none;">
+                        <div id="sm-export-individual-list"></div>
+                        <div class="sm-export-bottom-actions">
+                            <span id="sm-export-selected-count" class="sm-export-selected-count"></span>
+                            <button type="button" id="sm-export-download-selected" class="menu_button sm-export-selected-download" disabled>
+                                <i class="fa-solid fa-file-arrow-down"></i>
+                                <span data-i18n="export_download_selected">Backup selected</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="sm-mini-guide-panel" style="display:none;">
@@ -2887,6 +3942,7 @@
                                         <div class="sm-mini-guide-topics-title" data-i18n="mini_guide_topics_title">Topics</div>
                                         <div class="sm-mini-guide-subtabs">
                                             <button type="button" class="menu_button sm-mini-guide-subtab-btn is-active" data-guide-subtab="settings-modules" data-i18n="mini_guide_topic_settings_modules">Enable modules and tabs</button>
+                                            <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="settings-storage" data-i18n="mini_guide_topic_settings_storage">Storage and transfer</button>
                                             <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="settings-custom" data-i18n="mini_guide_topic_settings_custom">Customization and colors</button>
                                             <button type="button" class="menu_button sm-mini-guide-subtab-btn" data-guide-subtab="settings-filter" data-i18n="mini_guide_topic_settings_filter">Anti-Filter mode</button>
                                         </div>
@@ -2898,6 +3954,15 @@
                                             <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_depth_body">Depth controls where a memory block is inserted in chat context.</div>
                                             <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_frequency_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">How Frequency works (Frequency / F)?</div>
                                             <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_frequency_body">Frequency controls how often entries are injected.</div>
+                                        </div>
+                                        <div class="sm-mini-guide-subpane" data-guide-subpane="settings-storage">
+                                            <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_settings_storage">Storage and transfer</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_storage_scope_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">Where data is stored</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_storage_scope_body">Chat storage keeps data only in the current chat, branch, or checkpoint. Character card storage makes data shared by all chats of this character, without sharing it with other characters.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_transfer_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Transfer buttons</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_transfer_body">Arrow buttons send Summary, Facts, or Library entries to the other storage. Copy mode leaves data in both storages. When copy mode is disabled, transfer works as move and removes data from the source storage.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_settings_timeline_storage_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Timeline, quests and events</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_settings_timeline_storage_body">By default they are bound to the character card, so all chats of this character see the same timeline. Disable the default checkbox only if you want to choose chat storage manually for a specific setup.</div>
                                         </div>
                                         <div class="sm-mini-guide-subpane" data-guide-subpane="settings-custom">
                                             <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_settings_custom">Customization and colors</div>
@@ -2948,6 +4013,8 @@ If generation quality is normal, keep it disabled.</div>
                                             <div class="sm-mini-guide-article-title" data-i18n="mini_guide_topic_memories_library">Library entries and injection</div>
                                             <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_title" style="font-size: 1.08em; font-weight: 700; margin: 8px 0 6px;">Library</div>
                                             <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_library_body">Library stores important fragments from Summary and Facts for long-term use.</div>
+                                            <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_storage_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Storage mode</div>
+                                            <div class="sm-mini-guide-text" data-i18n="mini_guide_text_memories_library_storage_body">Chat / branch keeps entries inside the current chat branch. Character card stores entries on the character card, so they appear in every chat, checkpoint, and branch for that character.</div>
                                             <div class="sm-mini-guide-inline-heading" data-i18n="mini_guide_text_memories_library_controls_title" style="font-size: 1.08em; font-weight: 700; margin: 12px 0 6px;">Library control panel</div>
                                             <div class="sm-mini-guide-text"><i class="fa-regular fa-moon" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_library_controls_moon">Moon — select one or multiple entries. Then you can apply actions to selected items.</span></div>
                                             <div class="sm-mini-guide-text" style="margin-top: 6px;"><i class="fa-solid fa-trash" aria-hidden="true" style="margin-right: 6px;"></i><span data-i18n="mini_guide_text_memories_library_controls_delete">Trash — delete selected entries.</span></div>
@@ -3175,6 +4242,20 @@ Folder binding links saves to the active character for faster consistent workflo
 
                         <textarea id="sunny-memories-output-summary" class="text_pole margin-bottom-5" rows="8" style="width: 100%; resize: vertical;" placeholder="..."></textarea>
 
+                        <div class="sm-memory-storage-row">
+                            <div class="sm-library-storage-title" data-i18n="summary_storage_scope">Summary storage</div>
+                            <div class="sm-summary-mode-toggle sm-library-type-toggle sm-library-storage-toggle" role="radiogroup" data-i18n-aria-label="summary_storage_scope">
+                                <input type="radio" id="sm-summary-storage-chat" name="sm_summary_storage_mode" value="chat" checked>
+                                <label for="sm-summary-storage-chat"><i class="fa-solid fa-code-branch"></i><span data-i18n="library_scope_chat">Chat</span></label>
+
+                                <input type="radio" id="sm-summary-storage-character" name="sm_summary_storage_mode" value="character">
+                                <label for="sm-summary-storage-character"><i class="fa-solid fa-id-card"></i><span data-i18n="library_scope_character">Character</span></label>
+                            </div>
+                            <button type="button" class="menu_button sm-storage-copy-btn" data-type="summary" data-i18n-title="storage_copy_other">
+                                <i class="fa-solid fa-right-left"></i>
+                            </button>
+                        </div>
+
                         <div class="flex-container margin-bottom-10" style="justify-content: space-between; align-items: flex-end; gap: 10px;">
                             <div class="flex-container flexFlowColumn" style="gap: 5px; align-items: flex-start;">
                                 <button class="menu_button sm-restore-btn" data-type="summary" style="padding: 4px 10px; font-size: 0.85em; margin: 0;" data-i18n-title="restore_title">
@@ -3257,6 +4338,20 @@ Folder binding links saves to the active character for faster consistent workflo
 
                         <textarea id="sunny-memories-output-facts" class="text_pole margin-bottom-5" rows="8" style="width: 100%; resize: vertical;" placeholder="..."></textarea>
 
+                        <div class="sm-memory-storage-row">
+                            <div class="sm-library-storage-title" data-i18n="facts_storage_scope">Facts storage</div>
+                            <div class="sm-summary-mode-toggle sm-library-type-toggle sm-library-storage-toggle" role="radiogroup" data-i18n-aria-label="facts_storage_scope">
+                                <input type="radio" id="sm-facts-storage-chat" name="sm_facts_storage_mode" value="chat" checked>
+                                <label for="sm-facts-storage-chat"><i class="fa-solid fa-code-branch"></i><span data-i18n="library_scope_chat">Chat</span></label>
+
+                                <input type="radio" id="sm-facts-storage-character" name="sm_facts_storage_mode" value="character">
+                                <label for="sm-facts-storage-character"><i class="fa-solid fa-id-card"></i><span data-i18n="library_scope_character">Character</span></label>
+                            </div>
+                            <button type="button" class="menu_button sm-storage-copy-btn" data-type="facts" data-i18n-title="storage_copy_other">
+                                <i class="fa-solid fa-right-left"></i>
+                            </button>
+                        </div>
+
                         <div class="flex-container margin-bottom-10" style="justify-content: space-between; align-items: flex-end; gap: 10px;">
                             <div class="flex-container flexFlowColumn" style="gap: 5px; align-items: flex-start;">
                                 <button class="menu_button sm-restore-btn" data-type="facts" style="padding: 4px 10px; font-size: 0.85em; margin: 0;" data-i18n-title="restore_title">
@@ -3291,6 +4386,17 @@ Folder binding links saves to the active character for faster consistent workflo
 
                                 <input type="radio" id="sm-library-view-facts" name="sm_library_view" value="facts">
                                 <label for="sm-library-view-facts"><i class="fa-solid fa-thumbtack"></i><span data-i18n="facts">Facts</span></label>
+                            </div>
+                        </div>
+
+                        <div class="sm-library-type-switch sm-library-storage-switch">
+                            <div class="sm-library-storage-title" data-i18n="library_storage_scope">Library storage</div>
+                            <div class="sm-summary-mode-toggle sm-library-type-toggle sm-library-storage-toggle" role="radiogroup" data-i18n-aria-label="library_storage_scope">
+                                <input type="radio" id="sm-library-storage-chat" name="sm_library_storage_mode" value="chat" checked>
+                                <label for="sm-library-storage-chat"><i class="fa-solid fa-code-branch"></i><span data-i18n="library_scope_chat">Chat</span></label>
+
+                                <input type="radio" id="sm-library-storage-character" name="sm_library_storage_mode" value="character">
+                                <label for="sm-library-storage-character"><i class="fa-solid fa-id-card"></i><span data-i18n="library_scope_character">Character</span></label>
                             </div>
                         </div>
 
@@ -3943,13 +5049,29 @@ Folder binding links saves to the active character for faster consistent workflo
             >
                 <i class="fa-solid fa-xmark"></i>
             </button>
+            <button
+                type="button"
+                id="sm-album-image-viewer-clean-toggle"
+                class="sm-album-image-viewer-clean-toggle"
+                data-i18n-title="album_image_viewer_hide_controls"
+                title="Hide viewer controls"
+                aria-label="Hide viewer controls"
+                aria-pressed="false"
+            >
+                <i class="fa-solid fa-eye-slash"></i>
+            </button>
             <img class="sm-album-image-viewer-img" src="" alt="image">
+            <div class="sm-album-image-zoom-controls" aria-label="Image zoom controls">
+                <button type="button" id="sm-album-image-zoom-out" class="sm-album-image-zoom-btn" data-zoom-action="out" title="Zoom out" aria-label="Zoom out">−</button>
+                <button type="button" id="sm-album-image-zoom-reset" class="sm-album-image-zoom-btn sm-album-image-zoom-value" data-zoom-action="reset" title="Reset zoom" aria-label="Reset zoom">100%</button>
+                <button type="button" id="sm-album-image-zoom-in" class="sm-album-image-zoom-btn" data-zoom-action="in" title="Zoom in" aria-label="Zoom in">+</button>
+            </div>
             <div class="sm-album-image-viewer-caption"></div>
             <div class="sm-album-image-viewer-actions">
                 <button type="button" id="sm-album-image-viewer-download" class="sm-album-action-btn" data-i18n-title="album_download_image" title="Download">
                     <span data-i18n="album_download_image">Download</span>
                 </button>
-                <button type="button" id="sm-album-image-viewer-delete" class="sm-album-action-btn is-danger" data-i18n-title="album_delete_image" title="Delete" disabled>
+                <button type="button" id="sm-album-image-viewer-delete" class="sm-album-action-btn is-danger" data-i18n-title="album_delete_image" disabled>
                     <span data-i18n="album_delete_image">Delete</span>
                 </button>
             </div>
