@@ -709,6 +709,59 @@ function createAlbumFolder() {
   toastr.success(t("album_folder_created"));
 }
 
+function createAlbumTouchSafeTapHandler(action) {
+  let lastHandledAt = 0;
+  return function albumTouchSafeTapHandler(e) {
+    const eventType = String(e?.type || "");
+    const now = Date.now();
+
+    const isActivationEvent =
+      eventType === "pointerup" ||
+      eventType === "mouseup" ||
+      eventType === "touchend" ||
+      eventType === "click";
+
+    if (isActivationEvent && now - lastHandledAt < 450) {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      if (typeof e.stopImmediatePropagation === "function") {
+        e.stopImmediatePropagation();
+      }
+      return false;
+    }
+
+    if (eventType === "pointerdown" || eventType === "mousedown" || eventType === "touchstart") {
+      e.stopPropagation?.();
+      return undefined;
+    }
+
+    if (eventType === "dblclick") {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      if (typeof e.stopImmediatePropagation === "function") {
+        e.stopImmediatePropagation();
+      }
+      return false;
+    }
+
+    if (isActivationEvent) {
+      lastHandledAt = now;
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      if (typeof e.stopImmediatePropagation === "function") {
+        e.stopImmediatePropagation();
+      }
+      if (typeof action === "function") {
+        action.call(this, e);
+      }
+      return false;
+    }
+
+    e.stopPropagation?.();
+    return undefined;
+  };
+}
+
     function bindAlbumImageViewerHandlers() {
       const viewer = $("#sm-album-image-viewer");
       const content = $("#sm-album-image-viewer-content");
@@ -716,25 +769,14 @@ function createAlbumFolder() {
 
       if (!viewer.length || !content.length || !closeBtn.length) return;
 
+      const closeImageViewerTap = createAlbumTouchSafeTapHandler(() => {
+        closeAlbumImageViewer();
+      });
+
       closeBtn
         .off(".smAlbumViewer")
-        .on("pointerdown.smAlbumViewer mousedown.smAlbumViewer touchstart.smAlbumViewer dblclick.smAlbumViewer", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === "function") {
-            e.stopImmediatePropagation();
-          }
-          return false;
-        })
-        .on("click.smAlbumViewer", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === "function") {
-            e.stopImmediatePropagation();
-          }
-          closeAlbumImageViewer();
-          return false;
-        });
+        .on("pointerdown.smAlbumViewer mousedown.smAlbumViewer touchstart.smAlbumViewer dblclick.smAlbumViewer", closeImageViewerTap)
+        .on("pointerup.smAlbumViewer mouseup.smAlbumViewer touchend.smAlbumViewer click.smAlbumViewer", closeImageViewerTap);
 
       viewer
         .off(".smAlbumViewer")
@@ -774,30 +816,15 @@ function createAlbumFolder() {
         e.stopPropagation();
       }
 
-      function closeFromMetaViewerControl(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (typeof e.stopImmediatePropagation === "function") {
-          e.stopImmediatePropagation();
-        }
+
+      const closeMetaViewerTap = createAlbumTouchSafeTapHandler(() => {
         closeAlbumMetaViewer();
-        return false;
-      }
+      });
 
       closeBtn
         .off(".smAlbumMetaViewer")
-        .on("click.smAlbumMetaViewer dblclick.smAlbumMetaViewer", closeFromMetaViewerControl)
-        .on(
-          "pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer",
-          function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof e.stopImmediatePropagation === "function") {
-              e.stopImmediatePropagation();
-            }
-            return false;
-          },
-        );
+        .on("pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer dblclick.smAlbumMetaViewer", closeMetaViewerTap)
+        .on("pointerup.smAlbumMetaViewer mouseup.smAlbumMetaViewer touchend.smAlbumMetaViewer click.smAlbumMetaViewer", closeMetaViewerTap);
 
       viewer
         .off(".smAlbumMetaViewer")
@@ -816,7 +843,7 @@ function createAlbumFolder() {
       content
         .off(".smAlbumMetaViewer")
         .on(
-          "dblclick.smAlbumMetaViewer pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer touchend.smAlbumMetaViewer",
+          "dblclick.smAlbumMetaViewer pointerdown.smAlbumMetaViewer mousedown.smAlbumMetaViewer touchstart.smAlbumMetaViewer",
           stopMetaViewerEvent,
         );
     }
@@ -1040,18 +1067,17 @@ function bindAlbumHandlers() {
 
     bindAlbumMetaViewerHandlers();
 
-    $(document).on("click", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
+    const handleAlbumMetaModeTap = createAlbumTouchSafeTapHandler(function () {
       const mode = String($(this).data("mode") || "prompt");
       setAlbumMetaViewerMode(mode);
     });
 
-    $(document).on("click", "#sm-album-meta-viewer-copy", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    $(document)
+      .off("pointerdown.smAlbumMetaMode mousedown.smAlbumMetaMode touchstart.smAlbumMetaMode dblclick.smAlbumMetaMode pointerup.smAlbumMetaMode mouseup.smAlbumMetaMode touchend.smAlbumMetaMode click.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn")
+      .on("pointerdown.smAlbumMetaMode mousedown.smAlbumMetaMode touchstart.smAlbumMetaMode dblclick.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", handleAlbumMetaModeTap)
+      .on("pointerup.smAlbumMetaMode mouseup.smAlbumMetaMode touchend.smAlbumMetaMode click.smAlbumMetaMode", "#sm-album-meta-viewer .sm-album-prompt-mode-btn", handleAlbumMetaModeTap);
 
+    const handleAlbumMetaCopyTap = createAlbumTouchSafeTapHandler(async function () {
       const textToCopy = String(getAlbumMetaViewerActiveText() || "").trim();
       if (!textToCopy) {
         toastr.info(t("album_prompt_not_found"));
@@ -1066,6 +1092,11 @@ function bindAlbumHandlers() {
         toastr.error(t("failed_copy_text"));
       }
     });
+
+    $(document)
+      .off("pointerdown.smAlbumMetaCopy mousedown.smAlbumMetaCopy touchstart.smAlbumMetaCopy dblclick.smAlbumMetaCopy pointerup.smAlbumMetaCopy mouseup.smAlbumMetaCopy touchend.smAlbumMetaCopy click.smAlbumMetaCopy", "#sm-album-meta-viewer-copy")
+      .on("pointerdown.smAlbumMetaCopy mousedown.smAlbumMetaCopy touchstart.smAlbumMetaCopy dblclick.smAlbumMetaCopy", "#sm-album-meta-viewer-copy", handleAlbumMetaCopyTap)
+      .on("pointerup.smAlbumMetaCopy mouseup.smAlbumMetaCopy touchend.smAlbumMetaCopy click.smAlbumMetaCopy", "#sm-album-meta-viewer-copy", handleAlbumMetaCopyTap);
 
     $(document).on("click", ".sm-album-thumb-wrap", function (e) {
       e.preventDefault();
