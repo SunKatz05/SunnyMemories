@@ -3605,7 +3605,6 @@
         }
         
 
-        /* SunnyMemories repair: original bottom caption/actions + non-blocking zoom viewport. */
         body > #sm-album-image-viewer .sm-album-image-viewer-content {
             width: min(96vw, 1500px) !important;
             max-width: calc(100vw - 24px) !important;
@@ -3699,6 +3698,72 @@
                 font-size: 0.82em !important;
             }
         }
+
+        body > #sm-album-image-viewer .sm-album-image-viewer-close,
+        body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle,
+        body > #sm-album-image-viewer .sm-album-image-zoom-btn,
+        body > #sm-album-image-viewer .sm-album-image-viewer-actions .sm-album-action-btn,
+        body > #sm-album-meta-viewer .sm-album-image-viewer-close,
+        body > #sm-album-meta-viewer .sm-album-prompt-mode-btn,
+        body > #sm-album-meta-viewer #sm-album-meta-viewer-copy {
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
+        body > #sm-album-meta-viewer .sm-album-image-viewer-close {
+            z-index: 55 !important;
+            min-width: 42px !important;
+            min-height: 42px !important;
+        }
+
+        body > #sm-album-meta-viewer .sm-album-meta-viewer-toolbar {
+            position: relative !important;
+            z-index: 2 !important;
+            pointer-events: auto !important;
+        }
+
+        body > #sm-album-meta-viewer .sm-album-prompt-mode-switch {
+            pointer-events: auto !important;
+        }
+
+        body > #sm-album-meta-viewer .sm-album-prompt-mode-btn {
+            min-height: 38px !important;
+        }
+
+        @media (max-width: 700px), (pointer: coarse) {
+            body > #sm-album-image-viewer .sm-album-image-viewer-close,
+            body > #sm-album-image-viewer .sm-album-image-viewer-clean-toggle,
+            body > #sm-album-image-viewer .sm-album-image-zoom-btn,
+            body > #sm-album-meta-viewer .sm-album-image-viewer-close,
+            body > #sm-album-meta-viewer .sm-album-prompt-mode-btn,
+            body > #sm-album-meta-viewer #sm-album-meta-viewer-copy {
+                min-width: 44px !important;
+                min-height: 44px !important;
+            }
+
+            body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-close {
+                opacity: 0.38 !important;
+                pointer-events: auto !important;
+            }
+
+            body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-close:hover,
+            body > #sm-album-image-viewer.sm-clean-view .sm-album-image-viewer-close:focus-visible {
+                opacity: 1 !important;
+            }
+
+            body > #sm-album-meta-viewer .sm-album-meta-viewer-toolbar .sm-album-prompt-mode-switch {
+                display: flex !important;
+                width: 100% !important;
+            }
+
+            body > #sm-album-meta-viewer .sm-album-meta-viewer-toolbar .sm-album-prompt-mode-btn {
+                flex: 1 1 50% !important;
+            }
+        }
+
 </style>
 
         <div class="inline-drawer">
