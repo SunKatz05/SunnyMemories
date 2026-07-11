@@ -208,9 +208,12 @@ export function shouldInjectPeriodicContextBlock({
     : null;
 
   const periodicShouldInject = isPeriodicContextInjection(frequency, nowTimelineValue);
+  const firstInjection = lastInjectedAt === null;
   const duplicateInjection =
     lastInjectedAt !== null && lastInjectedAt === nowTimelineValue && !signatureChanged;
-  const shouldInject = force || (periodicShouldInject && !duplicateInjection);
+
+  const shouldInject =
+    force || duplicateInjection || firstInjection || signatureChanged || periodicShouldInject;
 
   const next = {
     ...prev,
