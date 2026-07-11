@@ -67,6 +67,17 @@ export function createContextInjectionModule({
     return typeof value === "string" ? value : String(value ?? "");
   }
 
+  function formatLibraryMemoryForInjection(itemType, itemContent) {
+    const normalizedType = getSafeText(itemType || "facts").trim().toLowerCase();
+    const content = getSafeText(itemContent).trim();
+
+    if (normalizedType === "summary") {
+      return `<story_summary>\n${content}\n</story_summary>\n`;
+    }
+
+    return `<established_facts>\n${content}\n</established_facts>\n`;
+  }
+
   function updateContextInjection() {
     try {
       return updateContextInjectionUnsafe();
@@ -291,7 +302,7 @@ export function createContextInjectionModule({
           if (libInjectState.shouldInject) {
             setExtensionPrompt(
               libPromptKey,
-              `### ${itemType === "summary" ? "Story Summary" : "Established Facts"}:\n${itemContent}\n`,
+              formatLibraryMemoryForInjection(itemType, itemContent),
               normInt(safeItem.position, 0),
               libDepth,
               scanWI,
