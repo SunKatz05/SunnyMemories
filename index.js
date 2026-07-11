@@ -7432,6 +7432,7 @@ $(document).on("click", ".sm-btn-cancel-gen", globalThis.cancelMemoryGeneration)
         item.enabled = !item.enabled;
         $(this).toggleClass("active", item.enabled);
         setChatMemory({ library });
+        updateContextInjection();
         scheduleContextUpdate();
       }
     });
