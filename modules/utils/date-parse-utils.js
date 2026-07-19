@@ -17,8 +17,8 @@ export function normalizeDateSearchText(text) {
     .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
     .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
     .replace(/[‐‑‒–—―]/g, "-")
-    .replace(/[пјЏвЃ„]/g, "/")
-    .replace(/[пјЋгЂ‚]/g, ".")
+    .replace(/[⁄∕／]/g, "/")
+    .replace(/[．。•·∙]/g, ".")
     .replace(/[•·・|]/g, " ")
     .replace(/\u00A0/g, " ")
     .replace(/\s+/g, " ")
@@ -37,8 +37,9 @@ export function isLikelyDateText(text) {
   if (!normalized) return false;
 
   if (/\d{1,4}\s*[./-]\s*\d{1,2}/u.test(normalized)) return true;
+  if (/\b\d{1,2}\s+[\p{L}]{3,}\s+\d{2,4}\b/u.test(normalized)) return true;
 
-  return /\b(?:date|дата|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|январь|января|янв|февраль|февраля|фев|март|марта|мар|апрель|апреля|апр|май|мая|июнь|июня|июн|июль|июля|июл|август|августа|авг|сентябрь|сентября|сен|сент|октябрь|октября|окт|ноябрь|ноября|ноя|декабрь|декабря|дек|january|february|march|april|june|july|august|september|october|november|december)\b/u.test(normalized);
+  return /\b(?:date|дата|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|январь|января|янв|февраль|февраля|фев|март|марта|мар|апрель|апреля|апр|май|мая|июнь|июня|июн|июль|июля|июл|август|августа|авг|сентябрь|сентября|сен|сент|октябрь|октября|окт|ноябрь|ноября|ноя|декабрь|декабря|дек|січень|січня|січ|лютий|лютого|лют|березень|березня|бер|квітень|квітня|кві|травень|травня|трав|червень|червня|чер|липень|липня|лип|серпень|серпня|сер|вересень|вересня|вер|жовтень|жовтня|жов|листопад|листопада|лис|грудень|грудня|гру|january|february|march|april|june|july|august|september|october|november|december)\b/u.test(normalized);
 }
 
 export function monthNameFromToken(token, calData, fallbackMonths = []) {
@@ -75,46 +76,75 @@ export function monthNameFromToken(token, calData, fallbackMonths = []) {
     "январь": "january",
     "января": "january",
     "янв": "january",
+    "січень": "january",
+    "січня": "january",
+    "січ": "january",
     "февраль": "february",
     "февраля": "february",
     "фев": "february",
+    "лютий": "february",
+    "лютого": "february",
+    "лют": "february",
     "март": "march",
     "марта": "march",
     "мар": "march",
+    "березень": "march",
+    "березня": "march",
+    "бер": "march",
     "апрель": "april",
     "апреля": "april",
     "апр": "april",
+    "квітень": "april",
+    "квітня": "april",
+    "кві": "april",
     "май": "may",
     "мая": "may",
+    "травень": "may",
+    "травня": "may",
+    "трав": "may",
     "июнь": "june",
     "июня": "june",
     "июн": "june",
+    "червень": "june",
+    "червня": "june",
+    "чер": "june",
     "июль": "july",
     "июля": "july",
     "июл": "july",
+    "липень": "july",
+    "липня": "july",
+    "лип": "july",
     "август": "august",
     "августа": "august",
     "авг": "august",
+    "серпень": "august",
+    "серпня": "august",
+    "сер": "august",
     "сентябрь": "september",
     "сентября": "september",
     "сен": "september",
     "сент": "september",
+    "вересень": "september",
+    "вересня": "september",
+    "вер": "september",
     "октябрь": "october",
     "октября": "october",
     "окт": "october",
+    "жовтень": "october",
+    "жовтня": "october",
+    "жов": "october",
     "ноябрь": "november",
     "ноября": "november",
     "ноя": "november",
+    "листопад": "november",
+    "листопада": "november",
+    "лис": "november",
     "декабрь": "december",
     "декабря": "december",
     "дек": "december",
-    "янв": "january",
-    "фев": "february",
-    "мар": "march",
-    "апр": "april",
-    "июн": "june",
-    "июл": "july",
-    "авг": "august",
+    "грудень": "december",
+    "грудня": "december",
+    "гру": "december",
   };
 
   for (const m of months) {
